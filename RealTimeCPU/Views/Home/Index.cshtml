@@ -1,0 +1,41 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style type="text/css">
+    .highCpu {
+        background: red;
+        color: white;
+    }
+</style>
+
+
+<div id="computerInfo">
+    <h2>Real-time System Resource Monitor</h2>
+    <h5 data-bind="visible: connected">Connected to missage hub</h5>
+
+    <table class="table table-stripped" border="0">
+        <tbody>
+            <tr>
+                <th>Machine</th>
+                <th>CPU % </th>
+                <th>Memory Avialable (Mb)</th>
+                <th>Total Memory (Mb)</th>
+                <th>Mem Avialable (%)</th>
+                
+            </tr>
+
+            <tr data-bind="css: { highCpu: processor() > 90 }">
+                <td data-bind ="text: machineName"></td>
+                <td data-bind ="text: processor"></td>
+                <td data-bind ="text: memUsage"></td>
+                <td data-bind ="text: memTotal"></td>
+                <td data-bind ="text: memPercent"></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+@section Scripts { <script src="~/Scripts/index.js"></script> }
+
