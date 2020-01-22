@@ -38,7 +38,7 @@ namespace CpuInfoClient
                 _running = false;
                 pollingThread.Join(5000);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 pollingThread.Abort();
                 throw;

@@ -11,7 +11,6 @@ namespace RealTimeCPU.Api
         {
             var context = GlobalHost.ConnectionManager.GetHubContext<CpuInfo>();
             context.Clients.All.cpuInfoMessage(cpuInfo.MachineName, cpuInfo.Processor, cpuInfo.MemUsage, cpuInfo.TotalMemory);
-
         }
         
     }

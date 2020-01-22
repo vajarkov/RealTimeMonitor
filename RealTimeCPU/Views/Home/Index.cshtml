@@ -27,9 +27,9 @@
                 
             </tr>
 
-            <tr data-bind="css: { highCpu: processor() > 90 }">
+            <tr data-bind="css: { highCpu: cpu() > 90 }">
                 <td data-bind ="text: machineName"></td>
-                <td data-bind ="text: processor"></td>
+                <td data-bind ="text: cpu"></td>
                 <td data-bind ="text: memUsage"></td>
                 <td data-bind ="text: memTotal"></td>
                 <td data-bind ="text: memPercent"></td>
