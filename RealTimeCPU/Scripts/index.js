@@ -35,7 +35,7 @@
 
         // Check if we already have it:
         var match = ko.utils.arrayFirst(vm.machines(), function (item) {
-            return item.machineName() == machineName;
+            return item.machineName() === machineName;
         });
 
         if (!match)
