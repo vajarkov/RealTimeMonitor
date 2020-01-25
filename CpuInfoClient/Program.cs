@@ -67,7 +67,13 @@ namespace CpuInfoClient
                         MemUsage = memUsage,
                         TotalMemory = totalMemory
                     };
-
+                    /*
+                    var postData = new
+                    {
+                        message = "Simple message",
+                        userName = "Vadim"
+                    };
+                    */
                     var json = JsonConvert.SerializeObject(postData);
                     var serverUrl = new Uri(ConfigurationManager.AppSettings["ServerUrl"]);
                     var client = new WebClient();

@@ -7,7 +7,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RealTimeCPU", "RealTimeCPU\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CpuInfoClient", "CpuInfoClient\CpuInfoClient.csproj", "{459A9DB8-6572-4442-BDE4-7158936426BB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RealTimeMonitor", "RealTimeMonitor\RealTimeMonitor.csproj", "{3E66B54B-226F-4925-BFD3-177EA92A4117}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RealTimeMonitor", "RealTimeMonitor\RealTimeMonitor.csproj", "{3E66B54B-226F-4925-BFD3-177EA92A4117}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinClientRealTimeMonitor", "WinClientRealTimeMonitor\WinClientRealTimeMonitor.csproj", "{EE20CD34-7F32-4EAC-975F-1518CF2D72EB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,6 +27,10 @@ Global
 		{3E66B54B-226F-4925-BFD3-177EA92A4117}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3E66B54B-226F-4925-BFD3-177EA92A4117}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3E66B54B-226F-4925-BFD3-177EA92A4117}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE20CD34-7F32-4EAC-975F-1518CF2D72EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE20CD34-7F32-4EAC-975F-1518CF2D72EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE20CD34-7F32-4EAC-975F-1518CF2D72EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE20CD34-7F32-4EAC-975F-1518CF2D72EB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

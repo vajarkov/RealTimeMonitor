@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Http.Connections;
 
 namespace RealTimeMonitor
 {
@@ -33,8 +34,15 @@ namespace RealTimeMonitor
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHub<ChatHub>("/chat");
+                endpoints.MapHub<ChatHub>("/chat", options =>
+                {
+                    options.ApplicationMaxBufferSize = 64;
+                    options.TransportMaxBufferSize = 64;
+                    options.LongPolling.PollTimeout = System.TimeSpan.FromMinutes(1);
+                    options.Transports = HttpTransportType.LongPolling | HttpTransportType.WebSockets;
+                });
             });
+            
         }
     }
 }
