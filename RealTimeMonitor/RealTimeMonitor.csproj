@@ -9,10 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RTKLib\src.vcxproj">
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
+    <ProjectReference Include="..\RTKLib\src.vcxproj" />
   </ItemGroup>
 
 </Project>
