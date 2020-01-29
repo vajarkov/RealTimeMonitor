@@ -235,7 +235,7 @@
 */
 
 /* Included files: */
-#include "../rtklib.h"
+#include "rtklib.h"
 
 #ifndef FALSE
 #define FALSE (0)

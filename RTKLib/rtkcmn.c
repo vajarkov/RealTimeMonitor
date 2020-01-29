@@ -127,8 +127,6 @@
 *           2018/10/10 1.44 modify api satexclude()
 *-----------------------------------------------------------------------------*/
 #define _POSIX_C_SOURCE 199506
-#define WIN32
-
 #include <stdarg.h>
 #include <ctype.h>
 #ifndef WIN32
@@ -3888,14 +3886,14 @@ extern int rtk_uncompress(const char *file, char *uncfile)
     return stat;
 }
 /* dummy application functions for shared library ----------------------------*/
-#ifndef WIN_DLL
+#ifdef WIN_DLL
 extern int showmsg(char *format,...) {return 0;}
 extern void settspan(gtime_t ts, gtime_t te) {}
 extern void settime(gtime_t time) {}
 #endif
 
 /* dummy functions for lex extentions ----------------------------------------*/
-#ifdef EXTLEX
+#ifndef EXTLEX
 extern int input_lexr(raw_t *raw, unsigned char data) {return 0;}
 extern int input_lexrf(raw_t *raw, FILE *fp) {return 0;}
 extern int gen_lexr(const char *msg, unsigned char *buff) {return 0;}

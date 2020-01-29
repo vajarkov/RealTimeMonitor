@@ -38,13 +38,6 @@
 #include <math.h>
 #include <time.h>
 #include <ctype.h>
-
-#define ENAGLO
-#define ENAGAL
-#define ENAQZS
-#define ENACMP
-#define WIN32
-
 #ifdef WIN32
 #include <winsock2.h>
 #include <windows.h>
@@ -69,8 +62,6 @@ extern "C" {
 
 #define COPYRIGHT_RTKLIB \
             "Copyright (C) 2007-2019 T.Takasu\nAll rights reserved."
-
-
 
 #define PI          3.1415926535897932  /* pi */
 #define D2R         (PI/180.0)          /* deg to rad */
@@ -451,7 +442,7 @@ extern "C" {
 #define STRFMT_RT17  12                 /* stream format: Trimble RT17 */
 #define STRFMT_SEPT  13                 /* stream format: Septentrio */
 #define STRFMT_CMR   14                 /* stream format: CMR/CMR+ */
-#define STRFMT_TERSUS 15                /* stream format: TERSUS */
+//#define STRFMT_TERSUS 15                /* stream format: TERSUS */
 #define STRFMT_LEXR  16                 /* stream format: Furuno LPY-10000 */
 #define STRFMT_RINEX 17                 /* stream format: RINEX */
 #define STRFMT_SP3   18                 /* stream format: SP3 */
@@ -1680,7 +1671,7 @@ EXPORT int input_bnx   (raw_t *raw, unsigned char data);
 EXPORT int input_rt17  (raw_t *raw, unsigned char data);
 EXPORT int input_sbf   (raw_t *raw, unsigned char data);
 EXPORT int input_cmr   (raw_t *raw, unsigned char data);
-EXPORT int input_tersus(raw_t *raw, unsigned char data);
+//EXPORT int input_tersus(raw_t *raw, unsigned char data);
 EXPORT int input_lexr  (raw_t *raw, unsigned char data);
 EXPORT int input_oem4f (raw_t *raw, FILE *fp);
 EXPORT int input_oem3f (raw_t *raw, FILE *fp);
@@ -1695,7 +1686,7 @@ EXPORT int input_bnxf  (raw_t *raw, FILE *fp);
 EXPORT int input_rt17f (raw_t *raw, FILE *fp);
 EXPORT int input_sbff  (raw_t *raw, FILE *fp);
 EXPORT int input_cmrf  (raw_t *raw, FILE *fp);
-EXPORT int input_tersusf(raw_t *raw, FILE *fp);
+//EXPORT int input_tersusf(raw_t *raw, FILE *fp);
 EXPORT int input_lexrf (raw_t *raw, FILE *fp);
 
 EXPORT int gen_ubx (const char *msg, unsigned char *buff);

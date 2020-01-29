@@ -346,7 +346,7 @@ static int decoderaw(rtksvr_t *svr, int index)
 #endif
         /* update cmr rover observations cache */
         if (svr->format[1]==STRFMT_CMR&&index==0&&ret==1) {
-            //update_cmr(&svr->raw[1],svr,obs);
+            update_cmr(&svr->raw[1],svr,obs);
         }
         /* update rtk server */
         if (ret>0) updatesvr(svr,ret,obs,nav,sat,sbsmsg,index,fobs);
@@ -753,10 +753,7 @@ extern void rtksvrfree(rtksvr_t *svr)
 * args   : rtksvr_t *svr    IO rtk server
 * return : status (1:ok 0:error)
 *-----------------------------------------------------------------------------*/
-extern void rtksvrlock  (rtksvr_t *svr) 
-{
-	lock  (&svr->lock);
-}
+extern void rtksvrlock  (rtksvr_t *svr) {lock  (&svr->lock);}
 extern void rtksvrunlock(rtksvr_t *svr) {unlock(&svr->lock);}
 
 /* start rtk server ------------------------------------------------------------
@@ -926,12 +923,8 @@ extern int rtksvrstart(rtksvr_t *svr, int cycle, int buffsize, int *strs,
 #endif
         for (i=0;i<MAXSTRRTK;i++) strclose(svr->stream+i);
         sprintf(errmsg,"thread create error\n");
-		printf("thread create error\n");
         return 0;
     }
-	else {
-		printf("thread create success\n");
-	}
     return 1;
 }
 /* stop rtk server -------------------------------------------------------------

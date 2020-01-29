@@ -22,7 +22,7 @@
 *           2019/05/10 1.9 save galileo E5b data to obs index 2
 *           2019/07/25 1.10 support upgraded galileo ephemeris (0x01-14)
 *-----------------------------------------------------------------------------*/
-#include "../rtklib.h"
+#include "rtklib.h"
 
 #define BNXSYNC1    0xC2    /* binex sync (little-endian,regular-crc) */
 #define BNXSYNC2    0xE2    /* binex sync (big-endian   ,regular-crc) */

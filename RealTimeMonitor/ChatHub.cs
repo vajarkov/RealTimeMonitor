@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.SignalR;
 
 
+
 namespace RealTimeMonitor
 {
     public class ChatHub : Hub
