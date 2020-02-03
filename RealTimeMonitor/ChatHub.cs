@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
@@ -16,6 +17,15 @@ namespace RealTimeMonitor
         public async Task Send(string message, string userName)
         {
             await this.Clients.All.SendAsync("Send", message, userName);
+        }
+
+
+        public async Task UploadStream(IAsyncEnumerable<string> stream)
+        {
+            await foreach (var item in stream)
+            {
+                Console.WriteLine(item);
+            }
         }
     }
 }

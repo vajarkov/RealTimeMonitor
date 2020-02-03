@@ -5,11 +5,70 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using System.Threading;
+
+
+
 
 namespace RealTimeMonitor
 {
     public class DataRTK
     {
+        //CriticalHandle CriticalHandle = new CriticalHandle()
+
+
+        //#endif
+
+
+        /*
+        #else
+                //C++ TO C# CONVERTER TODO TASK: #define macros defined in multiple preprocessor conditionals can only be replaced within the scope of the preprocessor conditional:
+                //C++ TO C# CONVERTER NOTE: The following #define macro was replaced in-line:
+                //ORIGINAL LINE: #define thread_t pthread_t
+        #define thread_t
+                //C++ TO C# CONVERTER TODO TASK: #define macros defined in multiple preprocessor conditionals can only be replaced within the scope of the preprocessor conditional:
+                //C++ TO C# CONVERTER NOTE: The following #define macro was replaced in-line:
+                //ORIGINAL LINE: #define lock_t pthread_mutex_t
+        #define lock_t
+                //C++ TO C# CONVERTER TODO TASK: #define macros defined in multiple preprocessor conditionals can only be replaced within the scope of the preprocessor conditional:
+                //C++ TO C# CONVERTER NOTE: The following #define macro was replaced in-line:
+                //ORIGINAL LINE: #define initlock(f) pthread_mutex_init(f,NULL)
+        #define initlock
+                //C++ TO C# CONVERTER TODO TASK: #define macros defined in multiple preprocessor conditionals can only be replaced within the scope of the preprocessor conditional:
+                //C++ TO C# CONVERTER NOTE: The following #define macro was replaced in-line:
+                //ORIGINAL LINE: #define lock(f) pthread_mutex_lock(f)
+        #define lock
+                //C++ TO C# CONVERTER TODO TASK: #define macros defined in multiple preprocessor conditionals can only be replaced within the scope of the preprocessor conditional:
+                //C++ TO C# CONVERTER NOTE: The following #define macro was replaced in-line:
+                //ORIGINAL LINE: #define unlock(f) pthread_mutex_unlock(f)
+        #define unlock
+        #define FILEPATHSEP
+                    */
+
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct CRITICAL_SECTION
+        {
+            public IntPtr DebugInfo;
+            public int LockCount;
+            public int RecursionCount;
+            public IntPtr OwningThread;
+            public IntPtr LockSemaphore;
+            public UIntPtr SpinCount;
+        }
+
+
+
+        internal static class DefineConstants
+        {
+#if WIN32
+	public const char FILEPATHSEP = '\\';
+#else
+           // public const char FILEPATHSEP = '/';
+#endif
+        }
+
+
         const int NEXOBS = 0;
         const int NFREQ = 3;
         const int MAXANT = 64;
@@ -32,23 +91,9 @@ namespace RealTimeMonitor
         const int MAXSOLBUF = 256;
         const int MAXGISLAYER = 32;
         const int MAXOBSBUF = 128;
-        /*
-        # if WIN32
-        const thread_t =   HANDLE
-        #define lock_t      CRITICAL_SECTION
-        #define initlock(f) InitializeCriticalSection(f)
-        #define lock(f)     EnterCriticalSection(f)
-        #define unlock(f)   LeaveCriticalSection(f)
-        #define FILEPATHSEP "\\"
-        #else
-        #define thread_t    pthread_t
-        #define lock_t      pthread_mutex_t
-        #define initlock(f) pthread_mutex_init(f,NULL)
-        #define lock(f)     pthread_mutex_lock(f)
-        #define unlock(f)   pthread_mutex_unlock(f)
-        #define FILEPATHSEP "/"
-        #endif
-        */
+
+
+
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]   /* time struct */
 #pragma warning disable IDE1006 // Naming Styles
@@ -126,8 +171,8 @@ namespace RealTimeMonitor
             public fixed char code[MAXANT];                                   /* valid time start and end */
             public gtime_t ts, te;                                      /* phase center offset e/n/u or x/y/z (m) */
             //[MarshalAs(UnmanagedType.ByValArray, SizeConst = 9)]
-            public double off[NFREQ, 3];                               /* phase center offset e/n/u or x/y/z (m) */
-            public double var[NFREQ, 19];                                       /* phase center variation (m) */
+            public fixed double off[NFREQ*3];                               /* phase center offset e/n/u or x/y/z (m) */
+            public fixed double var[NFREQ*19];                                       /* phase center variation (m) */
                                                                         /* el=90,85,...,0 or nadir=0,1,2,3,... (deg) */
 
         }
@@ -154,8 +199,8 @@ namespace RealTimeMonitor
             public fixed char type[MAXANT];                                   /* serial number or satellite code */
             public fixed char code[MAXANT];                                   /* valid time start and end */
             public gtime_t ts, te;                                      /* phase center offset e/n/u or x/y/z (m) */
-            public double off[NFREQ, 3];                               /* phase center offset e/n/u or x/y/z (m) */
-            public double var[NFREQ, 19];                                      /* phase center variation (m) */
+            public fixed double off[NFREQ*3];                               /* phase center offset e/n/u or x/y/z (m) */
+            public fixed double var[NFREQ*19];                                      /* phase center variation (m) */
             /* el=90,85,...,0 or nadir=0,1,2,3,... (deg) */
 
         }
@@ -231,31 +276,31 @@ namespace RealTimeMonitor
                 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)] 
 #pragma warning disable IDE1006 // Naming Styles
-        public struct peph_t
+        public unsafe struct peph_t
 #pragma warning restore IDE1006 // Naming Styles
         {        /* precise ephemeris type */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
             public gtime_t time;       /* time (GPST) */
             public int index;          /* ephemeris index for multiple files */
-            public double pos[MAXSAT,4]; /* satellite position/clock (ecef) (m|s) */
-            public float std[MAXSAT, 4]; /* satellite position/clock std (m|s) */
-            public double vel[MAXSAT, 4]; /* satellite velocity/clk-rate (m/s|s/s) */
-            public float vst[MAXSAT, 4]; /* satellite velocity/clk-rate std (m/s|s/s) */
-            public float cov[MAXSAT, 3]; /* satellite position covariance (m^2) */
-            public float vco[MAXSAT, 3]; /* satellite velocity covariance (m^2) */
+            public fixed double pos[MAXSAT*4]; /* satellite position/clock (ecef) (m|s) */
+            public fixed float std[MAXSAT*4]; /* satellite position/clock std (m|s) */
+            public fixed double vel[MAXSAT*4]; /* satellite velocity/clk-rate (m/s|s/s) */
+            public fixed float vst[MAXSAT*4]; /* satellite velocity/clk-rate std (m/s|s/s) */
+            public fixed float cov[MAXSAT*3]; /* satellite position covariance (m^2) */
+            public fixed float vco[MAXSAT*3]; /* satellite velocity covariance (m^2) */
         } ;
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)] 
 #pragma warning disable IDE1006 // Naming Styles
-        public struct pclk_t
+        public unsafe struct pclk_t
 #pragma warning restore IDE1006 // Naming Styles
         {
             /* precise clock type */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
             public gtime_t time;       /* time (GPST) */
             public int index;          /* clock index for multiple files */
-            public double clk[MAXSAT, 1]; /* satellite clock (s) */
-            public float std[MAXSAT, 1]; /* satellite clock std (s) */
+            public fixed double clk[MAXSAT]; /* satellite clock (s) */
+            public fixed float std[MAXSAT]; /* satellite clock std (s) */
         };
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)] 
@@ -342,8 +387,8 @@ namespace RealTimeMonitor
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
             /* satellite fcb data type */
             public gtime_t ts, te;      /* start/end time (GPST) */
-            public fixed double bias[MAXSAT][3]; /* fcb value   (cyc) */
-            public fixed double std[MAXSAT][3]; /* fcb std-dev (cyc) */
+            public fixed double bias[MAXSAT*3]; /* fcb value   (cyc) */
+            public fixed double std[MAXSAT*3]; /* fcb std-dev (cyc) */
         };
 
                 
@@ -571,7 +616,7 @@ namespace RealTimeMonitor
             public gtime_t t0;         /* epoch time (GPST) */
             public double tspan;       /* valid time span (s) */
             public fixed double pos0[2];     /* reference position {lat,lon} (rad) */
-            public fixed double coef[3, 2];  /* coefficients lat x lon (3 x 2) */
+            public fixed double coef[3*2];  /* coefficients lat x lon (3 x 2) */
         };
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)] 
@@ -608,8 +653,8 @@ namespace RealTimeMonitor
         { 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 9)]        /* ppp corrections type */
             public int nsta;           /* number of stations */
-            public fixed char stas[MAXSTA][8]; /* station names */
-            public fixed double rr[MAXSTA][3]; /* station ecef positions (m) */
+            public fixed char stas[MAXSTA*8]; /* station names */
+            public fixed double rr[MAXSTA*3]; /* station ecef positions (m) */
             public fixed int ns[MAXSTA], nsmax[MAXSTA]; /* number of stec data */
             public fixed int nt[MAXSTA], ntmax[MAXSTA]; /* number of trop data */
             public unsafe stec_t* stec; /* stec data */
@@ -653,9 +698,9 @@ namespace RealTimeMonitor
             public fixed double ion_cmp[8];  /* BeiDou iono model parameters {a0,a1,a2,a3,b0,b1,b2,b3} */
             public fixed double ion_irn[8];  /* IRNSS iono model parameters {a0,a1,a2,a3,b0,b1,b2,b3} */
             public int leaps;          /* leap seconds (s) */
-            public fixed double lam[MAXSAT][NFREQ]; /* carrier wave lengths (m) */
-            public fixed double cbias[MAXSAT][3]; /* satellite dcb (0:p1-p2,1:p1-c1,2:p2-c2) (m) */
-            public fixed double rbias[MAXRCV][2] [3]; /* receiver dcb (0:p1-p2,1:p1-c1,2:p2-c2) (m) */
+            public fixed double lam[MAXSAT*NFREQ]; /* carrier wave lengths (m) */
+            public fixed double cbias[MAXSAT*3]; /* satellite dcb (0:p1-p2,1:p1-c1,2:p2-c2) (m) */
+            public fixed double rbias[MAXRCV*2*3]; /* receiver dcb (0:p1-p2,1:p1-c1,2:p2-c2) (m) */
             public fixed double wlbias[MAXSAT];   /* wide-lane bias (cycle) */
             public fixed double glo_cpbias[4];    /* glonass code-phase bias {1C,1P,2C,2P} (m) */
             public fixed char glo_fcn[MAXPRNGLO + 1]; /* glonass frequency channel number + 8 */
@@ -783,12 +828,12 @@ namespace RealTimeMonitor
             public unsafe ssr_t* ssr;  /* output of ssr corrections */
             public fixed char msg[128];      /* special message */
             public fixed char msgtype[256];  /* last message type */
-            public fixed char msmtype[6][128]; /* msm signal types */
+            public fixed char msmtype[6*128]; /* msm signal types */
             public int obsflag;        /* obs data complete flag (1:ok,0:not complete) */
             public int ephsat;         /* update satellite of ephemeris */
-            public fixed double cp[MAXSAT][NFREQ+NEXOBS]; /* carrier-phase measurement */
-            public fixed short time_lock[MAXSAT] [NFREQ+NEXOBS]; /* lock time */
-            public fixed short loss[MAXSAT][NFREQ+NEXOBS]; /* loss of lock count */
+            public fixed double cp[MAXSAT*(NFREQ+NEXOBS)]; /* carrier-phase measurement */
+            public fixed short time_lock[MAXSAT*(NFREQ+NEXOBS)]; /* lock time */
+            public fixed short loss[MAXSAT*(NFREQ+NEXOBS)]; /* loss of lock count */
             public unsafe gtime_t** lltime; /* last lock time */
             public int nbyte;          /* number of bytes in message buffer */
             public int nbit;           /* number of bits in word buffer */
@@ -812,7 +857,7 @@ namespace RealTimeMonitor
             public char type;        /* rinex file type ('O','N',...) */
             public int sys;         /* navigation system */
             public int tsys;        /* time system */
-            public fixed char tobs[7][MAXOBSTYPE] [4]; /* rinex obs types */
+            public fixed char tobs[7*MAXOBSTYPE*4]; /* rinex obs types */
             public obs_t obs;         /* observation data */
             public nav_t nav;         /* navigation data */
             public sta_t sta;         /* station info */
@@ -854,8 +899,8 @@ namespace RealTimeMonitor
         { 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 5)]        /* extended receiver error model */
             public fixed int ena[4];         /* model enabled */
-            public fixed double cerr[4][NFREQ*2]; /* code errors (m) */
-            public fixed double perr[4][NFREQ*2]; /* carrier-phase errors (m) */
+            public fixed double cerr[4*NFREQ*2]; /* code errors (m) */
+            public fixed double perr[4*NFREQ*2]; /* carrier-phase errors (m) */
             public fixed double gpsglob[NFREQ]; /* gps-glonass h/w bias (m) */
             public fixed double gloicb[NFREQ]; /* glonass interchannel bias (m/fn) */
         };
@@ -868,7 +913,7 @@ namespace RealTimeMonitor
         { 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]        /* SNR mask type */
             public fixed int ena[2];         /* enable flag {rover,base} */
-            public fixed double mask[NFREQ][9]; /* mask (dBHz) at 5,10,...85 deg */
+            public fixed double mask[NFREQ*9]; /* mask (dBHz) at 5,10,...85 deg */
         };
 
                 
@@ -923,17 +968,17 @@ namespace RealTimeMonitor
            public fixed double baseline[2]; /* baseline length constraint {const,sigma} (m) */
            public fixed double ru[3];       /* rover position for fixed mode {x,y,z} (ecef) (m) */
            public fixed double rb[3];       /* base position for relative mode {x,y,z} (ecef) (m) */
-           public fixed char anttype[2][MAXANT]; /* antenna types {rover,base} */
-           public fixed double antdel[2][3]; /* antenna delta {{rov_e,rov_n,rov_u},{ref_e,ref_n,ref_u}} */
+           public fixed char anttype[2*MAXANT]; /* antenna types {rover,base} */
+           public fixed double antdel[2*3]; /* antenna delta {{rov_e,rov_n,rov_u},{ref_e,ref_n,ref_u}} */
            public unsafe pcv_t* pcvr;      /* receiver antenna parameters {rov,base} */
            public fixed char exsats[MAXSAT]; /* excluded satellites (1:excluded,2:included) */
            public int maxaveep;      /* max averaging epoches */
            public int initrst;       /* initialize by restart */
            public int outsingle;     /* output single by dgps/float/fix/ppp outage */
-           public fixed char rnxopt[2][256]; /* rinex options {rover,base} */
+           public fixed char rnxopt[2*256]; /* rinex options {rover,base} */
            public fixed int posopt[6];     /* positioning options */
            public int syncsol;       /* solution sync mode (0:off,1:on) */
-           public fixed double odisp[2][6*11]; /* ocean tide loading parameters {rov,base} */
+           public fixed double odisp[2*6*11]; /* ocean tide loading parameters {rov,base} */
            public exterr_t exterr;    /* extended receiver error model */
            public int freqopt;        /* disable L2-AR */
            public fixed char pppopt[256];   /* ppp option */
@@ -1003,19 +1048,19 @@ namespace RealTimeMonitor
             public int navsys;         /* navigation system */
             public int obstype;        /* observation type */
             public int freqtype;       /* frequency type */
-            public fixed char mask[7][64];   /* code mask {GPS,GLO,GAL,QZS,SBS,CMP,IRN} */
+            public fixed char mask[7*64];   /* code mask {GPS,GLO,GAL,QZS,SBS,CMP,IRN} */
             public fixed char staid[32];    /* station id for rinex file name */
             public fixed char prog[32];    /* program */
             public fixed char runby[32];    /* run-by */
             public fixed char marker[64];    /* marker name */
             public fixed char markerno[32];  /* marker number */
             public fixed char markertype[32]; /* marker type (ver.3) */
-            public fixed char name[2][32];   /* observer/agency */
-            public fixed char rec[3][32];   /* receiver #/type/vers */
-            public fixed char ant[3][32];   /* antenna #/type */
+            public fixed char name[2*32];   /* observer/agency */
+            public fixed char rec[3*32];   /* receiver #/type/vers */
+            public fixed char ant[3*32];   /* antenna #/type */
             public fixed double apppos[3];   /* approx position x/y/z */
             public fixed double antdel[3];   /* antenna delta h/e/n */
-            public fixed char comment[MAXCOMMENT][64]; /* comments */
+            public fixed char comment[MAXCOMMENT*4]; /* comments */
             public fixed char rcvopt[256];   /* receiver dependent options */
             public fixed byte exsats[MAXSAT]; /* excluded satellites */
             public int scanobs;        /* scan obs types */
@@ -1028,7 +1073,7 @@ namespace RealTimeMonitor
             public gtime_t tstart;     /* first obs time */
             public gtime_t tend;       /* last obs time */
             public gtime_t trtcm;      /* approx log start time for rtcm */
-            public fixed char tobs[7][MAXOBSTYPE] [4]; /* obs types {GPS,GLO,GAL,QZS,SBS,CMP,IRN} */
+            public fixed char tobs[7*MAXOBSTYPE*4]; /* obs types {GPS,GLO,GAL,QZS,SBS,CMP,IRN} */
             public fixed int nobs[7];        /* number of obs types {GPS,GLO,GAL,QZS,SBS,CMP,IRN} */
         };
 
@@ -1057,8 +1102,8 @@ namespace RealTimeMonitor
             public double gf2;        /* geometry-free phase L1-L5 (m) */
             public double mw;         /* MW-LC (m) */
             public double phw;        /* phase windup (cycle) */
-            public unsafe gtime_t pt[2][NFREQ]; /* previous carrier-phase time */
-            public fixed double ph[2][NFREQ]; /* previous carrier-phase observable (cycle) */
+            public unsafe gtime_t* pt; /* previous carrier-phase time */
+            public fixed double ph[2*NFREQ]; /* previous carrier-phase observable (cycle) */
         };
 
                 
@@ -1109,7 +1154,7 @@ namespace RealTimeMonitor
             public byte valid; /* half-cycle valid flag */
             public char corr;          /* half-cycle corrected (x 0.5 cyc) */
             public gtime_t ts, te;      /* time start, time end */
-            public half_cyc_t half_cyc_tag* next; /* pointer to next correction */
+            public unsafe half_cyc_t* next; /* pointer to next correction */
         };
 
         
@@ -1121,7 +1166,7 @@ namespace RealTimeMonitor
         { 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 28)]        /* receiver raw data control type */
             public gtime_t time;       /* message time */
-            public unsafe gtime_t tobs[MAXSAT][NFREQ+NEXOBS]; /* observation data time */
+            public unsafe gtime_t* tobs;//[MAXSAT*(NFREQ+NEXOBS)]; /* observation data time */
             public obs_t obs;          /* observation data */
             public obs_t obuf;         /* observation data buffer */
             public nav_t nav;          /* satellite ephemerides */
@@ -1129,13 +1174,13 @@ namespace RealTimeMonitor
             public int ephsat;         /* sat number of update ephemeris (0:no satellite) */
             public sbsmsg_t sbsmsg;    /* SBAS message */
             public fixed char msgtype[256];  /* last message type */
-            public fixed char subfrm[MAXSAT][380];  /* subframe buffer */
+            public fixed char subfrm[MAXSAT*380];  /* subframe buffer */
             public lexmsg_t lexmsg;    /* LEX message */
-            public fixed double lockt[MAXSAT][NFREQ+NEXOBS]; /* lock time (s) */
+            public fixed double lockt[MAXSAT*(NFREQ+NEXOBS)]; /* lock time (s) */
             public fixed double icpp[MAXSAT], off[MAXSAT]; 
             public double icpc; /* carrier params for ss2 */
             public fixed double prCA[MAXSAT], dpCA[MAXSAT]; /* L1/CA pseudrange/doppler for javad */
-            public fixed byte halfc[MAXSAT][NFREQ+NEXOBS]; /* half-cycle add flag */
+            public fixed byte halfc[MAXSAT*(NFREQ+NEXOBS)]; /* half-cycle add flag */
             public fixed char freqn[MAXOBS]; /* frequency number for javad */
             public int nbyte;          /* number of bytes in message buffer */
             public int len;            /* message length (bytes) */
@@ -1168,7 +1213,7 @@ namespace RealTimeMonitor
             public uint tick_o; /* output tick */
             public uint tact;  /* active tick */
             public uint inbt, outbt; /* input/output bytes at tick */
-            public lock_t lock_flag;        /* lock flag */
+            public CRITICAL_SECTION lock_flag;        /* lock flag */
             public IntPtr port;         /* type dependent port control struct */
             public fixed char path[MAXSTRPATH]; /* stream path */
             public fixed char msg[MAXSTRMSG];  /* stream message */
@@ -1207,15 +1252,15 @@ namespace RealTimeMonitor
             public int relayback;      /* relay back of output streams (0:no) */
             public int nstr;           /* number of streams (1 input + (nstr-1) outputs */
             public int npb;            /* data length in peek buffer (bytes) */
-            public fixed char cmds_periodic[16][MAXRCVCMD]; /* periodic commands */
+            public fixed char cmds_periodic[16*MAXRCVCMD]; /* periodic commands */
             public fixed double nmeapos[3];  /* NMEA request position (ecef) (m) */
             public byte* buff; /* input buffers */
             public byte* pbuf; /* peek buffer */
             public uint tick;  /* start tick */
             public unsafe stream_t* stream; /* input/output streams */
             public unsafe strconv_t* conv; /* stream converter */
-            public thread_t thread;    /* server thread */
-            public lock_t lock_flag;        /* lock flag */
+            public IntPtr thread;    /* server thread */
+            public CRITICAL_SECTION lock_flag;        /* lock flag */
         };
 
                 
@@ -1244,26 +1289,26 @@ namespace RealTimeMonitor
             public fixed byte sbuf[2]; /* output buffers {sol1,sol2} */
             public fixed byte pbuf[3]; /* peek buffers {rov,base,corr} */
             public unsafe sol_t* solbuf; /* solution buffer */
-            public fixed int nmsg[3][10]; /* input message counts */
+            public fixed int nmsg[3*10]; /* input message counts */
             public unsafe raw_t* raw;     /* receiver raw control {rov,base,corr} */
             public unsafe rtcm_t* rtcm;     /* RTCM control {rov,base,corr} */
             public unsafe gtime_t* ftime;   /* download time {rov,base,corr} */
-            public fixed char files[3][MAXSTRPATH]; /* download paths {rov,base,corr} */
+            public fixed char files[3*MAXSTRPATH]; /* download paths {rov,base,corr} */
             public unsafe obs_t** obs; /* observation data {rov,base,corr} */
             public unsafe nav_t nav;          /* navigation data */
             public unsafe sbsmsg_t* sbsmsg; /* SBAS message buffer */
             public unsafe stream_t* stream; /* streams {rov,base,corr,sol1,sol2,logr,logb,logc} */
             public unsafe stream_t* moni;     /* monitor stream */
             public uint tick;  /* start tick */
-            public thread_t thread;    /* server thread */
+            public IntPtr thread;    /* server thread */
             public int cputime;        /* CPU time (ms) for a processing cycle */
             public int prcout;         /* missing observation data count */
             public int nave;           /* number of averaging base pos */
             public fixed double rb_ave[3];   /* averaging base pos */
-            public fixed char cmds_periodic[3][MAXRCVCMD]; /* periodic commands */
+            public fixed char cmds_periodic[3*MAXRCVCMD]; /* periodic commands */
             public fixed char cmd_reset[MAXRCVCMD]; /* reset command */
             public double bl_reset;    /* baseline length to reset (km) */
-            public lock_t lock_flag;        /* lock flag */
+            public CRITICAL_SECTION lock_flag;        /* lock flag */
         };
 
                 
@@ -1311,7 +1356,7 @@ namespace RealTimeMonitor
             /* gis data list type */
             public int type;           /* data type (1:point,2:polyline,3:polygon) */
             public IntPtr data;         /* data body */
-            public gesd_t gisd_tag next; /* pointer to next */
+            public unsafe gisd_t* next; /* pointer to next */
         };
         #endregion
 
@@ -1322,7 +1367,7 @@ namespace RealTimeMonitor
 #pragma warning restore IDE1006 // Naming Styles
         { 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]        /* gis type */
-            public fixed char name[MAXGISLAYER][256]; /* name */
+            public fixed char name[MAXGISLAYER*256]; /* name */
             public fixed int flag[MAXGISLAYER];     /* flag */
             public unsafe gisd_t* data; /* gis data list */
             public fixed double bound[4];    /* boundary {lat0,lat1,lon0,lon1} */
