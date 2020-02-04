@@ -18,6 +18,7 @@ namespace RealTimeMonitor
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSignalR();
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -32,6 +33,12 @@ namespace RealTimeMonitor
 
             app.UseRouting();
 
+            app.UseSignalR( routes =>
+                {
+                    routes.MapHub<StreamHub>("/streamHub");
+                }
+            );
+            
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHub<ChatHub>("/chat", options =>
@@ -42,6 +49,7 @@ namespace RealTimeMonitor
                     options.Transports = HttpTransportType.LongPolling | HttpTransportType.WebSockets;
                 });
             });
+            
             
         }
     }

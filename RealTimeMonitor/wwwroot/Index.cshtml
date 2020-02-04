@@ -1,0 +1,28 @@
+﻿@page
+
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div class="container">
+    <div class="row"></div>
+    <div class="row">
+        <div class="col-6"></div>
+        <div class="col-6">
+            <input type="button" id="streamButton" value="Start Streaming" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <hr />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-6"></div>
+        <div class="col-6">
+            <ul id="messageList"></ul>
+        </div>
+    </div>
+</div>
+<script src="~/lib/signalr/signalr.js"></script>
+<script src="~/js/siganrstream.js"></script>
