@@ -1375,6 +1375,11 @@ namespace RealTimeMonitor
             public exterr_t exterr;    /* extended receiver error model */
             public int freqopt;        /* disable L2-AR */
             public fixed char pppopt[256];   /* ppp option */
+
+            public static implicit operator prcopt_t(object v)
+            {
+                throw new NotImplementedException();
+            }
         };
 
 
@@ -1403,6 +1408,11 @@ namespace RealTimeMonitor
             public fixed char sep[64];       /* field separator */
             public fixed char prog[64];      /* program name */
             public double maxsolstd;   /* max std-dev for solution output (m) (0:all) */
+
+            public static implicit operator solopt_t(object v)
+            {
+                throw new NotImplementedException();
+            }
         };
 
 
@@ -1801,7 +1811,7 @@ namespace RealTimeMonitor
             nf = 2,
             navsys = SYS_GPS,   /* mode,soltype,nf,navsys */
             elmin = 15.0 * D2R,
-            snrmask = 0,           /* elmin,snrmask */
+            snrmask = new snrmask_t(),           /* elmin,snrmask */
             sateph = 0,
             modear = 1,
             glomodear = 1,
@@ -1825,7 +1835,7 @@ namespace RealTimeMonitor
             err = new double[] {100.0,0.003,0.003,0.0,1.0}, /* err[] */
             std = new double[] {30.0,0.03,0.3},            /* std[] */
             prn = new double[] {1E-4,1E-3,1E-4,1E-1,1E-2,0.0}, /* prn[] */
-            sclkstab = 5E - 12,                      /* sclkstab */
+            sclkstab = 5E-12,                      /* sclkstab */
             thresar = new double[] {3.0,0.9999,0.25,0.1,0.05}, /* thresar */
             elmaskar = 0.0,
             almaskhold = 0.0,
@@ -1836,17 +1846,30 @@ namespace RealTimeMonitor
             baseline = new double[] {0},
             ru = new double[] {0},
             rb = new double[] {0},                /* baseline,ru,rb */
-            anttype = new char[] {"",""},                    /* anttype */
+            anttype = Array.Empty<char>(),                    /* anttype */
             antdel = new double[] {0},
-            pcv = new exterr_t {0},
-            exsats = new char[] {}             /* antdel,pcv,exsats */
-};
+            pcv = new exterr_t() ,
+            exsats = Array.Empty<char>()             /* antdel,pcv,exsats */
+        };
        public solopt_t solopt_default = new { /* defaults solution output options */
-    SOLF_LLH,TIMES_GPST,1,3,    /* posf,times,timef,timeu */
-    0,1,0,0,0,0,0,              /* degf,outhead,outopt,outvel,datum,height,geoid */
-    0,0,0,                      /* solstatic,sstat,trace */
-    {0.0,0.0},                  /* nmeaintv */
-    " ",""                      /* separator/program name */
+           posf = SOLF_LLH,
+           times =TIMES_GPST,
+           timef = 1,
+           timeu = 3,    /* posf,times,timef,timeu */
+           degf = 0,
+           outhead = 1,
+           outopt = 0,
+           outvel = 0,
+           datum = 0,
+           height = 0,
+           geoid = 0,              /* degf,outhead,outopt,outvel,datum,height,geoid */
+           solstatic = 0,
+           sstat = 0,
+           trace = 0,                      /* solstatic,sstat,trace */
+           nmeaintv = new double[] {0.00,0.00},                  /* nmeaintv */
+           sep = new char[] { Convert.ToChar(65) },
+           prog = Array.Empty<char>(),                      /* separator/program name */
+           maxsolstd = 0.00
 };
 
 
