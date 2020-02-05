@@ -1836,8 +1836,10 @@ namespace RealTimeMonitor
             baseline = new double[] {0},
             ru = new double[] {0},
             rb = new double[] {0},                /* baseline,ru,rb */
-    {"",""},                    /* anttype */
-    {{0}},{{0}},{0}             /* antdel,pcv,exsats */
+            anttype = new char[] {"",""},                    /* anttype */
+            antdel = new double[] {0},
+            pcv = new exterr_t {0},
+            exsats = new char[] {}             /* antdel,pcv,exsats */
 };
        public solopt_t solopt_default = new { /* defaults solution output options */
     SOLF_LLH,TIMES_GPST,1,3,    /* posf,times,timef,timeu */
