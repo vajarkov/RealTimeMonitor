@@ -71,8 +71,8 @@ namespace RealTimeMonitor
         double MaxBL;
         int PSol, PSolS, PSolE,  SolCurrentStat;
         int[] Nsat = new int[2];
-        int? SolStat, Nvsat;
-        double? SolRov, SolRef, Qr, VelRov, Age, Ratio;
+        int[] SolStat, Nvsat;
+        double[] SolRov, SolRef, Qr, VelRov, Age, Ratio;
         int TimeSys, SolType;
         string InTimeStart, InTimeSpeed, ExSats;
         int PlotType1, FreqType1, PlotType2, FreqType2;
@@ -82,7 +82,7 @@ namespace RealTimeMonitor
         int BLMode1, BLMode2, BLMode3, BLMode4;
         int MoniPort, OpenPort;
         int NMapPnt;
-        DataRTK.gtime_t? Time;
+        DataRTK.gtime_t[] Time;
 
         int[,] Sat = new int[2, DataRTK.MAXSAT];
         int[,,] Snr = new int[2, DataRTK.MAXSAT, DataRTK.NFREQ];
@@ -105,7 +105,7 @@ namespace RealTimeMonitor
         {
             while (true)
             {
-                char[] p = new char[];
+                //char[] p = new char[];
                 char[] argv = new char[32], buff = new char[1024];// file = new char[1024];
                 string file = "rtknavi.exe";
                 //Option Reciver
@@ -133,19 +133,19 @@ namespace RealTimeMonitor
                         for (int k = 0; k < DataRTK.NFREQ; k++) Snr[i, j, k] = 0;
                     }
 
-                PrcOpt = prcopt_default;
-                SolOpt = solopt_default;
+                PrcOpt = DataRTK.prcopt_default;
+                SolOpt = DataRTK.solopt_default;
 
                 TLEData.n = TLEData.nmax = 0;
-                TLEData.data = NULL;
+                //TLEData.data = { };
 
                 for (int i = 0; i < 3; i++)
                 {
                     TrkOri[i] = 0.0;
                 }
 
-                if (!(p = strrchr(file, '.'))) p = file + strlen(file);
-                strcpy(p, ".ini");
+                if (file.IndexOf('.') != 0) _ = file.Replace("exe", "ini");
+                
                 IniFile = file;
 
                 InitSolBuff();
@@ -168,5 +168,41 @@ namespace RealTimeMonitor
             */
             writer.TryComplete();
         }
+
+
+        private void InitSolBuff()
+        {
+            double[] ep = new double[] { 2000, 1, 1, 0, 0, 0 };
+            int i, j;
+
+            //trace(3, "InitSolBuff\n");
+
+            //delete[] Time; delete[] SolStat; delete[] Nvsat; delete[] SolRov;
+            //delete[] SolRef; delete[] Qr; delete[] VelRov; delete[] Age;
+            //delete[] Ratio;
+
+            if (SolBuffSize <= 0) SolBuffSize = 1;
+            Time = new DataRTK.gtime_t[SolBuffSize];
+            SolStat = new int[SolBuffSize];
+            Nvsat = new int[SolBuffSize];
+            SolRov = new double[SolBuffSize * 3];
+            SolRef = new double[SolBuffSize * 3];
+            VelRov = new double[SolBuffSize * 3];
+            Qr = new double[SolBuffSize * 9];
+            Age = new double[SolBuffSize];
+            Ratio = new double[SolBuffSize];
+            PSol = PSolS = PSolE = 0;
+            for (i = 0; i < SolBuffSize; i++)
+            {
+                Time[i] = DataRTK.epoch2time(ep);
+                SolStat[i] = Nvsat[i] = 0;
+                for (j = 0; j < 3; j++) SolRov[j + i * 3] = SolRef[j + i * 3] = VelRov[j + i * 3] = 0.0;
+                for (j = 0; j < 9; j++) Qr[j + i * 9] = 0.0;
+                Age[i] = Ratio[i] = 0.0;
+            }
+            //ScbSol->Max = 0; 
+            //ScbSol->Position = 0;
+        }
+
     }
 }

@@ -41,6 +41,36 @@ namespace RealTimeMonitor
         }
 
 
+        public const int MAXSCALE = 18;
+        public const int MAXMAPPNT = 10;
+
+        public const string PRGNAME = "RTKNAVI"  ;         // program name
+        /*public const int TRACEFILE   "rtknavi_%Y%m%d%h%M.trace" // debug trace file
+        public const int STATFILE    "rtknavi_%Y%m%d%h%M.stat"  // solution status file
+        public const int CLORANGE    (TColor)0x00AAFF
+        public const int CLLGRAY     (TColor)0xDDDDDD
+        public const int CHARDEG     0x00B0              // character code of degree
+        public const int SATSIZE     20                  // satellite circle size in skyplot
+        public const int MINSNR      10                  // minimum snr
+        public const int MAXSNR      60                  // maximum snr
+        public const int KEYF6       0x75                // code of function key F6
+        public const int KEYF7       0x76                // code of function key F7
+        public const int KEYF8       0x77                // code of function key F8
+        public const int KEYF9       0x78                // code of function key F9
+        public const int KEYF10      0x79                // code of function key F10
+        public const int POSFONTNAME "Palatino Linotype"
+        public const int POSFONTSIZE 12
+        public const int MINBLLEN    0.01                // minimum baseline length to show
+        */
+        public const int KACYCLE = 1000;// keep alive cycle (ms)
+        public const int TIMEOUT = 10000;// inactive timeout time (ms)
+        public const int DEFAULTPORT = 52001;// default monitor port number
+        public const int MAXPORTOFF = 9;// max port number offset
+        public const int MAXTRKSCALE = 23;// track scale
+        public const int SPLITTER_WIDTH = 6;// splitter width
+        public const int MAXPANELMODE = 7;// max panel mode
+
+
         public const double PI = 3.1415926535897932;/* pi */
         public const double D2R = (PI / 180.0);/* deg to rad */
         public const double R2D = (180.0 / PI);/* rad to deg */
@@ -750,7 +780,7 @@ namespace RealTimeMonitor
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             /* norad two line element type */
             public int n, nmax;         /* number/max number of two line element data */
-            public unsafe tled_t* data;       /* norad two line element data */
+            public tled_t data;       /* norad two line element data */
         };
 
 
@@ -1290,12 +1320,18 @@ namespace RealTimeMonitor
         public unsafe struct exterr_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 5)]        /* extended receiver error model */
-            public fixed int ena[4];         /* model enabled */
-            public fixed double cerr[4 * NFREQ * 2]; /* code errors (m) */
-            public fixed double perr[4 * NFREQ * 2]; /* carrier-phase errors (m) */
-            public fixed double gpsglob[NFREQ]; /* gps-glonass h/w bias (m) */
-            public fixed double gloicb[NFREQ]; /* glonass interchannel bias (m/fn) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]        /* extended receiver error model */
+            public int[] ena;         /* model enabled */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4 * NFREQ * 2)]
+            public double cerr; /* code errors (m) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4 * NFREQ * 2)]
+            public double[] perr; /* carrier-phase errors (m) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = NFREQ)]
+            public double[] gpsglob; /* gps-glonass h/w bias (m) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = NFREQ)]
+            public double[] gloicb; /* glonass interchannel bias (m/fn) */
+
+            
         };
 
 
@@ -1307,6 +1343,12 @@ namespace RealTimeMonitor
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]        /* SNR mask type */
             public fixed int ena[2];         /* enable flag {rover,base} */
             public fixed double mask[NFREQ * 9]; /* mask (dBHz) at 5,10,...85 deg */
+
+            public snrmask_t(int ena1, int ena2)
+            {
+                this.ena[0] = ena1;
+                this.ena[1] = ena2;
+            }
         };
 
 
@@ -1343,43 +1385,55 @@ namespace RealTimeMonitor
             public int refpos;         /* base position for relative mode */
             /* (0:pos in prcopt,  1:average of single pos, */
             /*  2:read from file, 3:rinex header, 4:rtcm pos) */
-            public fixed double eratio[NFREQ]; /* code/phase error ratio */
-            public fixed double err[5];      /* measurement error factor */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = NFREQ)]
+            public double[] eratio; /* code/phase error ratio */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 5)]
+            public double[] err;      /* measurement error factor */
             /* [0]:reserved */
             /* [1-3]:error factor a/b/c of phase (m) */
             /* [4]:doppler frequency (hz) */
-            public fixed double std[3];      /* initial-state std [0]bias,[1]iono [2]trop */
-            public fixed double prn[6];      /* process-noise std [0]bias,[1]iono [2]trop [3]acch [4]accv [5] pos */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public double[] std;      /* initial-state std [0]bias,[1]iono [2]trop */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
+            public double[] prn;      /* process-noise std [0]bias,[1]iono [2]trop [3]acch [4]accv [5] pos */
             public double sclkstab;    /* satellite clock stability (sec/sec) */
-            public fixed double thresar[8];  /* AR validation threshold */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
+            public double[] thresar;  /* AR validation threshold */
             public double elmaskar;    /* elevation mask of AR for rising satellite (deg) */
             public double elmaskhold;  /* elevation mask to hold ambiguity (deg) */
             public double thresslip;   /* slip threshold of geometry-free phase (m) */
             public double maxtdiff;    /* max difference of time (sec) */
             public double maxinno;     /* reject threshold of innovation (m) */
             public double maxgdop;     /* reject threshold of gdop */
-            public fixed double baseline[2]; /* baseline length constraint {const,sigma} (m) */
-            public fixed double ru[3];       /* rover position for fixed mode {x,y,z} (ecef) (m) */
-            public fixed double rb[3];       /* base position for relative mode {x,y,z} (ecef) (m) */
-            public fixed char anttype[2 * MAXANT]; /* antenna types {rover,base} */
-            public fixed double antdel[2 * 3]; /* antenna delta {{rov_e,rov_n,rov_u},{ref_e,ref_n,ref_u}} */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public double[] baseline; /* baseline length constraint {const,sigma} (m) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public double[] ru;       /* rover position for fixed mode {x,y,z} (ecef) (m) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public double[] rb;       /* base position for relative mode {x,y,z} (ecef) (m) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2 * MAXANT)]
+            public char[] anttype; /* antenna types {rover,base} */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2 * 3)]
+            public double[] antdel; /* antenna delta {{rov_e,rov_n,rov_u},{ref_e,ref_n,ref_u}} */
             public unsafe pcv_t* pcvr;      /* receiver antenna parameters {rov,base} */
-            public fixed char exsats[MAXSAT]; /* excluded satellites (1:excluded,2:included) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
+            public char[] exsats; /* excluded satellites (1:excluded,2:included) */
             public int maxaveep;      /* max averaging epoches */
             public int initrst;       /* initialize by restart */
             public int outsingle;     /* output single by dgps/float/fix/ppp outage */
-            public fixed char rnxopt[2 * 256]; /* rinex options {rover,base} */
-            public fixed int posopt[6];     /* positioning options */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2*256)]
+            public char[] rnxopt; /* rinex options {rover,base} */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
+            public int[] posopt;     /* positioning options */
             public int syncsol;       /* solution sync mode (0:off,1:on) */
-            public fixed double odisp[2 * 6 * 11]; /* ocean tide loading parameters {rov,base} */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2 * 6 * 11)]
+            public double[] odisp; /* ocean tide loading parameters {rov,base} */
             public exterr_t exterr;    /* extended receiver error model */
             public int freqopt;        /* disable L2-AR */
-            public fixed char pppopt[256];   /* ppp option */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
+            public char[] pppopt;   /* ppp option */
 
-            public static implicit operator prcopt_t(object v)
-            {
-                throw new NotImplementedException();
-            }
+
         };
 
 
@@ -1403,16 +1457,16 @@ namespace RealTimeMonitor
             public int solstatic;      /* solution of static mode (0:all,1:single) */
             public int sstat;          /* solution statistics level (0:off,1:states,2:residuals) */
             public int trace;          /* debug trace level (0:off,1-5:debug) */
-            public fixed double nmeaintv[2]; /* nmea output interval (s) (<0:no,0:all) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public double[] nmeaintv; /* nmea output interval (s) (<0:no,0:all) */
             /* nmeaintv[0]:gprmc,gpgga,nmeaintv[1]:gpgsv */
-            public fixed char sep[64];       /* field separator */
-            public fixed char prog[64];      /* program name */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 64)]
+            public char[] sep;       /* field separator */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 64)]
+            public char[] prog;      /* program name */
             public double maxsolstd;   /* max std-dev for solution output (m) (0:all) */
 
-            public static implicit operator solopt_t(object v)
-            {
-                throw new NotImplementedException();
-            }
+
         };
 
 
@@ -1680,7 +1734,7 @@ namespace RealTimeMonitor
             public fixed double nmeapos[3];  /* NMEA request position (ecef) (m) */
             public int buffsize;       /* input buffer size (bytes) */
             public fixed int format[3];      /* input format {rov,base,corr} */
-            public unsafe solopt_t* solopt; /* output solution options {sol1,sol2} */
+            public solopt_t solopt; /* output solution options {sol1,sol2} */
             public int navsel;         /* ephemeris select (0:all,1:rover,2:base,3:corr) */
             public int nsbs;           /* number of sbas message */
             public int nsol;           /* number of solution buffer */
@@ -1804,14 +1858,16 @@ namespace RealTimeMonitor
         };
 
 
-        
-        public prcopt_t prcopt_default = new { /* defaults processing options */
+
+        public static prcopt_t prcopt_default = new prcopt_t
+        { /* defaults processing options */
             mode = PMODE_SINGLE,
             soltype = 0,
             nf = 2,
             navsys = SYS_GPS,   /* mode,soltype,nf,navsys */
             elmin = 15.0 * D2R,
-            snrmask = new snrmask_t(),           /* elmin,snrmask */
+            snrmask = new snrmask_t(0, 0),           /* elmin,snrmask */
+
             sateph = 0,
             modear = 1,
             glomodear = 1,
@@ -1820,38 +1876,42 @@ namespace RealTimeMonitor
             minlock = 0,
             minfix = 10,
             armaxiter = 1,                   /* maxout,minlock,minfix,armaxiter */
-            estion = 0,
-            esttrop = 0,
+            ionoopt = 0,
+            tropopt = 0,
             dynamics = 0,
-            tidecorr = 0,                    /* estion,esttrop,dynamics,tidecorr */
+            tidecorr = 0,
             niter = 1,
             codesmooth = 0,
             intpref = 0,
             sbascorr = 0,
-            sbassatsel = 0,                  /* niter,codesmooth,intpref,sbascorr,sbassatsel */
+            sbassatsel = 0,
             rovpos = 0,
-            refpos = 0,                        /* rovpos,refpos */
-            eratio = new double[] {100.0,100.0},              /* eratio[] */
-            err = new double[] {100.0,0.003,0.003,0.0,1.0}, /* err[] */
-            std = new double[] {30.0,0.03,0.3},            /* std[] */
-            prn = new double[] {1E-4,1E-3,1E-4,1E-1,1E-2,0.0}, /* prn[] */
+            refpos = 0,
+            eratio = new double[] { 100.0, 100.0 } ,              /* eratio[] */
+            err = new double[] { 100.0, 0.003, 0.003, 0.0, 1.0 },
+            std = new double[] { 30.0, 0.03, 0.3 },            /* std[] */
+            prn = new double[] { 1E-4, 1E-3, 1E-4, 1E-1, 1E-2, 0.0 }, /* prn[] */
             sclkstab = 5E-12,                      /* sclkstab */
-            thresar = new double[] {3.0,0.9999,0.25,0.1,0.05}, /* thresar */
+            thresar = new double[] { 3.0, 0.9999, 0.25, 0.1, 0.05 }, /* thresar */
             elmaskar = 0.0,
-            almaskhold = 0.0,
+            elmaskhold = 0.0,
             thresslip = 0.05,               /* elmaskar,almaskhold,thresslip */
-            maxtdif = 30.0,
+            maxtdiff = 30.0,
             maxinno = 30.0,
             maxgdop = 30.0,             /* maxtdif,maxinno,maxgdop */
-            baseline = new double[] {0},
-            ru = new double[] {0},
-            rb = new double[] {0},                /* baseline,ru,rb */
+            baseline = new double[] { 0 },
+            ru = new double[] { 0 },
+            rb = new double[] { 0 },                /* baseline,ru,rb */
             anttype = Array.Empty<char>(),                    /* anttype */
-            antdel = new double[] {0},
-            pcv = new exterr_t() ,
+            antdel = new double[] { 0 },
+            exterr = new exterr_t(),
             exsats = Array.Empty<char>()             /* antdel,pcv,exsats */
         };
-       public solopt_t solopt_default = new { /* defaults solution output options */
+    
+
+
+       public static solopt_t solopt_default = new solopt_t
+       { /* defaults solution output options */
            posf = SOLF_LLH,
            times =TIMES_GPST,
            timef = 1,
