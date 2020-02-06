@@ -40,7 +40,7 @@ namespace RealTimeMonitor
 #endif
         }
 
-
+        #region Константы
         public const int MAXSCALE = 18;
         public const int MAXMAPPNT = 10;
 
@@ -516,8 +516,10 @@ namespace RealTimeMonitor
         public const double P2_55 = 2.775557561562891E-17; /* 2^-55 */
 
 
+        #endregion
 
-
+        
+        #region Структуры
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]   /* time struct */
 #pragma warning disable IDE1006 // Naming Styles
         public unsafe struct gtime_t
@@ -1731,28 +1733,38 @@ namespace RealTimeMonitor
             public int cycle;          /* processing cycle (ms) */
             public int nmeacycle;      /* NMEA request cycle (ms) (0:no req) */
             public int nmeareq;        /* NMEA request (0:no,1:nmeapos,2:single sol) */
-            public fixed double nmeapos[3];  /* NMEA request position (ecef) (m) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public double[] nmeapos;  /* NMEA request position (ecef) (m) */
             public int buffsize;       /* input buffer size (bytes) */
-            public fixed int format[3];      /* input format {rov,base,corr} */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public int[] format;      /* input format {rov,base,corr} */
             public solopt_t solopt; /* output solution options {sol1,sol2} */
             public int navsel;         /* ephemeris select (0:all,1:rover,2:base,3:corr) */
             public int nsbs;           /* number of sbas message */
             public int nsol;           /* number of solution buffer */
             public rtk_t rtk;          /* RTK control/result struct */
-            public fixed int nb[3];         /* bytes in input buffers {rov,base} */
-            public fixed int nsb[2];         /* bytes in soulution buffers */
-            public fixed int npb[3];         /* bytes in input peek buffers */
-            public fixed byte buff[3]; /* input buffers {rov,base,corr} */
-            public fixed byte sbuf[2]; /* output buffers {sol1,sol2} */
-            public fixed byte pbuf[3]; /* peek buffers {rov,base,corr} */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public int[] nb;         /* bytes in input buffers {rov,base} */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public int[] nsb;         /* bytes in soulution buffers */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public int[] npb;         /* bytes in input peek buffers */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public byte[] buff; /* input buffers {rov,base,corr} */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public byte[] sbuf; /* output buffers {sol1,sol2} */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public byte[] pbuf; /* peek buffers {rov,base,corr} */
             public unsafe sol_t* solbuf; /* solution buffer */
-            public fixed int nmsg[3 * 10]; /* input message counts */
-            public unsafe raw_t* raw;     /* receiver raw control {rov,base,corr} */
-            public unsafe rtcm_t* rtcm;     /* RTCM control {rov,base,corr} */
-            public unsafe gtime_t* ftime;   /* download time {rov,base,corr} */
-            public fixed char files[3 * MAXSTRPATH]; /* download paths {rov,base,corr} */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3 * 10)]
+            public int[] nmsg; /* input message counts */
+            public raw_t[] raw;     /* receiver raw control {rov,base,corr} */
+            public rtcm_t[] rtcm;     /* RTCM control {rov,base,corr} */
+            public gtime_t[] ftime;   /* download time {rov,base,corr} */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3 * MAXSTRPATH)]
+            public char[] files; /* download paths {rov,base,corr} */
             public unsafe obs_t** obs; /* observation data {rov,base,corr} */
-            public unsafe nav_t nav;          /* navigation data */
+            public nav_t nav;          /* navigation data */
             public unsafe sbsmsg_t* sbsmsg; /* SBAS message buffer */
             public unsafe stream_t* stream; /* streams {rov,base,corr,sol1,sol2,logr,logb,logc} */
             public unsafe stream_t* moni;     /* monitor stream */
@@ -1761,9 +1773,12 @@ namespace RealTimeMonitor
             public int cputime;        /* CPU time (ms) for a processing cycle */
             public int prcout;         /* missing observation data count */
             public int nave;           /* number of averaging base pos */
-            public fixed double rb_ave[3];   /* averaging base pos */
-            public fixed char cmds_periodic[3 * MAXRCVCMD]; /* periodic commands */
-            public fixed char cmd_reset[MAXRCVCMD]; /* reset command */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public double[] rb_ave;   /* averaging base pos */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3 * MAXRCVCMD)]
+            public char[] cmds_periodic; /* periodic commands */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXRCVCMD)]
+            public char[] cmd_reset; /* reset command */
             public double bl_reset;    /* baseline length to reset (km) */
             public CRITICAL_SECTION lock_flag;        /* lock flag */
         };
@@ -1857,8 +1872,10 @@ namespace RealTimeMonitor
             public fixed byte buff[256]; /* imu data buffer */
         };
 
+        #endregion
 
 
+        #region Инициализация структур по-умолчанию
         public static prcopt_t prcopt_default = new prcopt_t
         { /* defaults processing options */
             mode = PMODE_SINGLE,
@@ -1930,8 +1947,79 @@ namespace RealTimeMonitor
            sep = new char[] { Convert.ToChar(65) },
            prog = Array.Empty<char>(),                      /* separator/program name */
            maxsolstd = 0.00
-};
+
+        };
+
+        #endregion
 
 
+        #region Функции из библиотеки
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "epoch2time")]
+        public static extern gtime_t epoch2time(double[] ep);
+        
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strinitcom")]
+        public static extern void strinitcom();
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtksvrinit")]
+        public static extern int rtksvrinit(ref rtksvr_t svr);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strinit")]
+        public static extern void strinit(ref stream_t stream);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "timeget")]
+        public static extern gtime_t timeget();
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtksvrlock")]
+        public static extern void rtksvrlock(ref rtksvr_t svr);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtksvrunlock")]
+        public static extern void rtksvrunlock(ref rtksvr_t svr);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "readpcv")]
+        public static extern int readpcv(string file, ref pcvs_t pcvs);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "pos2ecef")]
+        public static extern void pos2ecef(double[] pos, double[] r);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strsetdir")]
+        public static extern void strsetdir(string dir);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strsetproxy")]
+        public static extern void strsetproxy(string addr);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "traceopen")]
+        public static extern void traceopen(string file);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "tracelevel")]
+        public static extern void tracelevel(int level);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtkopenstat")]
+        public static extern int rtkopenstat(string file, int level);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "opengeoid")]
+        public static extern int opengeoid(int model, string file);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "readdcb")]
+        public static extern int readdcb(string file, ref nav_t nav, ref sta_t sta);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strsetopt")]
+        public static extern void strsetopt(int[] opt);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtksvrstart")]
+        public static extern int rtksvrstart(ref rtksvr_t svr, int cycle, int buffsize, int[] strs,
+                         string[] paths, int[] formats, int navsel, string[] cmds,
+                         string[] cmds_periodic, string[] rcvopts, int nmeacycle,
+                         int nmeareq, double[] nmeapos, ref prcopt_t prcopt,
+                         solopt_t[] solopt, ref stream_t moni, string errmsg);
+
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "trace")]
+        //public static extern void trace(int level, string format, ...);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "traceclose")]
+        public static extern void traceclose();
+
+
+        #endregion
     }
 }

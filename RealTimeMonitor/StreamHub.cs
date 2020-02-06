@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -103,8 +104,7 @@ namespace RealTimeMonitor
 
         private async Task WriteItems(ChannelWriter<int> writer, int count, int delay)
         {
-            while (true)
-            {
+            
                 //char[] p = new char[];
                 char[] argv = new char[32], buff = new char[1024];// file = new char[1024];
                 string file = "rtknavi.exe";
@@ -149,8 +149,45 @@ namespace RealTimeMonitor
                 IniFile = file;
 
                 InitSolBuff();
-                strinitcom();
+                DataRTK.strinitcom();
+                
+                StreamC[0] = 0;
+                StreamC[1] = 1;
+                StreamC[2] = 0;
+                Stream[0] = 0;
+                Stream[1] = 1;
+                Stream[2] = 0;
+                Format[0] = 0;
+                Format[1] = DataRTK.STRFMT_RTCM3;
+                Format[2] = 0;
+                Paths[0,2] = "";
+                Paths[1,2] = "";
+                Paths[2,2] = "";
+                Paths[1,1] = ":@192.168.0.186:5018/:";
+                NmeaReq = 0;
+                InTimeTag = 0;
+                InTimeSpeed = "x1";
+                InTimeStart = "0";
+                InTime64Bit = 0;
+                NmeaPos[0] = 0;//str2dbl
+                NmeaPos[1] = 0;
+                NmeaPos[2] = 0;
+                MaxBL = 0;
+                ResetCmd = "";
+                DCBFileF = "";
 
+
+
+            DataRTK.rtksvrinit(ref rtksvr);
+            DataRTK.strinit(ref monistr);
+
+            LocalDirectory = "C:\\Temp";
+            SvrStart();
+
+
+
+            while (true)
+            {
 
                 await writer.WriteAsync(i);
                 await Task.Delay(delay);
@@ -204,5 +241,403 @@ namespace RealTimeMonitor
             //ScbSol->Position = 0;
         }
 
-    }
+		/// <summary>
+		/// Запуск сервера
+		/// </summary>
+		private void  SvrStart()
+		{
+			// Локальные переменные
+			//char* s;
+			DataRTK.solopt_t[] solopt = new DataRTK.solopt_t[2]; // структура для параметров "решения"
+
+			DataRTK.rtcm_t rtcm;  //Структура данных для выходных данных с приемника
+
+
+			//
+			double[] pos = new double[3], nmeapos = new double[3]; // 
+			//Типы источника данных
+			int[] itype = new int[] {
+		DataRTK.STR_SERIAL,DataRTK.STR_TCPCLI,DataRTK.STR_TCPSVR,DataRTK.STR_NTRIPCLI,DataRTK.STR_FILE,DataRTK.STR_FTP,DataRTK.STR_HTTP
+	};
+			int[] otype = new int[] {
+		DataRTK.STR_SERIAL,DataRTK.STR_TCPCLI,DataRTK.STR_TCPSVR,DataRTK.STR_NTRIPSVR,DataRTK.STR_NTRIPC_C,DataRTK.STR_FILE
+	};
+			int i, sat, ex;
+			int[] strs = new int[DataRTK.MAXSTRRTK] { 0, 0, 0, 0, 0, 0, 0, 0 };  
+			int[] stropt = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
+			string[] paths = new string[8], cmds = new string[3], cmds_periodic= new string [3], rcvopts = new string[3];
+			string buff , p;
+			string file, type, errmsg = "";
+			int j, format;
+			//char tstr[64] = "-", mstr1[1024] = "", mstr2[1024] = "", *p1 = mstr1, *p2 = mstr2;
+			//File fp;
+			DataRTK.gtime_t time = DataRTK.timeget();
+			DataRTK.pcvs_t pcvr, pcvs;
+			DataRTK.pcv_t[] pcv;
+			//char buf_cpy[1024];
+			// Локальные переменные
+
+			DataRTK.rtksvrlock(ref rtksvr);
+			format = rtksvr.format[1];
+			rtcm = rtksvr.rtcm[1];
+			DataRTK.rtksvrunlock(ref rtksvr);
+
+
+			if (RovPosTypeF <= 2)
+			{ // LLH,XYZ
+				PrcOpt.rovpos = DataRTK.POSOPT_POS;
+				PrcOpt.ru[0] = RovPos[0];
+				PrcOpt.ru[1] = RovPos[1];
+				PrcOpt.ru[2] = RovPos[2];
+			}
+			else
+			{ // RTCM position
+				PrcOpt.rovpos = DataRTK.POSOPT_RTCM;
+				for (i = 0; i < 3; i++) PrcOpt.ru[i] = 0.0;
+			}
+			if (RefPosTypeF <= 2)
+			{ // LLH,XYZ
+				PrcOpt.refpos = DataRTK.POSOPT_POS;
+				PrcOpt.rb[0] = RefPos[0];
+				PrcOpt.rb[1] = RefPos[1];
+				PrcOpt.rb[2] = RefPos[2];
+			}
+			else if (RefPosTypeF == 3)
+			{ // RTCM position
+				PrcOpt.refpos = DataRTK.POSOPT_RTCM;
+				for (i = 0; i < 3; i++) PrcOpt.rb[i] = 0.0;
+			}
+			else if (RefPosTypeF == 4)
+			{ // raw position
+				PrcOpt.refpos = DataRTK.POSOPT_RAW;
+				for (i = 0; i < 3; i++) PrcOpt.rb[i] = 0.0;
+			}
+			else
+			{ // average of single position
+				PrcOpt.refpos = DataRTK.POSOPT_SINGLE;
+				for (i = 0; i < 3; i++) PrcOpt.rb[i] = 0.0;
+			}
+			for (i = 0; i < DataRTK.MAXSAT; i++)
+			{
+				PrcOpt.exsats[i] = '\0';
+			}
+			
+			
+			/* Исключить спутники
+			if (string.IsNullOrEmpty(ExSats))
+			{ // excluded satellites
+				buff = ExSats;
+				string[] exSatMas = ExSats.Split(' ');
+				foreach(string exSat in exSatMas)
+				{
+					if (exSat.StartsWith("+")) { ex = 2;  } else 
+				}
+				for (p = (buff, " "); p; p = strtok(NULL, " "))
+				{
+					if (*p == '+') { ex = 2; p++; }
+					else ex = 1;
+					if (!(sat = satid2no(p))) continue;
+					PrcOpt.exsats[sat - 1] = ex;
+				}
+				//memset(buff, 0, sizeof(buff));
+			}
+			*/
+
+			/*  Обработка ошибок 
+			if ((RovAntPcvF || RefAntPcvF) && !readpcv(AntPcvFileF.c_str(), &pcvr))
+			{
+				printf_s("rcv ant file read error %s", AntPcvFileF);
+				//Message->Caption = s.sprintf("rcv ant file read error %s", AntPcvFileF);
+				//Message->Parent->Hint = Message->Caption;
+				return;
+			}
+
+			*/
+
+			/* Нет антены ровера
+			if (RovAntPcvF)
+			{
+				strcpy(type, RovAntF.c_str());
+				//type = RovAntF.c_str();
+				if ((pcv = searchpcv(0, type, time, &pcvr)))
+				{
+					PrcOpt.pcvr[0] = *pcv;
+				}
+				else
+				{
+					printf_s("no antenna pcv %s", type);
+					//Message->Caption = s.sprintf("no antenna pcv %s", type);
+					//Message->Parent->Hint = Message->Caption;
+				}
+				for (i = 0; i < 3; i++) PrcOpt.antdel[0][i] = RovAntDel[i];
+			}
+
+			*/
+
+			/* Нет антены базы
+			if (RefAntPcvF)
+			{
+				strcpy(type, RefAntF.c_str());
+				//type = RefAntF.c_str();
+				if ((pcv = searchpcv(0, type, time, &pcvr)))
+				{
+					PrcOpt.pcvr[1] = *pcv;
+				}
+				else
+				{
+					printf_s("no antenna pcv %s", type);
+					//Message->Caption = s.sprintf("no antenna pcv %s", type);
+					//Message->Parent->Hint = Message->Caption;
+				}
+				for (i = 0; i < 3; i++) PrcOpt.antdel[1][i] = RefAntDel[i];
+			}
+
+			*/
+
+			/* Очистка ошибок
+			if (RovAntPcvF || RefAntPcvF)
+			{
+				free(pcvr.pcv);
+			}
+			*/
+
+			/*
+			if (PrcOpt.sateph == DataRTK.EPHOPT_PREC || PrcOpt.sateph == DataRTK.EPHOPT_SSRCOM)
+			{
+				if (DataRTK.readpcv(SatPcvFileF, ref pcvs)!=1)
+				{
+					printf_s("sat ant file read error %s", SatPcvFileF);
+					//Message->Caption = s.sprintf("sat ant file read error %s", SatPcvFileF);
+					//Message->Parent->Hint = Message->Caption;
+					return;
+				}
+				for (i = 0; i < MAXSAT; i++)
+				{
+					if (!(pcv = searchpcv(i + 1, "", time, &pcvs))) continue;
+					rtksvr.nav.pcvs[i] = *pcv;
+				}
+				free(pcvs.pcv);
+			}
+			*/
+
+			// Базовая линия
+			if (BaselineC==0)
+			{
+				PrcOpt.baseline[0] = Baseline[0];
+				PrcOpt.baseline[1] = Baseline[1];
+			}
+			else
+			{
+				PrcOpt.baseline[0] = 0.0;
+				PrcOpt.baseline[1] = 0.0;
+			}
+
+			//Если есть источники, то их записываем, если нет, то присваиваем нужному типу или указываем, что источника нет
+			for (i = 0; i < 3; i++) strs[i] = StreamC[i] = (StreamC[i] != 0) ? itype[Stream[i]] : DataRTK.STR_NONE;
+			for (i = 3; i < 5; i++) strs[i] = StreamC[i] = (StreamC[i] != 0) ? otype[Stream[i]] : DataRTK.STR_NONE;
+			for (i = 5; i < 8; i++) strs[i] = StreamC[i] = (StreamC[i] != 0) ? otype[Stream[i]] : DataRTK.STR_NONE;
+			
+			//Прописываем пути к каждому источнику
+			for (i = 0; i < 8; i++)
+			{
+				if (strs[i] == DataRTK.STR_NONE) paths[i] = "";
+				else if (strs[i] == DataRTK.STR_SERIAL)
+				{
+					paths[i] = Paths[i,1];
+					//strcpy(paths[i], Paths[i][0].c_str());//paths[i] = Paths[i][0].c_str();
+
+				}
+				else if (strs[i] == DataRTK.STR_FILE)
+				{
+					paths[i] = Paths[i, 1];//.size() + 1];
+					//strcpy(paths[i], Paths[i][2].c_str());
+				}
+				else if (strs[i] == DataRTK.STR_FTP || strs[i] == DataRTK.STR_HTTP)
+				{
+					paths[i] = Paths[i, 1];//new char[Paths[i][1].size() + 1];
+					//strcpy(paths[i], Paths[i][3].c_str());
+				}
+				else
+				{
+					paths[i] = Paths[i, 1];//new char[Paths[i][1].size() + 1];
+					//strcpy(paths[i], Paths[i][1].c_str());//TCP
+
+				}
+
+			}
+
+
+			//Проверяем каждый из настроенных узлов
+			for (i = 0; i < 3; i++)
+			{	
+				//Если источник последодовательный порт
+				if (strs[i] == DataRTK.STR_SERIAL)
+				{
+					//Если прописана команда 1
+					if (CmdEna[i, 0]!=0)
+					{
+						cmds[i] = Cmds[i, 0];//new char[Cmds[i][0].size() + 1];
+						//strcpy(cmds[i], Cmds[i][0].c_str());
+					}
+					//Если прописана команда 3
+					if (CmdEna[i, 2]!=0)
+					{
+						cmds_periodic[i] = Cmds[i, 2];///new char[Cmds[i][2].size() + 1];
+						//strcpy(cmds_periodic[i], Cmds[i][2].c_str());
+					}
+				}
+				else if (strs[i] == DataRTK.STR_TCPCLI || strs[i] == DataRTK.STR_TCPSVR ||
+					strs[i] == DataRTK.STR_NTRIPCLI)
+				{
+					if (CmdEnaTcp[i,0]!=0)
+					{
+						cmds[i] = Cmds[i, 0];//new char[Cmds[i][0].size() + 1];
+						//strcpy(cmds[i], CmdsTcp[i][0].c_str());
+					}
+					if (CmdEnaTcp[i, 2]!=0)
+					{
+						cmds_periodic[i] = Cmds[i, 2];//new char[Cmds[i][2].size() + 1];
+						//strcpy(cmds_periodic[i], CmdsTcp[i][2].c_str());
+					}
+				}
+				rcvopts[i] = RcvOpt[i];//new char[RcvOpt[i].size() + 1];
+				//strcpy(rcvopts[i], RcvOpt[i].c_str());
+
+			}
+
+			NmeaCycle = NmeaCycle < 1000 ? 1000 : NmeaCycle;
+			pos[0] = NmeaPos[0] * DataRTK.D2R;
+			pos[1] = NmeaPos[1] * DataRTK.D2R;
+			pos[2] = NmeaPos[2];
+			DataRTK.pos2ecef(pos, nmeapos);
+			//Устанавлтиваем локальные директории и прокс-сервер
+			DataRTK.strsetdir(LocalDirectory);
+			DataRTK.strsetproxy(ProxyAddr);
+
+
+			//Если источник "решения" файл, то выходим из цикла
+			for (i = 3; i < 8; i++)
+			{
+				if (strs[i] == DataRTK.STR_FILE && ConfOverwrite(paths[i])!=1) return;
+			}
+
+			//Открываем отладку и информацию о работе
+			if (DebugTraceF > 0)
+			{
+				DataRTK.traceopen(TRACEFILE);
+				DataRTK.tracelevel(DebugTraceF);
+			}
+
+			//Открываем файл для отладочной информации
+			if (DebugStatusF > 0)
+			{
+				DataRTK.rtkopenstat(STATFILE, DebugStatusF);
+			}
+
+			//
+			if (SolOpt.geoid > 0 && !string.IsNullOrEmpty(GeoidDataFileF) )
+			{
+				DataRTK.opengeoid(SolOpt.geoid, GeoidDataFileF);
+			}
+
+			DataRTK.sta_t sta_temp = new DataRTK.sta_t();
+
+			if (!string.IsNullOrEmpty(DCBFileF))
+			{
+				DataRTK.readdcb(DCBFileF, ref rtksvr.nav, ref sta_temp);
+			}
+			for (i = 0; i < 2; i++)
+			{
+				solopt[i] = SolOpt;
+				solopt[i].posf = Format[i + 3];
+			}
+			stropt[0] = TimeoutTime;
+			stropt[1] = ReconTime;
+			stropt[2] = 1000;
+			stropt[3] = SvrBuffSize;
+			stropt[4] = FileSwapMargin;
+			DataRTK.strsetopt(stropt);
+			rtksvr.cmd_reset =  ResetCmd.ToCharArray();
+			rtksvr.bl_reset = MaxBL;
+
+			// start rtk server
+			if (DataRTK.rtksvrstart(ref rtksvr, SvrCycle, SvrBuffSize, strs, paths, Format, NavSelect,
+				cmds, cmds_periodic, rcvopts, NmeaCycle, NmeaReq, nmeapos,
+				ref PrcOpt, solopt, ref monistr, errmsg)!=1)
+			{
+				//trace(2, "rtksvrstart error %s\n", errmsg);
+				DataRTK.traceclose();
+				return;
+			}
+			PSol = PSolS = PSolE = 0;
+			SolStat[0] = Nvsat[0] = 0;
+			for (i = 0; i < 3; i++) SolRov[i] = SolRef[i] = VelRov[i] = 0.0;
+			for (i = 0; i < 9; i++) Qr[i] = 0.0;
+			Age[0] = Ratio[0] = 0.0;
+			Nsat[0] = Nsat[1] = 0;
+			UpdatePos();
+			UpdatePlot();
+			/*
+			BtnStart->Visible = false;
+			BtnOpt->Enabled = false;
+			BtnExit->Enabled = false;
+			BtnInputStr->Enabled = false;
+			MenuStart->Enabled = false;
+			MenuExit->Enabled = false;
+			ScbSol->Enabled = false;
+			BtnStop->Visible = true;
+			MenuStop->Enabled = true;
+			Svr->Color = CLORANGE;
+			SetTrayIcon(0);
+			*/
+		}
+
+		// confirm overwrite --------------------------------------------------------
+		private int ConfOverwrite(string path)
+		{
+			string s;
+			//File fp;
+			int[] itype = {
+		DataRTK.STR_SERIAL,DataRTK.STR_TCPCLI,DataRTK.STR_TCPSVR,DataRTK.STR_NTRIPCLI,DataRTK.STR_FILE,DataRTK.STR_FTP,DataRTK.STR_HTTP
+	};
+			int i;
+			string buff1, buff2, p;
+
+			//trace(3, "ConfOverwrite\n");
+
+			//strcpy(buff1, path);
+
+			if ((path.IndexOf("::", StringComparison.OrdinalIgnoreCase) != -1)) p = "\0";
+
+			if (!File.Exists(path)) return 1; // file not exists
+			//fclose(fp);
+
+			// check overwrite input files
+			for (i = 0; i < 3; i++)
+			{
+				if (StreamC[i]!>0 || itype[Stream[i]] != DataRTK.STR_FILE) continue;
+
+				//strcpy(buff2, Paths[i][2].c_str());
+				//if ((p = strstr(buff2, "::"))) *p = '\0';
+				if (Paths[i, 2].IndexOf("::", StringComparison.OrdinalIgnoreCase) != -1) p = "\0";
+				if (string.Compare(path, Paths[i,2]) != 0)							// !strcmp(buff1, buff2))
+				{
+					//printf_s("invalid output %s", buff1);
+					//Message->Caption = s.sprintf("invalid output %s", buff1);
+					//Message->Parent->Hint = Message->Caption;
+					return 0;
+				}
+			}
+			//ConfDialog->Label2->Caption = buff1;
+			return 1;
+			//return ConfDialog->ShowModal() == mrOk;
+		}
+
+
+
+
+	}
+
+
+	
 }
