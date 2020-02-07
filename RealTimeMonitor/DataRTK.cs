@@ -49,16 +49,18 @@ namespace RealTimeMonitor
         public const int STATFILE    "rtknavi_%Y%m%d%h%M.stat"  // solution status file
         public const int CLORANGE    (TColor)0x00AAFF
         public const int CLLGRAY     (TColor)0xDDDDDD
-        public const int CHARDEG     0x00B0              // character code of degree
-        public const int SATSIZE     20                  // satellite circle size in skyplot
-        public const int MINSNR      10                  // minimum snr
-        public const int MAXSNR      60                  // maximum snr
-        public const int KEYF6       0x75                // code of function key F6
-        public const int KEYF7       0x76                // code of function key F7
-        public const int KEYF8       0x77                // code of function key F8
-        public const int KEYF9       0x78                // code of function key F9
-        public const int KEYF10      0x79                // code of function key F10
-        public const int POSFONTNAME "Palatino Linotype"
+        */
+        public const int CHARDEG = 0x00B0;// character code of degree
+        public const int SATSIZE = 20;// satellite circle size in skyplot
+        public const int MINSNR = 10;// minimum snr
+        public const int MAXSNR = 60;// maximum snr
+        public const int KEYF6 = 0x75;// code of function key F6
+        public const int KEYF7 = 0x76;// code of function key F7
+        public const int KEYF8 = 0x77;// code of function key F8
+        public const int KEYF9 = 0x78;// code of function key F9
+        public const int KEYF10 = 0x79;// code of function key F10
+        /*
+            public const int POSFONTNAME "Palatino Linotype"
         public const int POSFONTSIZE 12
         public const int MINBLLEN    0.01                // minimum baseline length to show
         */
@@ -2018,6 +2020,22 @@ namespace RealTimeMonitor
 
         [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "traceclose")]
         public static extern void traceclose();
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "ecef2pos")]
+        public static extern void ecef2pos(double[] r, double[] pos);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "ecef2enu")]
+        public static extern void ecef2enu(double[] pos, double[] r, double[] e);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "covenu")]
+        public static extern void covenu(double[] pos, double[] P, double[] Q);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "geoidh")]
+        public static extern double geoidh(double[] pos);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "norm")]
+        public static extern double norm(double[] a, int n);
+
 
 
         #endregion

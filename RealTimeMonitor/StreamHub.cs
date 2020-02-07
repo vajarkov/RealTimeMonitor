@@ -576,7 +576,7 @@ namespace RealTimeMonitor
 			Age[0] = Ratio[0] = 0.0;
 			Nsat[0] = Nsat[1] = 0;
 			UpdatePos();
-			UpdatePlot();
+			//UpdatePlot();
 			/*
 			BtnStart->Visible = false;
 			BtnOpt->Enabled = false;
@@ -634,9 +634,299 @@ namespace RealTimeMonitor
 		}
 
 
+		// update solution display --------------------------------------------------
+		private void UpdatePos()
+		{
+			//Тип ""???
+			string[] sol = { "----", "FIX", "FLOAT", "SBAS", "DGPS", "SINGLE", "PPP" };
+			//UnicodeString s[9], ext = L"";
+			string[] s = new string[9]; 
+			string ext = "";
+			//TColor color[] = { clSilver,clGreen,CLORANGE,clFuchsia,clBlue,clRed,clTeal };
+			DataRTK.gtime_t time;
+			double[] rr = SolRov.Select(x => x + Convert.ToDouble(PSol)).ToArray(); //SolRov + PSol * 3;????
+			double[] rb = SolRef.Select(x => x + Convert.ToDouble(PSol)).ToArray(); //SolRef + PSol * 3 ???
+			double[] qr = Qr.Select(x => x + Convert.ToDouble(PSol)).ToArray();//Qr + PSol * 9, ??????????
+			double[] pos = new double[3]; 
+			double[] Qe = new double[9];
+			double[] dms1 = new double[3], dms2 = new double[3], bl = new double[3], enu = new double[3];
+			double pitch = 0.0, yaw = 0.0, len;
+			int i, stat = SolStat[PSol];
 
+			//trace(4, "UpdatePos\n");
+
+			if (rtksvr.rtk.opt.mode == DataRTK.PMODE_STATIC || rtksvr.rtk.opt.mode == DataRTK.PMODE_PPP_STATIC)
+			{
+				ext = " (S)";
+			}
+			else if (rtksvr.rtk.opt.mode == DataRTK.PMODE_FIXED || rtksvr.rtk.opt.mode == DataRTK.PMODE_PPP_FIXED)
+			{
+				ext = " (F)";
+			}
+			
+			if (DataRTK.norm(rr, 3) > 0.0 && DataRTK.norm(rb, 3) > 0.0)
+			{
+				for (i = 0; i < 3; i++) bl[i] = rr[i] - rb[i];
+			}
+
+			//wchar_t* _buf_char = new wchar_t[100];
+			len = DataRTK.norm(bl, 3);
+
+			//Тип отображения    Lat/Lon/Height
+			if (SolType == 0)
+			{
+				if (DataRTK.norm(rr, 3) > 0.0)
+				{
+					DataRTK.ecef2pos(rr, pos); DataRTK.covenu(pos, qr, Qe);
+					degtodms(pos[0] * DataRTK.R2D, dms1);
+					degtodms(pos[1] * DataRTK.R2D, dms2);
+					if (SolOpt.height == 1) pos[2] -= DataRTK.geoidh(pos); /* geodetic */
+				}
+
+
+				//s[0] = pos[0] < 0 ? wstring(L"S:") : wstring(L"N:");
+				//s[1] = pos[1] < 0 ? L"W:" : L"E:";
+				//s[2] = SolOpt.height == 1 ? L"H:" : L"He:";
+				//_swprintf((wchar_t*)s[3].c_str(), L"%.0f%c %02.0f' %07.4f\"", fabs(dms1[0]), CHARDEG, dms1[1], dms1[2]);
+				//_buf_char = new wchar_t[100];
+				//_swprintf(_buf_char, L"%.0f%c %02.0f' %07.4f\"", Math.Abs(dms1[0]), DataRTK.CHARDEG, dms1[1], dms1[2]);
+				//s[3] = _buf_char;
+				//s[3].sprintf(L"%.0f%c %02.0f' %07.4f\"", fabs(dms1[0]), CHARDEG, dms1[1], dms1[2]);
+				//_swprintf(_buf_char, L"%.0f%c %02.0f' %07.4f\"", Math.Abs(dms2[0]), DataRTK.CHARDEG, dms2[1], dms2[2]);
+				//s[4] = _buf_char;
+				//s[4].sprintf(L"%.0f%c %02.0f' %07.4f\"", fabs(dms2[0]), CHARDEG, dms2[1], dms2[2]);
+				//_swprintf(_buf_char, L"%.3f m", pos[2]);
+				//s[5] = _buf_char;
+				//s[5].sprintf(L"%.3f m", pos[2]);
+				//_swprintf(_buf_char, L"N:%6.3f E:%6.3f U:%6.3f m",	
+
+
+				/*
+
+				(Qe[4]) < 0.0 || (Qe[4]) != (Qe[4]) ? 0.0 : Math.Sqrt(Qe[4]), 
+				(Qe[0]) < 0.0 || (Qe[0]) != (Qe[0]) ? 0.0 : Math.Sqrt(Qe[0]),
+				(Qe[8]) < 0.0 || (Qe[8]) != (Qe[8]) ? 0.0 : Math.Sqrt(Qe[8]));
+				
+				*/
+				
+				//s[6] = _buf_char;
+				//s[6].sprintf(L"N:%6.3f E:%6.3f U:%6.3f m", SQRT(Qe[4]), SQRT(Qe[0]), SQRT(Qe[8]));
+			}
+			//Тип отображения Lat/Lon/Height
+			else if (SolType == 1)
+			{
+				if (DataRTK.norm(rr, 3) > 0.0)
+				{
+					DataRTK.ecef2pos(rr, pos); DataRTK.covenu(pos, qr, Qe);
+					if (SolOpt.height == 1) pos[2] -= DataRTK.geoidh(pos); /* geodetic */
+				}
+				//s[0] = pos[0] < 0 ? L"S:" : L"N:"; s[1] = pos[1] < 0 ? L"W:" : L"E:";
+				//s[2] = SolOpt.height == 1 ? L"H:" : L"He:";
+				//_swprintf(_buf_char, L"%.8f %c", Math.Abs(pos[0]) * DataRTK.R2D, DataRTK.CHARDEG);
+				//s[3] = _buf_char;
+				//s[3].sprintf(L"%.8f %c", fabs(pos[0])*R2D, CHARDEG);
+				//_swprintf(_buf_char, L"%.8f %c", Math.Abs(pos[1]) * DataRTK.R2D, DataRTK.CHARDEG);
+				//s[4] = _buf_char;
+				//s[4].sprintf(L"%.8f %c", fabs(pos[1])*R2D, CHARDEG);
+				//_swprintf(_buf_char, L"%.3f m", pos[2]);
+				//s[5] = _buf_char;
+				//s[5].sprintf(L"%.3f m", pos[2]);
+				//_swprintf(_buf_char, L"E:%6.3f N:%6.3f U:%6.3f m",
+				
+				/*
+
+				(Qe[0]) < 0.0 || (Qe[0]) != (Qe[0]) ? 0.0 : Math.Sqrt(Qe[0]),
+				(Qe[4]) < 0.0 || (Qe[4]) != (Qe[4]) ? 0.0 : Math.Sqrt(Qe[4]),
+				(Qe[8]) < 0.0 || (Qe[8]) != (Qe[8]) ? 0.0 : Math.Sqrt(Qe[8]));
+				
+				*/
+
+
+				//s[6] = _buf_char;
+				//s[6].sprintf(L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[0]), SQRT(Qe[4]), SQRT(Qe[8]));
+			}
+
+			// Тип отображения X/Y/Z-ECEF
+			else if (SolType == 2)
+			{
+				//s[0] = L"X:"; s[1] = L"Y:"; s[2] = L"Z:";
+				//_swprintf(_buf_char, L"%.3f m", rr[0]);
+				//s[3] = _buf_char;
+				//s[3].sprintf(L"%.3f m", rr[0]);
+				//_swprintf(_buf_char, L"%.3f m", rr[1]);
+				//s[4] = _buf_char;
+				//s[4].sprintf(L"%.3f m", rr[1]);
+				//_swprintf(_buf_char, L"%.3f m", rr[2]);
+				//s[5] = _buf_char;
+				//s[5].sprintf(L"%.3f m", rr[2]);
+				//_swprintf(_buf_char, L"X:%6.3f Y:%6.3f Z:%6.3f m",
+				
+				/*
+				
+				(Qe[0]) < 0.0 || (Qe[0]) != (Qe[0]) ? 0.0 : Math.Sqrt(Qe[0]),
+				(Qe[4]) < 0.0 || (Qe[4]) != (Qe[4]) ? 0.0 : Math.Sqrt(Qe[4]),
+				(Qe[8]) < 0.0 || (Qe[8]) != (Qe[8]) ? 0.0 : Math.Sqrt(Qe[8]));
+				
+				*/
+				
+				//s[6] = _buf_char;
+				//s[6].sprintf(L"X:%6.3f Y:%6.3f Z:%6.3f m", SQRT(qr[0]), SQRT(qr[4]), SQRT(qr[8]));
+			}
+			// Тип отображения E/N/U-Baseline
+			else if (SolType == 3)
+			{
+				if (len > 0.0)
+				{
+					DataRTK.ecef2pos(rb, pos); DataRTK.ecef2enu(pos, bl, enu); DataRTK.covenu(pos, qr, Qe);
+				}
+				//s[0] = L"E:"; s[1] = L"N:"; s[2] = L"U:";
+				//_swprintf(_buf_char, L"%.3f m", enu[0]);
+				//s[3] = _buf_char;
+				//s[3].sprintf(L"%.3f m", enu[0]);
+				//_swprintf(_buf_char, L"%.3f m", enu[1]);
+				//s[4] = _buf_char;
+				//s[4].sprintf(L"%.3f m", enu[1]);
+				//_swprintf(_buf_char, L"%.3f m", enu[2]);
+				//s[5] = _buf_char;
+				//s[5].sprintf(L"%.3f m", enu[2]);
+				//_swprintf(_buf_char, L"E:%6.3f N:%6.3f U:%6.3f m",	
+					
+				
+				/*
+				
+				(Qe[0]) < 0.0 || (Qe[0]) != (Qe[0]) ? 0.0 : Math.Sqrt(Qe[0]),
+				(Qe[4]) < 0.0 || (Qe[4]) != (Qe[4]) ? 0.0 : Math.Sqrt(Qe[4]),
+				(Qe[8]) < 0.0 || (Qe[8]) != (Qe[8]) ? 0.0 : Math.Sqrt(Qe[8]));
+				
+				*/
+
+
+				//s[6] = _buf_char;
+				//s[6].sprintf(L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[0]), SQRT(Qe[4]), SQRT(Qe[8]));
+			}
+
+			// Тип отображения Pitch/Yaw/Length-Baseline
+			else
+			{
+				if (len > 0.0)
+				{
+					DataRTK.ecef2pos(rb, pos); DataRTK.ecef2enu(pos, bl, enu); DataRTK.covenu(pos, qr, Qe);
+					pitch = Math.Asin(enu[2] / len);
+					yaw = Math.Atan2(enu[0], enu[1]); if (yaw < 0.0) yaw += 2.0 * DataRTK.PI;
+				}
+				/*
+				s[0] = L"P:"; s[1] = L"Y:"; s[2] = L"L:";
+				_swprintf(_buf_char, L"%.3f %c", pitch * DataRTK.R2D, DataRTK.CHARDEG);
+				s[3] = _buf_char;
+				//s[3].sprintf(L"%.3f %c", pitch*R2D, CHARDEG);
+				_swprintf(_buf_char, L"%.3f %c", yaw * DataRTK.R2D, DataRTK.CHARDEG);
+				s[4] = _buf_char;
+				//s[4].sprintf(L"%.3f %c", yaw*R2D, CHARDEG);
+				_swprintf(_buf_char, L"%.3f m", len);
+				s[5] = _buf_char;
+				//s[5].sprintf(L"%.3f m", len);
+				_swprintf(_buf_char, L"E:%6.3f N:%6.3f U:%6.3f m",	*/
+					
+				/*
+				
+				(Qe[0]) < 0.0 || (Qe[0]) != (Qe[0]) ? 0.0 : Math.Sqrt(Qe[0]),
+				(Qe[4]) < 0.0 || (Qe[4]) != (Qe[4]) ? 0.0 : Math.Sqrt(Qe[4]),
+				(Qe[8]) < 0.0 || (Qe[8]) != (Qe[8]) ? 0.0 : Math.Sqrt(Qe[8]));
+				
+				*/
+				
+				
+				/*
+				s[6] = _buf_char;
+				//s[6].sprintf(L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[0]), SQRT(Qe[4]), SQRT(Qe[8]));*/
+			}
+			//_swprintf(_buf_char, L"Age:%4.1f s Ratio:%4.1f #Sat:%2d", 
+				//Age[PSol], Ratio[PSol], Nvsat[PSol]);
+			//s[7] = _buf_char;
+			//s[7].sprintf(L"Age:%4.1f s Ratio:%4.1f #Sat:%2d", Age[PSol], Ratio[PSol], Nvsat[PSol]);
+			//if (Ratio[PSol] > 0.0) s[8] = _swprintf(_buf_char, L" R:%4.1f", Ratio[PSol]);
+			/*
+			for (i = 0; i < 8; i++) label[i]->Caption = s[i];
+			
+			for (i = 0; i < 8; i++)
+			{
+				wcout << s[i] << '\n';
+			}
+			*/
+			//wcout << rtksvr.rtcm[1].sta.pos[0] << "\t" << rtksvr.rtcm[1].sta.pos[1] << "\t" << rtksvr.rtcm[1].sta.pos[2] << "\n"; //
+
+
+
+
+			/*
+			for (i = 3; i < 6; i++) {
+				label[i]->Font->Color = PrcOpt.mode == PMODE_MOVEB && SolType <= 2 ? clGray : clBlack;
+			}
+			IndQ->Color = IndSol->Color;
+			SolS->Caption = Solution->Caption;
+			SolS->Font->Color = Solution->Font->Color;
+			SolQ->Caption = ext + L" " + label[0]->Caption + L" " + label[3]->Caption + L" " +
+				label[1]->Caption + L" " + label[4]->Caption + L" " +
+				label[2]->Caption + L" " + label[5]->Caption + s[8];
+				*/
+		}
+
+
+		static void degtodms(double deg, double[] dms)
+		{
+			double sgn = 1.0;
+			if (deg < 0.0) { deg = -deg; sgn = -1.0; }
+			dms[0] = Math.Floor(deg);
+			dms[1] = Math.Floor((deg - dms[0]) * 60.0);
+			dms[2] = (deg - dms[0] - dms[1] / 60.0) * 3600;
+			dms[0] *= sgn;
+		}
+
+		void Timer()
+		{
+			static int n = 0, inactive = 0;
+			sol_t* sol;
+			int i, update = 0;
+			unsigned char buff[8];
+
+			trace(4, "TimerTimer\n");
+
+			rtksvrlock(&rtksvr);
+
+			for (i = 0; i < rtksvr.nsol; i++)
+			{
+				sol = rtksvr.solbuf + i;
+				//UpdateLog(sol->stat, sol->time, sol->rr, sol->qr, rtksvr.rtk.rb, sol->ns,
+				//sol->age, sol->ratio);
+				update = 1;
+			}
+			rtksvr.nsol = 0;
+			SolCurrentStat = rtksvr.state ? rtksvr.rtk.sol.stat : 0;
+
+			rtksvrunlock(&rtksvr);
+
+			if (update)
+			{
+				//UpdateTime();
+				UpdatePos();
+				inactive = 0;
+			}
+
+
+
+			if (!(++n % 5)) UpdatePlot();
+			UpdateStr();
+
+			if (OpenPort)
+			{
+				buff[0] = '\r';
+				strwrite(&monistr, buff, 1);
+			}
+		}
 
 	}
+
+
 
 
 	
