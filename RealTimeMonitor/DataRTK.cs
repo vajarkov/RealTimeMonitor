@@ -1147,19 +1147,28 @@ namespace RealTimeMonitor
         public unsafe struct sta_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 13)]        /* station parameter type */
-            public fixed char name[MAXANT]; /* marker name */
-            public fixed char marker[MAXANT]; /* marker number */
-            public fixed char antdes[MAXANT]; /* antenna descriptor */
-            public fixed char antsno[MAXANT]; /* antenna serial number */
-            public fixed char rectype[MAXANT]; /* receiver type descriptor */
-            public fixed char recver[MAXANT]; /* receiver firmware version */
-            public fixed char recsno[MAXANT]; /* receiver serial number */
+            //[MarshalAs(UnmanagedType.ByValArray, SizeConst = 13)]        /* station parameter type */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXANT)]
+            public char[] name; /* marker name */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXANT)]
+            public char[] marker; /* marker number */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXANT)]
+            public char[] antdes; /* antenna descriptor */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXANT)]
+            public char[] antsno; /* antenna serial number */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXANT)]
+            public char[] rectype; /* receiver type descriptor */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXANT)]
+            public char[] recver; /* receiver firmware version */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXANT)]
+            public char[] recsno; /* receiver serial number */
             public int antsetup;       /* antenna setup id */
             public int itrf;           /* ITRF realization year */
             public int deltype;        /* antenna delta type (0:enu,1:xyz) */
-            public fixed double pos[3];      /* station position (ecef) (m) */
-            public fixed double del[3];      /* antenna position delta (e/n/u or x/y/z) (m) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public double[] pos;      /* station position (ecef) (m) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public double[] del;      /* antenna position delta (e/n/u or x/y/z) (m) */
             public double hgt;         /* antenna height (m) */
         };
 
@@ -1172,13 +1181,17 @@ namespace RealTimeMonitor
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 11)]        /* solution type */
 
             public gtime_t time;       /* time (GPST) */
-            public fixed double rr[6];       /* position/velocity (m|m/s) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
+            public double[] rr;       /* position/velocity (m|m/s) */
             /* {x,y,z,vx,vy,vz} or {e,n,u,ve,vn,vu} */
-            public fixed float qr[6];       /* position variance/covariance (m^2) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
+            public float[] qr;       /* position variance/covariance (m^2) */
             /* {c_xx,c_yy,c_zz,c_xy,c_yz,c_zx} or */
             /* {c_ee,c_nn,c_uu,c_en,c_nu,c_ue} */
-            public fixed float qv[6];       /* velocity variance/covariance (m^2/s^2) */
-            public fixed double dtr[6];      /* receiver clock bias to time systems (s) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
+            public float[] qv;       /* velocity variance/covariance (m^2/s^2) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
+            public double[] dtr;      /* receiver clock bias to time systems (s) */
             public byte type; /* type (0:xyz-ecef,1:enu-baseline) */
             public byte stat; /* solution status (SOLQ_???) */
             public byte ns;   /* number of valid satellites */
@@ -1757,7 +1770,8 @@ namespace RealTimeMonitor
             public byte[] sbuf; /* output buffers {sol1,sol2} */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public byte[] pbuf; /* peek buffers {rov,base,corr} */
-            public unsafe sol_t* solbuf; /* solution buffer */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSOLBUF)]
+            public sol_t[] solbuf; /* solution buffer */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3 * 10)]
             public int[] nmsg; /* input message counts */
             public raw_t[] raw;     /* receiver raw control {rov,base,corr} */
@@ -2035,6 +2049,12 @@ namespace RealTimeMonitor
 
         [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "norm")]
         public static extern double norm(double[] a, int n);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtksvrsstat")]
+        public static extern void rtksvrsstat(ref rtksvr_t svr, int[] sstat, string msg);
+
+        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strwrite")]
+        public static extern int strwrite(ref stream_t stream, byte[] buff, int n);
 
 
 

@@ -102,7 +102,7 @@ namespace RealTimeMonitor
             return channel.Reader;
         }
 
-        private async Task WriteItems(ChannelWriter<int> writer, int count, int delay)
+        private async Task WriteItems(ChannelWriter<double> writer, int count, int delay)
         {
             
                 //char[] p = new char[];
@@ -188,8 +188,8 @@ namespace RealTimeMonitor
 
             while (true)
             {
-
-                await writer.WriteAsync(i);
+				Timer();
+                await writer.WriteAsync(rtksvr.rtcm[1].sta.pos[0]);
                 await Task.Delay(delay);
             }
             /*
@@ -882,30 +882,31 @@ namespace RealTimeMonitor
 			dms[0] *= sgn;
 		}
 
-		void Timer()
+		private void Timer()
 		{
-			static int n = 0, inactive = 0;
-			sol_t* sol;
+			//static int n = 0;
+			int inactive = 0;
+			DataRTK.sol_t sol;
 			int i, update = 0;
-			unsigned char buff[8];
+			byte[] buff = new byte[8];
 
-			trace(4, "TimerTimer\n");
+			//trace(4, "TimerTimer\n");
 
-			rtksvrlock(&rtksvr);
+			DataRTK.rtksvrlock(ref rtksvr);
 
 			for (i = 0; i < rtksvr.nsol; i++)
 			{
-				sol = rtksvr.solbuf + i;
+				sol = rtksvr.solbuf[i];
 				//UpdateLog(sol->stat, sol->time, sol->rr, sol->qr, rtksvr.rtk.rb, sol->ns,
 				//sol->age, sol->ratio);
 				update = 1;
 			}
 			rtksvr.nsol = 0;
-			SolCurrentStat = rtksvr.state ? rtksvr.rtk.sol.stat : 0;
+			SolCurrentStat = (rtksvr.state==1) ? rtksvr.rtk.sol.stat : 0;
 
-			rtksvrunlock(&rtksvr);
+			DataRTK.rtksvrunlock(ref rtksvr);
 
-			if (update)
+			if (update==1)
 			{
 				//UpdateTime();
 				UpdatePos();
@@ -914,13 +915,38 @@ namespace RealTimeMonitor
 
 
 
-			if (!(++n % 5)) UpdatePlot();
+			//if (!(++n % 5)) UpdatePlot();
 			UpdateStr();
 
-			if (OpenPort)
+			if (OpenPort!=0)
 			{
-				buff[0] = '\r';
-				strwrite(&monistr, buff, 1);
+				buff[0] = (byte)'\r';
+				DataRTK.strwrite(ref monistr, buff, 1);
+			}
+		}
+
+
+
+		private void UpdateStr()
+		{
+			//TColor color[] = { clRed,clWindow,CLORANGE,clGreen,clLime };
+			//TPanel *ind[MAXSTRRTK] = { Str1,Str2,Str3,Str4,Str5,Str6,Str7,Str8 };
+			int i; 
+			int[] sstat = new int[DataRTK.MAXSTRRTK];
+			string msg = "";
+
+			//trace(4, "UpdateStr\n");
+
+			DataRTK.rtksvrsstat(ref rtksvr, sstat, msg);
+			for (i = 0; i < DataRTK.MAXSTRRTK; i++)
+			{
+				//ind[i]->Color = color[sstat[i] + 1];
+				if (sstat[i]>=0)
+				{
+					//printf(msg);
+					//Message->Caption = msg;
+					//Message->Parent->Hint = Message->Caption;
+				}
 			}
 		}
 
