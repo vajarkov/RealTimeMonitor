@@ -95,10 +95,10 @@ namespace RealTimeMonitor
 
 
 
-    public ChannelReader<int> DelayCounter(int delay)
+		public ChannelReader<double> DelayCounter(int delay)
         {
-            var channel = Channel.CreateUnbounded<int>();
-            _ = WriteItems(channel.Writer, 200, delay);
+            var channel = Channel.CreateUnbounded<double>();
+			_ = WriteItems(channel.Writer, 200, delay);
             return channel.Reader;
         }
 
@@ -111,11 +111,18 @@ namespace RealTimeMonitor
                 //Option Reciver
                 SvrCycle = SvrBuffSize = 0;
                 SolBuffSize = 1000;
-                for (int i = 0; i < 8; i++)
-                {
-                    StreamC[i] = Stream[i] = Format[i] = CmdEna[i,0] = CmdEna[i,1] = CmdEna[i,2] = 0;
-                }
-                TimeSys = SolType = PlotType1 = PlotType2 = FreqType1 = FreqType2 = 0;
+            for (int i = 0; i < 8; i++)
+            {
+				StreamC[i] = Stream[i] = Format[i] = 0;
+            }
+			
+			for(int i = 0; i < 3; i++)
+			{
+				CmdEna[i, 0] = CmdEna[i, 1] = CmdEna[i, 2] = 0;
+			}
+			
+
+				TimeSys = SolType = PlotType1 = PlotType2 = FreqType1 = FreqType2 = 0;
                 TrkType1 = TrkType2 = 0;
                 TrkScale1 = TrkScale2 = 5;
                 BLMode1 = BLMode2 = BLMode3 = BLMode4 = 0;
@@ -231,7 +238,19 @@ namespace RealTimeMonitor
             PSol = PSolS = PSolE = 0;
             for (i = 0; i < SolBuffSize; i++)
             {
-                Time[i] = DataRTK.epoch2time(ep);
+				try 
+				{
+					Time[i] = DataRTK.epoch2time(ep);
+				}
+				catch(EntryPointNotFoundException ex)
+				{
+					string str = ex.Message;
+				}
+				catch(TypeLoadException ex)
+				{
+					string str = ex.Message;
+				}
+                
                 SolStat[i] = Nvsat[i] = 0;
                 for (j = 0; j < 3; j++) SolRov[j + i * 3] = SolRef[j + i * 3] = VelRov[j + i * 3] = 0.0;
                 for (j = 0; j < 9; j++) Qr[j + i * 9] = 0.0;
@@ -937,7 +956,7 @@ namespace RealTimeMonitor
 
 			//trace(4, "UpdateStr\n");
 
-			DataRTK.rtksvrsstat(ref rtksvr, sstat, msg);
+			DataRTK.rtksvrsstat(ref rtksvr, sstat, msg.ToCharArray());
 			for (i = 0; i < DataRTK.MAXSTRRTK; i++)
 			{
 				//ind[i]->Color = color[sstat[i] + 1];

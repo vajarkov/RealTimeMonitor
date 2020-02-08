@@ -44,7 +44,7 @@ namespace RealTimeMonitor
         public const int MAXSCALE = 18;
         public const int MAXMAPPNT = 10;
 
-        public const string PRGNAME = "RTKNAVI"  ;         // program name
+        public const string PRGNAME = "RTKNAVI";         // program name
         /*public const int TRACEFILE   "rtknavi_%Y%m%d%h%M.trace" // debug trace file
         public const int STATFILE    "rtknavi_%Y%m%d%h%M.stat"  // solution status file
         public const int CLORANGE    (TColor)0x00AAFF
@@ -520,7 +520,7 @@ namespace RealTimeMonitor
 
         #endregion
 
-        
+
         #region Структуры
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]   /* time struct */
 #pragma warning disable IDE1006 // Naming Styles
@@ -528,7 +528,7 @@ namespace RealTimeMonitor
 #pragma warning restore IDE1006 // Naming Styles
         {
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
-            public Int64 time;                                          /* time (s) expressed by standard time_t */
+            public IntPtr time;                                          /* time (s) expressed by standard time_t */
             public double sec;                                          /* fraction of second under 1 s */
         }
 
@@ -1211,9 +1211,11 @@ namespace RealTimeMonitor
             public int cyclic;         /* cyclic buffer flag */
             public int start, end;      /* start/end index */
             public gtime_t time;       /* current solution time */
-            public unsafe sol_t* data;        /* solution data */
-            public fixed double rb[3];       /* reference position {x,y,z} (ecef) (m) */
-            public fixed byte buff[MAXSOLMSG + 1]; /* message buffer */
+            public sol_t data;        /* solution data */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public double[] rb;       /* reference position {x,y,z} (ecef) (m) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSOLMSG + 1)]
+            public byte[] buff; /* message buffer */
             public int nb;             /* number of byte in message buffer */
         };
 
@@ -1348,7 +1350,7 @@ namespace RealTimeMonitor
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = NFREQ)]
             public double[] gloicb; /* glonass interchannel bias (m/fn) */
 
-            
+
         };
 
 
@@ -1438,7 +1440,7 @@ namespace RealTimeMonitor
             public int maxaveep;      /* max averaging epoches */
             public int initrst;       /* initialize by restart */
             public int outsingle;     /* output single by dgps/float/fix/ppp outage */
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2*256)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2 * 256)]
             public char[] rnxopt; /* rinex options {rover,base} */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
             public int[] posopt;     /* positioning options */
@@ -1731,8 +1733,8 @@ namespace RealTimeMonitor
             public byte* buff; /* input buffers */
             public byte* pbuf; /* peek buffer */
             public uint tick;  /* start tick */
-            public unsafe stream_t* stream; /* input/output streams */
-            public unsafe strconv_t* conv; /* stream converter */
+            public stream_t stream; /* input/output streams */
+            public strconv_t conv; /* stream converter */
             public IntPtr thread;    /* server thread */
             public CRITICAL_SECTION lock_flag;        /* lock flag */
         };
@@ -1920,7 +1922,7 @@ namespace RealTimeMonitor
             sbassatsel = 0,
             rovpos = 0,
             refpos = 0,
-            eratio = new double[] { 100.0, 100.0 } ,              /* eratio[] */
+            eratio = new double[] { 100.0, 100.0 },              /* eratio[] */
             err = new double[] { 100.0, 0.003, 0.003, 0.0, 1.0 },
             std = new double[] { 30.0, 0.03, 0.3 },            /* std[] */
             prn = new double[] { 1E-4, 1E-3, 1E-4, 1E-1, 1E-2, 0.0 }, /* prn[] */
@@ -1940,29 +1942,29 @@ namespace RealTimeMonitor
             exterr = new exterr_t(),
             exsats = Array.Empty<char>()             /* antdel,pcv,exsats */
         };
-    
 
 
-       public static solopt_t solopt_default = new solopt_t
-       { /* defaults solution output options */
-           posf = SOLF_LLH,
-           times =TIMES_GPST,
-           timef = 1,
-           timeu = 3,    /* posf,times,timef,timeu */
-           degf = 0,
-           outhead = 1,
-           outopt = 0,
-           outvel = 0,
-           datum = 0,
-           height = 0,
-           geoid = 0,              /* degf,outhead,outopt,outvel,datum,height,geoid */
-           solstatic = 0,
-           sstat = 0,
-           trace = 0,                      /* solstatic,sstat,trace */
-           nmeaintv = new double[] {0.00,0.00},                  /* nmeaintv */
-           sep = new char[] { Convert.ToChar(65) },
-           prog = Array.Empty<char>(),                      /* separator/program name */
-           maxsolstd = 0.00
+
+        public static solopt_t solopt_default = new solopt_t
+        { /* defaults solution output options */
+            posf = SOLF_LLH,
+            times = TIMES_GPST,
+            timef = 1,
+            timeu = 3,    /* posf,times,timef,timeu */
+            degf = 0,
+            outhead = 1,
+            outopt = 0,
+            outvel = 0,
+            datum = 0,
+            height = 0,
+            geoid = 0,              /* degf,outhead,outopt,outvel,datum,height,geoid */
+            solstatic = 0,
+            sstat = 0,
+            trace = 0,                      /* solstatic,sstat,trace */
+            nmeaintv = new double[] { 0.00, 0.00 },                  /* nmeaintv */
+            sep = new char[] { Convert.ToChar(65) },
+            prog = Array.Empty<char>(),                      /* separator/program name */
+            maxsolstd = 0.00
 
         };
 
@@ -1970,8 +1972,7 @@ namespace RealTimeMonitor
 
 
         #region Функции из библиотеки
-
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "epoch2time")]
+        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\RTKLib\debug\RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "epoch2time")] //, EntryPoint = "epoch2time"
         public static extern gtime_t epoch2time(double[] ep);
         
         [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strinitcom")]
@@ -2051,7 +2052,7 @@ namespace RealTimeMonitor
         public static extern double norm(double[] a, int n);
 
         [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtksvrsstat")]
-        public static extern void rtksvrsstat(ref rtksvr_t svr, int[] sstat, string msg);
+        public static extern void rtksvrsstat(ref rtksvr_t svr, int[] sstat, char[] msg);
 
         [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strwrite")]
         public static extern int strwrite(ref stream_t stream, byte[] buff, int n);
