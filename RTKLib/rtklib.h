@@ -1404,17 +1404,17 @@ extern const char *formatstrs[];     /* stream format strings */
 extern opt_t sysopts[];              /* system options table */
 
 /* satellites, systems, codes functions --------------------------------------*/
-EXPORT int  satno   (int sys, int prn);
-EXPORT int  satsys  (int sat, int *prn);
-EXPORT int  satid2no(const char *id);
-EXPORT void satno2id(int sat, char *id);
-EXPORT unsigned char obs2code(const char *obs, int *freq);
-EXPORT char *code2obs(unsigned char code, int *freq);
-EXPORT int  satexclude(int sat, double var, int svh, const prcopt_t *opt);
-EXPORT int  testsnr(int base, int freq, double el, double snr,
+EXPORT __declspec(dllexport) int __stdcall satno   (int sys, int prn);
+EXPORT  __declspec(dllexport) int __stdcall satsys  (int sat, int *prn);
+EXPORT  __declspec(dllexport) int __stdcall satid2no(const char *id);
+EXPORT  __declspec(dllexport) void __stdcall satno2id(int sat, char *id);
+EXPORT  __declspec(dllexport) unsigned char __stdcall obs2code(const char *obs, int *freq);
+EXPORT  __declspec(dllexport) char __stdcall *code2obs(unsigned char code, int *freq);
+EXPORT  __declspec(dllexport) int __stdcall satexclude(int sat, double var, int svh, const prcopt_t *opt);
+EXPORT  __declspec(dllexport) int __stdcall testsnr(int base, int freq, double el, double snr,
                     const snrmask_t *mask);
-EXPORT void setcodepri(int sys, int freq, const char *pri);
-EXPORT int  getcodepri(int sys, unsigned char code, const char *opt);
+EXPORT  __declspec(dllexport) void __stdcall setcodepri(int sys, int freq, const char *pri);
+EXPORT  __declspec(dllexport) int __stdcall getcodepri(int sys, unsigned char code, const char *opt);
 
 /* matrix and vector functions -----------------------------------------------*/
 EXPORT double *mat  (int n, int m);
