@@ -454,7 +454,7 @@ static int decode_nvs(raw_t *raw)
 *          -TADJ=tint : adjust time tags to multiples of tint (sec)
 *
 *-----------------------------------------------------------------------------*/
-extern int input_nvs(raw_t *raw, unsigned char data)
+extern __declspec(dllexport)  int __stdcall input_nvs(raw_t *raw, unsigned char data)
 {
     trace(5,"input_nvs: data=%02x\n",data);
     
@@ -502,7 +502,7 @@ extern int input_nvs(raw_t *raw, unsigned char data)
 *          FILE   *fp    I      file pointer
 * return : status(-2: end of file, -1...9: same as above)
 *-----------------------------------------------------------------------------*/
-extern int input_nvsf(raw_t *raw, FILE *fp)
+extern __declspec(dllexport)  int __stdcall input_nvsf(raw_t *raw, FILE *fp)
 {
     int i,data, odd=0;
     
@@ -559,7 +559,7 @@ extern int input_nvsf(raw_t *raw, FILE *fp)
 * return : length of binary message (0: error)
 * note   : see reference [1][2] for details.
 *-----------------------------------------------------------------------------*/
-extern int gen_nvs(const char *msg, unsigned char *buff)
+extern __declspec(dllexport)  int __stdcall gen_nvs(const char *msg, unsigned char *buff)
 {
     unsigned char *q=buff;
     char mbuff[1024],*args[32],*p;

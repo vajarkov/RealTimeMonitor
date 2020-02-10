@@ -53,9 +53,9 @@
 #include "rtklib.h"
 
 /* function prototypes -------------------------------------------------------*/
-extern int decode_rtcm2(rtcm_t *rtcm);
-extern int decode_rtcm3(rtcm_t *rtcm);
-extern int encode_rtcm3(rtcm_t *rtcm, int type, int sync);
+extern __declspec(dllexport)  int decode_rtcm2(rtcm_t *rtcm);
+extern __declspec(dllexport)  int decode_rtcm3(rtcm_t *rtcm);
+extern __declspec(dllexport)  int encode_rtcm3(rtcm_t *rtcm, int type, int sync);
 
 /* constants -----------------------------------------------------------------*/
 
@@ -68,7 +68,7 @@ extern int encode_rtcm3(rtcm_t *rtcm, int type, int sync);
 * args   : rtcm_t *raw   IO     rtcm control struct
 * return : status (1:ok,0:memory allocation error)
 *-----------------------------------------------------------------------------*/
-extern int init_rtcm(rtcm_t *rtcm)
+extern __declspec(dllexport)  int __stdcall init_rtcm(rtcm_t *rtcm)
 {
     gtime_t time0={0};
     obsd_t data0={{0}};
@@ -130,7 +130,7 @@ extern int init_rtcm(rtcm_t *rtcm)
 * args   : rtcm_t *raw   IO     rtcm control struct
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void free_rtcm(rtcm_t *rtcm)
+extern __declspec(dllexport)  void __stdcall free_rtcm(rtcm_t *rtcm)
 {
     trace(3,"free_rtcm:\n");
     
@@ -153,7 +153,7 @@ extern void free_rtcm(rtcm_t *rtcm)
 *          supported msgs RTCM ver.2: 1,3,9,14,16,17,18,19,22
 *          refer [1] for RTCM ver.2
 *-----------------------------------------------------------------------------*/
-extern int input_rtcm2(rtcm_t *rtcm, unsigned char data)
+extern __declspec(dllexport)  int __stdcall input_rtcm2(rtcm_t *rtcm, unsigned char data)
 {
     unsigned char preamb;
     int i;
@@ -261,7 +261,7 @@ extern int input_rtcm2(rtcm_t *rtcm, unsigned char data)
 *            |<-- 8 --->|<- 6 -->|<-- 10 --->|<--- length x 8 --->|<-- 24 -->|
 *            
 *-----------------------------------------------------------------------------*/
-extern int input_rtcm3(rtcm_t *rtcm, unsigned char data)
+extern __declspec(dllexport)  int __stdcall input_rtcm3(rtcm_t *rtcm, unsigned char data)
 {
     trace(5,"input_rtcm3: data=%02x\n",data);
     
@@ -294,7 +294,7 @@ extern int input_rtcm3(rtcm_t *rtcm, unsigned char data)
 * return : status (-2: end of file, -1...10: same as above)
 * notes  : same as above
 *-----------------------------------------------------------------------------*/
-extern int input_rtcm2f(rtcm_t *rtcm, FILE *fp)
+extern __declspec(dllexport)  int __stdcall input_rtcm2f(rtcm_t *rtcm, FILE *fp)
 {
     int i,data=0,ret;
     
@@ -313,7 +313,7 @@ extern int input_rtcm2f(rtcm_t *rtcm, FILE *fp)
 * return : status (-2: end of file, -1...10: same as above)
 * notes  : same as above
 *-----------------------------------------------------------------------------*/
-extern int input_rtcm3f(rtcm_t *rtcm, FILE *fp)
+extern __declspec(dllexport)  int __stdcall input_rtcm3f(rtcm_t *rtcm, FILE *fp)
 {
     int i,data=0,ret;
     
@@ -332,7 +332,7 @@ extern int input_rtcm3f(rtcm_t *rtcm, FILE *fp)
 *          int    sync    I  sync flag (1:another message follows)
 * return : status (1:ok,0:error)
 *-----------------------------------------------------------------------------*/
-extern int gen_rtcm2(rtcm_t *rtcm, int type, int sync)
+extern __declspec(dllexport)  int __stdcall gen_rtcm2(rtcm_t *rtcm, int type, int sync)
 {
     trace(4,"gen_rtcm2: type=%d sync=%d\n",type,sync);
     
@@ -355,7 +355,7 @@ extern int gen_rtcm2(rtcm_t *rtcm, int type, int sync)
 *          ({nsat} = number of valid satellites, {nsig} = number of signals in
 *          the obs data) 
 *-----------------------------------------------------------------------------*/
-extern int gen_rtcm3(rtcm_t *rtcm, int type, int sync)
+extern __declspec(dllexport)  int __stdcall gen_rtcm3(rtcm_t *rtcm, int type, int sync)
 {
     unsigned int crc;
     int i=0;

@@ -348,16 +348,16 @@ static const unsigned int tbl_CRC24Q[]={
 #define dgetrs_     dgetrs
 #endif
 #ifdef LAPACK
-extern void dgemm_(char *, char *, int *, int *, int *, double *, double *,
+extern __declspec(dllexport) void dgemm_(char *, char *, int *, int *, int *, double *, double *,
                    int *, double *, int *, double *, double *, int *);
-extern void dgetrf_(int *, int *, double *, int *, int *, int *);
-extern void dgetri_(int *, double *, int *, int *, double *, int *, int *);
-extern void dgetrs_(char *, int *, int *, double *, int *, int *, double *,
+extern __declspec(dllexport) void dgetrf_(int *, int *, double *, int *, int *, int *);
+extern __declspec(dllexport) void dgetri_(int *, double *, int *, int *, double *, int *, int *);
+extern __declspec(dllexport) void dgetrs_(char *, int *, int *, double *, int *, int *, double *,
                     int *, int *);
 #endif
 
 #ifdef IERS_MODEL
-extern int gmf_(double *mjd, double *lat, double *lon, double *hgt, double *zd,
+extern __declspec(dllexport) int gmf_(double *mjd, double *lat, double *lon, double *hgt, double *zd,
                 double *gmfh, double *gmfw);
 #endif
 
@@ -377,7 +377,7 @@ static void fatalerr(const char *format, ...)
 * return : none
 * notes  : if malloc() failed in return : none
 *-----------------------------------------------------------------------------*/
-extern void add_fatal(fatalfunc_t *func)
+extern __declspec(dllexport) void __stdcall add_fatal(fatalfunc_t *func)
 {
     fatalfunc=func;
 }
@@ -387,7 +387,7 @@ extern void add_fatal(fatalfunc_t *func)
 *          int    prn       I   satellite prn/slot number
 * return : satellite number (0:error)
 *-----------------------------------------------------------------------------*/
-extern int satno(int sys, int prn)
+extern __declspec(dllexport)  __declspec(dllexport) int __stdcall satno(int sys, int prn)
 {
     if (prn<=0) return 0;
     switch (sys) {
@@ -426,7 +426,7 @@ extern int satno(int sys, int prn)
 *          int    *prn      IO  satellite prn/slot number (NULL: no output)
 * return : satellite system (SYS_GPS,SYS_GLO,...)
 *-----------------------------------------------------------------------------*/
-extern int satsys(int sat, int *prn)
+extern __declspec(dllexport) __declspec(dllexport) int __stdcall satsys(int sat, int *prn)
 {
     int sys=SYS_NONE;
     if (sat<=0||MAXSAT<sat) sat=0;
@@ -464,7 +464,7 @@ extern int satsys(int sat, int *prn)
 * return : satellite number (0: error)
 * notes  : 120-142 and 193-199 are also recognized as sbas and qzss
 *-----------------------------------------------------------------------------*/
-extern int satid2no(const char *id)
+extern __declspec(dllexport) __declspec(dllexport) int __stdcall satid2no(const char *id)
 {
     int sys,prn;
     char code;
@@ -497,7 +497,7 @@ extern int satid2no(const char *id)
 *          char   *id       O   satellite id (Gnn,Rnn,Enn,Jnn,Cnn,Inn or nnn)
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void satno2id(int sat, char *id)
+extern __declspec(dllexport) __declspec(dllexport) void __stdcall satno2id(int sat, char *id)
 {
     int prn;
     switch (satsys(sat,&prn)) {
@@ -520,7 +520,7 @@ extern void satno2id(int sat, char *id)
 *          prcopt_t *opt    I   processing options (NULL: not used)
 * return : status (1:excluded,0:not excluded)
 *-----------------------------------------------------------------------------*/
-extern int satexclude(int sat, double var, int svh, const prcopt_t *opt)
+extern __declspec(dllexport) __declspec(dllexport) int __stdcall satexclude(int sat, double var, int svh, const prcopt_t *opt)
 {
     int sys=satsys(sat,NULL);
     
@@ -551,7 +551,7 @@ extern int satexclude(int sat, double var, int svh, const prcopt_t *opt)
 *          snrmask_t *mask  I   SNR mask
 * return : status (1:masked,0:unmasked)
 *-----------------------------------------------------------------------------*/
-extern int testsnr(int base, int freq, double el, double snr,
+extern __declspec(dllexport) __declspec(dllexport) int __stdcall testsnr(int base, int freq, double el, double snr,
                    const snrmask_t *mask)
 {
     double minsnr,a;
@@ -575,7 +575,7 @@ extern int testsnr(int base, int freq, double el, double snr,
 * return : obs code (CODE_???)
 * notes  : obs codes are based on reference [6] and qzss extension
 *-----------------------------------------------------------------------------*/
-extern unsigned char obs2code(const char *obs, int *freq)
+extern __declspec(dllexport) __declspec(dllexport) unsigned char __stdcall obs2code(const char *obs, int *freq)
 {
     int i;
     if (freq) *freq=0;
@@ -595,7 +595,7 @@ extern unsigned char obs2code(const char *obs, int *freq)
 * return : obs code string ("1C","1P","1P",...)
 * notes  : obs codes are based on reference [6] and qzss extension
 *-----------------------------------------------------------------------------*/
-extern char *code2obs(unsigned char code, int *freq)
+extern __declspec(dllexport) __declspec(dllexport) char* __stdcall code2obs(unsigned char code, int *freq)
 {
     if (freq) *freq=0;
     if (code<=CODE_NONE||MAXCODE<code) return "";
@@ -610,7 +610,7 @@ extern char *code2obs(unsigned char code, int *freq)
 *                               (higher priority precedes lower)
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void setcodepri(int sys, int freq, const char *pri)
+extern __declspec(dllexport) __declspec(dllexport) void __stdcall setcodepri(int sys, int freq, const char *pri)
 {
     trace(3,"setcodepri:sys=%d freq=%d pri=%s\n",sys,freq,pri);
     
@@ -630,7 +630,7 @@ extern void setcodepri(int sys, int freq, const char *pri)
 *          char   *opt    I     code options (NULL:no option)
 * return : priority (15:highest-1:lowest,0:error)
 *-----------------------------------------------------------------------------*/
-extern int getcodepri(int sys, unsigned char code, const char *opt)
+extern __declspec(dllexport) int __stdcall getcodepri(int sys, unsigned char code, const char *opt)
 {
     const char *p,*optstr;
     char *obs,str[8]="";
@@ -663,14 +663,14 @@ extern int getcodepri(int sys, unsigned char code, const char *opt)
 *          int    len    I      bit length (bits) (len<=32)
 * return : extracted unsigned/signed bits
 *-----------------------------------------------------------------------------*/
-extern unsigned int getbitu(const unsigned char *buff, int pos, int len)
+extern __declspec(dllexport) unsigned int __stdcall getbitu(const unsigned char *buff, int pos, int len)
 {
     unsigned int bits=0;
     int i;
     for (i=pos;i<pos+len;i++) bits=(bits<<1)+((buff[i/8]>>(7-i%8))&1u);
     return bits;
 }
-extern int getbits(const unsigned char *buff, int pos, int len)
+extern __declspec(dllexport) int __stdcall getbits(const unsigned char *buff, int pos, int len)
 {
     unsigned int bits=getbitu(buff,pos,len);
     if (len<=0||32<=len||!(bits&(1u<<(len-1)))) return (int)bits;
@@ -684,7 +684,7 @@ extern int getbits(const unsigned char *buff, int pos, int len)
 *         (unsigned) int I      unsigned/signed data
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void setbitu(unsigned char *buff, int pos, int len, unsigned int data)
+extern __declspec(dllexport) void __stdcall setbitu(unsigned char *buff, int pos, int len, unsigned int data)
 {
     unsigned int mask=1u<<(len-1);
     int i;
@@ -693,7 +693,7 @@ extern void setbitu(unsigned char *buff, int pos, int len, unsigned int data)
         if (data&mask) buff[i/8]|=1u<<(7-i%8); else buff[i/8]&=~(1u<<(7-i%8));
     }
 }
-extern void setbits(unsigned char *buff, int pos, int len, int data)
+extern __declspec(dllexport) void __stdcall setbits(unsigned char *buff, int pos, int len, int data)
 {
     if (data<0) data|=1<<(len-1); else data&=~(1<<(len-1)); /* set sign bit */
     setbitu(buff,pos,len,(unsigned int)data);
@@ -705,7 +705,7 @@ extern void setbits(unsigned char *buff, int pos, int len, int data)
 * return : crc-32 parity
 * notes  : see NovAtel OEMV firmware manual 1.7 32-bit CRC
 *-----------------------------------------------------------------------------*/
-extern unsigned int rtk_crc32(const unsigned char *buff, int len)
+extern __declspec(dllexport) unsigned int __stdcall rtk_crc32(const unsigned char *buff, int len)
 {
     unsigned int crc=0;
     int i,j;
@@ -727,7 +727,7 @@ extern unsigned int rtk_crc32(const unsigned char *buff, int len)
 * return : crc-24Q parity
 * notes  : see reference [2] A.4.3.3 Parity
 *-----------------------------------------------------------------------------*/
-extern unsigned int rtk_crc24q(const unsigned char *buff, int len)
+extern __declspec(dllexport) unsigned int __stdcall rtk_crc24q(const unsigned char *buff, int len)
 {
     unsigned int crc=0;
     int i;
@@ -744,7 +744,7 @@ extern unsigned int rtk_crc24q(const unsigned char *buff, int len)
 * return : crc-16 parity
 * notes  : see reference [10] A.3.
 *-----------------------------------------------------------------------------*/
-extern unsigned short rtk_crc16(const unsigned char *buff, int len)
+extern __declspec(dllexport) unsigned short __stdcall rtk_crc16(const unsigned char *buff, int len)
 {
     unsigned short crc=0;
     int i;
@@ -765,7 +765,7 @@ extern unsigned short rtk_crc16(const unsigned char *buff, int len)
 * return : status (1:ok,0:parity error)
 * notes  : see reference [1] 20.3.5.2 user parity algorithm
 *-----------------------------------------------------------------------------*/
-extern int decode_word(unsigned int word, unsigned char *data)
+extern __declspec(dllexport) int __stdcall decode_word(unsigned int word, unsigned char *data)
 {
     const unsigned int hamming[]={
         0xBB1F3480,0x5D8F9A40,0xAEC7CD00,0x5763E680,0x6BB1F340,0x8B7A89C0
@@ -791,7 +791,7 @@ extern int decode_word(unsigned int word, unsigned char *data)
 * args   : int    n,m       I   number of rows and columns of matrix
 * return : matrix pointer (if n<=0 or m<=0, return NULL)
 *-----------------------------------------------------------------------------*/
-extern double *mat(int n, int m)
+extern __declspec(dllexport) double * __stdcall mat(int n, int m)
 {
     double *p;
     
@@ -806,7 +806,7 @@ extern double *mat(int n, int m)
 * args   : int    n,m       I   number of rows and columns of matrix
 * return : matrix pointer (if n<=0 or m<=0, return NULL)
 *-----------------------------------------------------------------------------*/
-extern int *imat(int n, int m)
+extern __declspec(dllexport) int * __stdcall imat(int n, int m)
 {
     int *p;
     
@@ -821,7 +821,7 @@ extern int *imat(int n, int m)
 * args   : int    n,m       I   number of rows and columns of matrix
 * return : matrix pointer (if n<=0 or m<=0, return NULL)
 *-----------------------------------------------------------------------------*/
-extern double *zeros(int n, int m)
+extern __declspec(dllexport) double * __stdcall zeros(int n, int m)
 {
     double *p;
     
@@ -840,7 +840,7 @@ extern double *zeros(int n, int m)
 * args   : int    n         I   number of rows and columns of matrix
 * return : matrix pointer (if n<=0, return NULL)
 *-----------------------------------------------------------------------------*/
-extern double *eye(int n)
+extern __declspec(dllexport) double * __stdcall eye(int n)
 {
     double *p;
     int i;
@@ -854,7 +854,7 @@ extern double *eye(int n)
 *          int    n         I   size of vector a,b
 * return : a'*b
 *-----------------------------------------------------------------------------*/
-extern double dot(const double *a, const double *b, int n)
+extern __declspec(dllexport) double __stdcall dot(const double *a, const double *b, int n)
 {
     double c=0.0;
     
@@ -867,7 +867,7 @@ extern double dot(const double *a, const double *b, int n)
 *          int    n         I   size of vector a
 * return : || a ||
 *-----------------------------------------------------------------------------*/
-extern double norm(const double *a, int n)
+extern __declspec(dllexport) double __stdcall norm(const double *a, int n)
 {
     return sqrt(dot(a,a,n));
 }
@@ -877,7 +877,7 @@ extern double norm(const double *a, int n)
 *          double *c        O   outer product (a x b) (3 x 1)
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void cross3(const double *a, const double *b, double *c)
+extern __declspec(dllexport) void __stdcall cross3(const double *a, const double *b, double *c)
 {
     c[0]=a[1]*b[2]-a[2]*b[1];
     c[1]=a[2]*b[0]-a[0]*b[2];
@@ -889,7 +889,7 @@ extern void cross3(const double *a, const double *b, double *c)
 *          double *b        O   normlized vector (3 x 1) || b || = 1
 * return : status (1:ok,0:error)
 *-----------------------------------------------------------------------------*/
-extern int normv3(const double *a, double *b)
+extern __declspec(dllexport) int __stdcall normv3(const double *a, double *b)
 {
     double r;
     if ((r=norm(a,3))<=0.0) return 0;
@@ -905,7 +905,7 @@ extern int normv3(const double *a, double *b)
 *          int    n,m       I   number of rows and columns of matrix
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void matcpy(double *A, const double *B, int n, int m)
+extern __declspec(dllexport) void __stdcall matcpy(double *A, const double *B, int n, int m)
 {
     memcpy(A,B,sizeof(double)*n*m);
 }
@@ -923,7 +923,7 @@ extern void matcpy(double *A, const double *B, int n, int m)
 *          double *C        IO matrix C (n x k)
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void matmul(const char *tr, int n, int k, int m, double alpha,
+extern __declspec(dllexport) void matmul(const char *tr, int n, int k, int m, double alpha,
                    const double *A, const double *B, double beta, double *C)
 {
     int lda=tr[0]=='T'?m:n,ldb=tr[1]=='T'?k:m;
@@ -937,7 +937,7 @@ extern void matmul(const char *tr, int n, int k, int m, double alpha,
 *          int    n         I   size of matrix A
 * return : status (0:ok,0>:error)
 *-----------------------------------------------------------------------------*/
-extern int matinv(double *A, int n)
+extern __declspec(dllexport) int matinv(double *A, int n)
 {
     double *work;
     int info,lwork=n*16,*ipiv=imat(n,1);
@@ -959,7 +959,7 @@ extern int matinv(double *A, int n)
 * notes  : matirix stored by column-major order (fortran convention)
 *          X can be same as Y
 *-----------------------------------------------------------------------------*/
-extern int solve(const char *tr, const double *A, const double *Y, int n,
+extern __declspec(dllexport) int solve(const char *tr, const double *A, const double *Y, int n,
                  int m, double *X)
 {
     double *B=mat(n,n);
@@ -976,7 +976,7 @@ extern int solve(const char *tr, const double *A, const double *Y, int n,
 #else /* without LAPACK/BLAS or MKL */
 
 /* multiply matrix -----------------------------------------------------------*/
-extern void matmul(const char *tr, int n, int k, int m, double alpha,
+extern __declspec(dllexport) void __stdcall matmul(const char *tr, int n, int k, int m, double alpha,
                    const double *A, const double *B, double beta, double *C)
 {
     double d;
@@ -1044,7 +1044,7 @@ static void lubksb(const double *A, int n, const int *indx, double *b)
     }
 }
 /* inverse of matrix ---------------------------------------------------------*/
-extern int matinv(double *A, int n)
+extern __declspec(dllexport) int __stdcall matinv(double *A, int n)
 {
     double d,*B;
     int i,j,*indx;
@@ -1060,7 +1060,7 @@ extern int matinv(double *A, int n)
     return 0;
 }
 /* solve linear equation -----------------------------------------------------*/
-extern int solve(const char *tr, const double *A, const double *Y, int n,
+extern __declspec(dllexport) int __stdcall solve(const char *tr, const double *A, const double *Y, int n,
                  int m, double *X)
 {
     double *B=mat(n,n);
@@ -1085,7 +1085,7 @@ extern int solve(const char *tr, const double *A, const double *Y, int n,
 * notes  : for weighted least square, replace A and y by A*w and w*y (w=W^(1/2))
 *          matirix stored by column-major order (fortran convention)
 *-----------------------------------------------------------------------------*/
-extern int lsq(const double *A, const double *y, int n, int m, double *x,
+extern __declspec(dllexport) int __stdcall lsq(const double *A, const double *y, int n, int m, double *x,
                double *Q)
 {
     double *Ay;
@@ -1136,7 +1136,7 @@ static int filter_(const double *x, const double *P, const double *H,
     free(F); free(Q); free(K); free(I);
     return info;
 }
-extern int filter(double *x, double *P, const double *H, const double *v,
+extern __declspec(dllexport) int __stdcall filter(double *x, double *P, const double *H, const double *v,
                   const double *R, int n, int m)
 {
     double *x_,*xp_,*P_,*Pp_,*H_;
@@ -1173,7 +1173,7 @@ extern int filter(double *x, double *P, const double *H, const double *v,
 * notes  : see reference [4] 5.2
 *          matirix stored by column-major order (fortran convention)
 *-----------------------------------------------------------------------------*/
-extern int smoother(const double *xf, const double *Qf, const double *xb,
+extern __declspec(dllexport) int __stdcall smoother(const double *xf, const double *Qf, const double *xb,
                     const double *Qb, int n, double *xs, double *Qs)
 {
     double *invQf=mat(n,n),*invQb=mat(n,n),*xx=mat(n,1);
@@ -1201,7 +1201,7 @@ extern int smoother(const double *xf, const double *Qf, const double *xb,
 * return : none
 * notes  : matirix stored by column-major order (fortran convention)
 *-----------------------------------------------------------------------------*/
-extern void matfprint(const double A[], int n, int m, int p, int q, FILE *fp)
+extern __declspec(dllexport) void __stdcall matfprint(const double A[], int n, int m, int p, int q, FILE *fp)
 {
     int i,j;
     
@@ -1210,7 +1210,7 @@ extern void matfprint(const double A[], int n, int m, int p, int q, FILE *fp)
         fprintf(fp,"\n");
     }
 }
-extern void matprint(const double A[], int n, int m, int p, int q)
+extern __declspec(dllexport) void __stdcall matprint(const double A[], int n, int m, int p, int q)
 {
     matfprint(A,n,m,p,q,stdout);
 }
@@ -1220,7 +1220,7 @@ extern void matprint(const double A[], int n, int m, int p, int q)
 *          int    i,n       I   substring position and width
 * return : converted number (0.0:error)
 *-----------------------------------------------------------------------------*/
-extern double str2num(const char *s, int i, int n)
+extern __declspec(dllexport) double __stdcall str2num(const char *s, int i, int n)
 {
     double value;
     char str[256],*p=str;
@@ -1237,7 +1237,7 @@ extern double str2num(const char *s, int i, int n)
 *          gtime_t *t       O   gtime_t struct
 * return : status (0:ok,0>:error)
 *-----------------------------------------------------------------------------*/
-extern int str2time(const char *s, int i, int n, gtime_t *t)
+extern __declspec(dllexport) int __stdcall str2time(const char *s, int i, int n, gtime_t *t)
 {
     double ep[6];
     char str[256],*p=str;
@@ -1257,7 +1257,7 @@ extern int str2time(const char *s, int i, int n, gtime_t *t)
 * return : gtime_t struct
 * notes  : proper in 1970-2037 or 1970-2099 (64bit time_t)
 *-----------------------------------------------------------------------------*/
-extern __declspec(dllexport) gtime_t __stdcall  epoch2time(const double *ep)
+extern __declspec(dllexport)  gtime_t __stdcall  epoch2time(const double *ep)
 {
     const int doy[]={1,32,60,91,121,152,182,213,244,274,305,335};
     gtime_t time={0};
@@ -1279,7 +1279,7 @@ extern __declspec(dllexport) gtime_t __stdcall  epoch2time(const double *ep)
 * return : none
 * notes  : proper in 1970-2037 or 1970-2099 (64bit time_t)
 *-----------------------------------------------------------------------------*/
-extern void time2epoch(gtime_t t, double *ep)
+extern __declspec(dllexport) void __stdcall time2epoch(gtime_t t, double *ep)
 {
     const int mday[]={ /* # of days in a month */
         31,28,31,30,31,30,31,31,30,31,30,31,31,28,31,30,31,30,31,31,30,31,30,31,
@@ -1302,7 +1302,7 @@ extern void time2epoch(gtime_t t, double *ep)
 *          double sec       I   time of week in gps time (s)
 * return : gtime_t struct
 *-----------------------------------------------------------------------------*/
-extern gtime_t gpst2time(int week, double sec)
+extern __declspec(dllexport) gtime_t __stdcall gpst2time(int week, double sec)
 {
     gtime_t t=epoch2time(gpst0);
     
@@ -1317,7 +1317,7 @@ extern gtime_t gpst2time(int week, double sec)
 *          int    *week     IO  week number in gps time (NULL: no output)
 * return : time of week in gps time (s)
 *-----------------------------------------------------------------------------*/
-extern double time2gpst(gtime_t t, int *week)
+extern __declspec(dllexport) double __stdcall time2gpst(gtime_t t, int *week)
 {
     gtime_t t0=epoch2time(gpst0);
     time_t sec=t.time-t0.time;
@@ -1332,7 +1332,7 @@ extern double time2gpst(gtime_t t, int *week)
 *          double sec       I   time of week in gst (s)
 * return : gtime_t struct
 *-----------------------------------------------------------------------------*/
-extern gtime_t gst2time(int week, double sec)
+extern __declspec(dllexport) gtime_t __stdcall gst2time(int week, double sec)
 {
     gtime_t t=epoch2time(gst0);
     
@@ -1347,7 +1347,7 @@ extern gtime_t gst2time(int week, double sec)
 *          int    *week     IO  week number in gst (NULL: no output)
 * return : time of week in gst (s)
 *-----------------------------------------------------------------------------*/
-extern double time2gst(gtime_t t, int *week)
+extern __declspec(dllexport) double __stdcall time2gst(gtime_t t, int *week)
 {
     gtime_t t0=epoch2time(gst0);
     time_t sec=t.time-t0.time;
@@ -1362,7 +1362,7 @@ extern double time2gst(gtime_t t, int *week)
 *          double sec       I   time of week in bdt (s)
 * return : gtime_t struct
 *-----------------------------------------------------------------------------*/
-extern gtime_t bdt2time(int week, double sec)
+extern __declspec(dllexport) gtime_t __stdcall bdt2time(int week, double sec)
 {
     gtime_t t=epoch2time(bdt0);
     
@@ -1377,7 +1377,7 @@ extern gtime_t bdt2time(int week, double sec)
 *          int    *week     IO  week number in bdt (NULL: no output)
 * return : time of week in bdt (s)
 *-----------------------------------------------------------------------------*/
-extern double time2bdt(gtime_t t, int *week)
+extern __declspec(dllexport) double __stdcall time2bdt(gtime_t t, int *week)
 {
     gtime_t t0=epoch2time(bdt0);
     time_t sec=t.time-t0.time;
@@ -1392,7 +1392,7 @@ extern double time2bdt(gtime_t t, int *week)
 *          double sec       I   time to add (s)
 * return : gtime_t struct (t+sec)
 *-----------------------------------------------------------------------------*/
-extern gtime_t timeadd(gtime_t t, double sec)
+extern __declspec(dllexport) gtime_t __stdcall timeadd(gtime_t t, double sec)
 {
     double tt;
     
@@ -1404,7 +1404,7 @@ extern gtime_t timeadd(gtime_t t, double sec)
 * args   : gtime_t t1,t2    I   gtime_t structs
 * return : time difference (t1-t2) (s)
 *-----------------------------------------------------------------------------*/
-extern double timediff(gtime_t t1, gtime_t t2)
+extern __declspec(dllexport) double __stdcall timediff(gtime_t t1, gtime_t t2)
 {
     return difftime(t1.time,t2.time)+t1.sec-t2.sec;
 }
@@ -1415,7 +1415,7 @@ extern double timediff(gtime_t t1, gtime_t t2)
 *-----------------------------------------------------------------------------*/
 static double timeoffset_=0.0;        /* time offset (s) */
 
-extern gtime_t timeget(void)
+extern __declspec(dllexport) gtime_t __stdcall timeget(void)
 {
     gtime_t time;
     double ep[6]={0};
@@ -1449,7 +1449,7 @@ extern gtime_t timeget(void)
 *          the time offset is reflected to only timeget()
 *          not reentrant
 *-----------------------------------------------------------------------------*/
-extern void timeset(gtime_t t)
+extern __declspec(dllexport) void __stdcall timeset(gtime_t t)
 {
     timeoffset_+=timediff(t,timeget());
 }
@@ -1509,7 +1509,7 @@ static int read_leaps_usno(FILE *fp)
 *          (2) The date and time indicate the start UTC time for the UTC-GPST
 *          (3) The date and time should be descending order.
 *-----------------------------------------------------------------------------*/
-extern int read_leaps(const char *file)
+extern __declspec(dllexport) int __stdcall read_leaps(const char *file)
 {
     FILE *fp;
     int i,n;
@@ -1531,7 +1531,7 @@ extern int read_leaps(const char *file)
 * return : time expressed in utc
 * notes  : ignore slight time offset under 100 ns
 *-----------------------------------------------------------------------------*/
-extern gtime_t gpst2utc(gtime_t t)
+extern __declspec(dllexport) gtime_t __stdcall gpst2utc(gtime_t t)
 {
     gtime_t tu;
     int i;
@@ -1548,7 +1548,7 @@ extern gtime_t gpst2utc(gtime_t t)
 * return : time expressed in gpstime
 * notes  : ignore slight time offset under 100 ns
 *-----------------------------------------------------------------------------*/
-extern gtime_t utc2gpst(gtime_t t)
+extern __declspec(dllexport) gtime_t __stdcall utc2gpst(gtime_t t)
 {
     int i;
     
@@ -1565,7 +1565,7 @@ extern gtime_t utc2gpst(gtime_t t)
 *          no leap seconds in BDT
 *          ignore slight time offset under 100 ns
 *-----------------------------------------------------------------------------*/
-extern gtime_t gpst2bdt(gtime_t t)
+extern __declspec(dllexport) gtime_t __stdcall gpst2bdt(gtime_t t)
 {
     return timeadd(t,-14.0);
 }
@@ -1575,7 +1575,7 @@ extern gtime_t gpst2bdt(gtime_t t)
 * return : time expressed in gpstime
 * notes  : see gpst2bdt()
 *-----------------------------------------------------------------------------*/
-extern gtime_t bdt2gpst(gtime_t t)
+extern __declspec(dllexport) gtime_t __stdcall bdt2gpst(gtime_t t)
 {
     return timeadd(t,14.0);
 }
@@ -1595,7 +1595,7 @@ static double time2sec(gtime_t time, gtime_t *day)
 *          double ut1_utc   I   UT1-UTC (s)
 * return : gmst (rad)
 *-----------------------------------------------------------------------------*/
-extern double utc2gmst(gtime_t t, double ut1_utc)
+extern __declspec(dllexport) double __stdcall utc2gmst(gtime_t t, double ut1_utc)
 {
     const double ep2000[]={2000,1,1,12,0,0};
     gtime_t tut,tut0;
@@ -1617,7 +1617,7 @@ extern double utc2gmst(gtime_t t, double ut1_utc)
 *          int    n         I   number of decimals
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void time2str(gtime_t t, char *s, int n)
+extern __declspec(dllexport) void __stdcall time2str(gtime_t t, char *s, int n)
 {
     double ep[6];
     
@@ -1634,7 +1634,7 @@ extern void time2str(gtime_t t, char *s, int n)
 * return : time string
 * notes  : not reentrant, do not use multiple in a function
 *-----------------------------------------------------------------------------*/
-extern char *time_str(gtime_t t, int n)
+extern __declspec(dllexport) char * __stdcall time_str(gtime_t t, int n)
 {
     static char buff[64];
     time2str(t,buff,n);
@@ -1645,7 +1645,7 @@ extern char *time_str(gtime_t t, int n)
 * args   : gtime_t t        I   gtime_t struct
 * return : day of year (days)
 *-----------------------------------------------------------------------------*/
-extern double time2doy(gtime_t t)
+extern __declspec(dllexport) double __stdcall time2doy(gtime_t t)
 {
     double ep[6];
     
@@ -1658,7 +1658,7 @@ extern double time2doy(gtime_t t)
 * args   : int   week       I   not-adjusted gps week number
 * return : adjusted gps week number
 *-----------------------------------------------------------------------------*/
-extern int adjgpsweek(int week)
+extern __declspec(dllexport) int __stdcall adjgpsweek(int week)
 {
     int w;
     (void)time2gpst(utc2gpst(timeget()),&w);
@@ -1670,7 +1670,7 @@ extern int adjgpsweek(int week)
 * args   : none
 * return : current tick in ms
 *-----------------------------------------------------------------------------*/
-extern unsigned int tickget(void)
+extern __declspec(dllexport) unsigned int __stdcall tickget(void)
 {
 #ifdef WIN32
     return (unsigned int)timeGetTime();
@@ -1698,7 +1698,7 @@ extern unsigned int tickget(void)
 * args   : int   ms         I   miliseconds to sleep (<0:no sleep)
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void sleepms(int ms)
+extern __declspec(dllexport) void __stdcall sleepms(int ms)
 {
 #ifdef WIN32
     if (ms<5) Sleep(1); else Sleep(ms);
@@ -1717,7 +1717,7 @@ extern void sleepms(int ms)
 *          int    ndec      I   number of decimals of second
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void deg2dms(double deg, double *dms, int ndec)
+extern __declspec(dllexport) void __stdcall deg2dms(double deg, double *dms, int ndec)
 {
     double sign=deg<0.0?-1.0:1.0,a=fabs(deg);
     double unit=pow(0.1,ndec);
@@ -1739,7 +1739,7 @@ extern void deg2dms(double deg, double *dms, int ndec)
 * args   : double *dms      I   degree-minute-second {deg,min,sec}
 * return : degree
 *-----------------------------------------------------------------------------*/
-extern double dms2deg(const double *dms)
+extern __declspec(dllexport) double __stdcall dms2deg(const double *dms)
 {
     double sign=dms[0]<0.0?-1.0:1.0;
     return sign*(fabs(dms[0])+dms[1]/60.0+dms[2]/3600.0);
@@ -1751,7 +1751,7 @@ extern double dms2deg(const double *dms)
 * return : none
 * notes  : WGS84, ellipsoidal height
 *-----------------------------------------------------------------------------*/
-extern void ecef2pos(const double *r, double *pos)
+extern __declspec(dllexport) void __stdcall ecef2pos(const double *r, double *pos)
 {
     double e2=FE_WGS84*(2.0-FE_WGS84),r2=dot(r,r,2),z,zk,v=RE_WGS84,sinp;
     
@@ -1772,7 +1772,7 @@ extern void ecef2pos(const double *r, double *pos)
 * return : none
 * notes  : WGS84, ellipsoidal height
 *-----------------------------------------------------------------------------*/
-extern void pos2ecef(const double *pos, double *r)
+extern __declspec(dllexport) void __stdcall pos2ecef(const double *pos, double *r)
 {
     double sinp=sin(pos[0]),cosp=cos(pos[0]),sinl=sin(pos[1]),cosl=cos(pos[1]);
     double e2=FE_WGS84*(2.0-FE_WGS84),v=RE_WGS84/sqrt(1.0-e2*sinp*sinp);
@@ -1788,7 +1788,7 @@ extern void pos2ecef(const double *pos, double *r)
 * return : none
 * notes  : matirix stored by column-major order (fortran convention)
 *-----------------------------------------------------------------------------*/
-extern void xyz2enu(const double *pos, double *E)
+extern __declspec(dllexport) void __stdcall xyz2enu(const double *pos, double *E)
 {
     double sinp=sin(pos[0]),cosp=cos(pos[0]),sinl=sin(pos[1]),cosl=cos(pos[1]);
     
@@ -1803,7 +1803,7 @@ extern void xyz2enu(const double *pos, double *E)
 *          double *e        O   vector in local tangental coordinate {e,n,u}
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void ecef2enu(const double *pos, const double *r, double *e)
+extern __declspec(dllexport) void __stdcall ecef2enu(const double *pos, const double *r, double *e)
 {
     double E[9];
     
@@ -1817,7 +1817,7 @@ extern void ecef2enu(const double *pos, const double *r, double *e)
 *          double *r        O   vector in ecef coordinate {x,y,z}
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void enu2ecef(const double *pos, const double *e, double *r)
+extern __declspec(dllexport) void __stdcall enu2ecef(const double *pos, const double *e, double *r)
 {
     double E[9];
     
@@ -1831,7 +1831,7 @@ extern void enu2ecef(const double *pos, const double *e, double *r)
 *          double *Q        O   covariance in local tangental coordinate
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void covenu(const double *pos, const double *P, double *Q)
+extern __declspec(dllexport) void __stdcall covenu(const double *pos, const double *P, double *Q)
 {
     double E[9],EP[9];
     
@@ -1846,7 +1846,7 @@ extern void covenu(const double *pos, const double *P, double *Q)
 *          double *P        O   covariance in xyz-ecef coordinate
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void covecef(const double *pos, const double *Q, double *P)
+extern __declspec(dllexport) void __stdcall covecef(const double *pos, const double *Q, double *P)
 {
     double E[9],EQ[9];
     
@@ -2026,7 +2026,7 @@ static void nut_iau1980(double t, const double *f, double *dpsi, double *deps)
 * note   : see ref [3] chap 5
 *          not thread-safe
 *-----------------------------------------------------------------------------*/
-extern void eci2ecef(gtime_t tutc, const double *erpv, double *U, double *gmst)
+extern __declspec(dllexport) void __stdcall eci2ecef(gtime_t tutc, const double *erpv, double *U, double *gmst)
 {
     const double ep2000[]={2000,1,1,12,0,0};
     static gtime_t tutc_;
@@ -2241,7 +2241,7 @@ static int readantex(const char *file, pcvs_t *pcvs)
 *          see reference [3]
 *          only support non-azimuth-depedent parameters
 *-----------------------------------------------------------------------------*/
-extern int readpcv(const char *file, pcvs_t *pcvs)
+extern __declspec(dllexport) int __stdcall readpcv(const char *file, pcvs_t *pcvs)
 {
     pcv_t *pcv;
     char *ext;
@@ -2273,7 +2273,7 @@ extern int readpcv(const char *file, pcvs_t *pcvs)
 *          pcvs_t *pcvs       IO  antenna parameters
 * return : antenna parameter (NULL: no antenna)
 *-----------------------------------------------------------------------------*/
-extern pcv_t *searchpcv(int sat, const char *type, gtime_t time,
+extern __declspec(dllexport) pcv_t * __stdcall searchpcv(int sat, const char *type, gtime_t time,
                         const pcvs_t *pcvs)
 {
     pcv_t *pcv;
@@ -2322,7 +2322,7 @@ extern pcv_t *searchpcv(int sat, const char *type, gtime_t time,
 *                               (all 0 if search error)
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void readpos(const char *file, const char *rcv, double *pos)
+extern __declspec(dllexport) void __stdcall readpos(const char *file, const char *rcv, double *pos)
 {
     static double poss[2048][3];
     static char stas[2048][16];
@@ -2375,7 +2375,7 @@ static int readblqrecord(FILE *fp, double *odisp)
 *          double *odisp      O   ocean tide loading parameters
 * return : status (1:ok,0:file open error)
 *-----------------------------------------------------------------------------*/
-extern int readblq(const char *file, const char *sta, double *odisp)
+extern __declspec(dllexport) int __stdcall readblq(const char *file, const char *sta, double *odisp)
 {
     FILE *fp;
     char buff[256],staname[32]="",name[32],*p;
@@ -2411,7 +2411,7 @@ extern int readblq(const char *file, const char *sta, double *odisp)
 *          erp_t  *erp        O   earth rotation parameters
 * return : status (1:ok,0:file open error)
 *-----------------------------------------------------------------------------*/
-extern int readerp(const char *file, erp_t *erp)
+extern __declspec(dllexport) int __stdcall readerp(const char *file, erp_t *erp)
 {
     FILE *fp;
     erpd_t *erp_data;
@@ -2457,7 +2457,7 @@ extern int readerp(const char *file, erp_t *erp)
 *          double *erpv       O   erp values {xp,yp,ut1_utc,lod} (rad,rad,s,s/d)
 * return : status (1:ok,0:error)
 *-----------------------------------------------------------------------------*/
-extern int geterp(const erp_t *erp, gtime_t time, double *erpv)
+extern __declspec(dllexport) int __stdcall geterp(const erp_t *erp, gtime_t time, double *erpv)
 {
     const double ep[]={2000,1,1,12,0,0};
     double mjd,day,a;
@@ -2621,7 +2621,7 @@ static void uniqseph(nav_t *nav)
 * args   : nav_t *nav    IO     navigation data
 * return : number of epochs
 *-----------------------------------------------------------------------------*/
-extern void uniqnav(nav_t *nav)
+extern __declspec(dllexport) void __stdcall uniqnav(nav_t *nav)
 {
     int i,j;
     
@@ -2651,7 +2651,7 @@ static int cmpobs(const void *p1, const void *p2)
 * args   : obs_t *obs    IO     observation data
 * return : number of epochs
 *-----------------------------------------------------------------------------*/
-extern int sortobs(obs_t *obs)
+extern __declspec(dllexport) int __stdcall sortobs(obs_t *obs)
 {
     int i,j,n;
     
@@ -2686,7 +2686,7 @@ extern int sortobs(obs_t *obs)
 *          double  tint  I      time interval (s) (0.0:no screen by tint)
 * return : 1:on condition, 0:not on condition
 *-----------------------------------------------------------------------------*/
-extern int screent(gtime_t time, gtime_t ts, gtime_t te, double tint)
+extern __declspec(dllexport) int __stdcall screent(gtime_t time, gtime_t ts, gtime_t te, double tint)
 {
     return (tint<=0.0||fmod(time2gpst(time,NULL)+DTTOL,tint)<=DTTOL*2.0)&&
            (ts.time==0||timediff(time,ts)>=-DTTOL)&&
@@ -2698,7 +2698,7 @@ extern int screent(gtime_t time, gtime_t ts, gtime_t te, double tint)
 *          nav_t   nav   O/I    navigation data
 * return : status (1:ok,0:no file)
 *-----------------------------------------------------------------------------*/
-extern int readnav(const char *file, nav_t *nav)
+extern __declspec(dllexport) int __stdcall readnav(const char *file, nav_t *nav)
 {
     FILE *fp;
     eph_t eph0={0};
@@ -2766,7 +2766,7 @@ extern int readnav(const char *file, nav_t *nav)
     fclose(fp);
     return 1;
 }
-extern int savenav(const char *file, const nav_t *nav)
+extern __declspec(dllexport) int __stdcall savenav(const char *file, const nav_t *nav)
 {
     FILE *fp;
     int i;
@@ -2820,7 +2820,7 @@ extern int savenav(const char *file, const nav_t *nav)
 * args   : obs_t *obs    IO     observation data
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void freeobs(obs_t *obs)
+extern __declspec(dllexport) void __stdcall freeobs(obs_t *obs)
 {
     free(obs->data); obs->data=NULL; obs->n=obs->nmax=0;
 }
@@ -2834,7 +2834,7 @@ extern void freeobs(obs_t *obs)
 *                                0x40: tec data)
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void freenav(nav_t *nav, int opt)
+extern __declspec(dllexport) void __stdcall freenav(nav_t *nav, int opt)
 {
     if (opt&0x01) {free(nav->eph ); nav->eph =NULL; nav->n =nav->nmax =0;}
     if (opt&0x02) {free(nav->geph); nav->geph=NULL; nav->ng=nav->ngmax=0;}
@@ -2880,7 +2880,7 @@ static void traceswap(void)
     }
     unlock(&lock_trace);
 }
-extern void traceopen(const char *file)
+extern __declspec(dllexport) void traceopen(const char *file)
 {
     gtime_t time=utc2gpst(timeget());
     char path[1024];
@@ -2892,17 +2892,17 @@ extern void traceopen(const char *file)
     time_trace=time;
     initlock(&lock_trace);
 }
-extern void traceclose(void)
+extern __declspec(dllexport) void traceclose(void)
 {
     if (fp_trace&&fp_trace!=stderr) fclose(fp_trace);
     fp_trace=NULL;
     file_trace[0]='\0';
 }
-extern void tracelevel(int level)
+extern __declspec(dllexport) void tracelevel(int level)
 {
     level_trace=level;
 }
-extern void trace(int level, const char *format, ...)
+extern __declspec(dllexport) void trace(int level, const char *format, ...)
 {
     va_list ap;
     
@@ -2916,7 +2916,7 @@ extern void trace(int level, const char *format, ...)
     va_start(ap,format); vfprintf(fp_trace,format,ap); va_end(ap);
     fflush(fp_trace);
 }
-extern void tracet(int level, const char *format, ...)
+extern __declspec(dllexport) void tracet(int level, const char *format, ...)
 {
     va_list ap;
     
@@ -2926,12 +2926,12 @@ extern void tracet(int level, const char *format, ...)
     va_start(ap,format); vfprintf(fp_trace,format,ap); va_end(ap);
     fflush(fp_trace);
 }
-extern void tracemat(int level, const double *A, int n, int m, int p, int q)
+extern __declspec(dllexport) void tracemat(int level, const double *A, int n, int m, int p, int q)
 {
     if (!fp_trace||level>level_trace) return;
     matfprint(A,n,m,p,q,fp_trace); fflush(fp_trace);
 }
-extern void traceobs(int level, const obsd_t *obs, int n)
+extern __declspec(dllexport) void traceobs(int level, const obsd_t *obs, int n)
 {
     char str[64],id[16];
     int i;
@@ -2947,7 +2947,7 @@ extern void traceobs(int level, const obsd_t *obs, int n)
     }
     fflush(fp_trace);
 }
-extern void tracenav(int level, const nav_t *nav)
+extern __declspec(dllexport) void tracenav(int level, const nav_t *nav)
 {
     char s1[64],s2[64],id[16];
     int i;
@@ -2967,7 +2967,7 @@ extern void tracenav(int level, const nav_t *nav)
     fprintf(fp_trace,"(ion) %9.4e %9.4e %9.4e %9.4e\n",nav->ion_gal[0],
             nav->ion_gal[1],nav->ion_gal[2],nav->ion_gal[3]);
 }
-extern void tracegnav(int level, const nav_t *nav)
+extern __declspec(dllexport) void tracegnav(int level, const nav_t *nav)
 {
     char s1[64],s2[64],id[16];
     int i;
@@ -2981,7 +2981,7 @@ extern void tracegnav(int level, const nav_t *nav)
                 id,s1,s2,nav->geph[i].frq,nav->geph[i].svh,nav->geph[i].taun*1E6);
     }
 }
-extern void tracehnav(int level, const nav_t *nav)
+extern __declspec(dllexport) void tracehnav(int level, const nav_t *nav)
 {
     char s1[64],s2[64],id[16];
     int i;
@@ -2995,7 +2995,7 @@ extern void tracehnav(int level, const nav_t *nav)
                 id,s1,s2,nav->seph[i].svh,nav->seph[i].sva);
     }
 }
-extern void tracepeph(int level, const nav_t *nav)
+extern __declspec(dllexport) void tracepeph(int level, const nav_t *nav)
 {
     char s[64],id[16];
     int i,j;
@@ -3015,7 +3015,7 @@ extern void tracepeph(int level, const nav_t *nav)
         }
     }
 }
-extern void tracepclk(int level, const nav_t *nav)
+extern __declspec(dllexport) void tracepclk(int level, const nav_t *nav)
 {
     char s[64],id[16];
     int i,j;
@@ -3032,7 +3032,7 @@ extern void tracepclk(int level, const nav_t *nav)
         }
     }
 }
-extern void traceb(int level, const unsigned char *p, int n)
+extern __declspec(dllexport) void traceb(int level, const unsigned char *p, int n)
 {
     int i;
     if (!fp_trace||level>level_trace) return;
@@ -3040,19 +3040,19 @@ extern void traceb(int level, const unsigned char *p, int n)
     fprintf(fp_trace,"\n");
 }
 #else
-extern void traceopen(const char *file) {}
-extern void traceclose(void) {}
-extern void tracelevel(int level) {}
-extern void trace   (int level, const char *format, ...) {}
-extern void tracet  (int level, const char *format, ...) {}
-extern void tracemat(int level, const double *A, int n, int m, int p, int q) {}
-extern void traceobs(int level, const obsd_t *obs, int n) {}
-extern void tracenav(int level, const nav_t *nav) {}
-extern void tracegnav(int level, const nav_t *nav) {}
-extern void tracehnav(int level, const nav_t *nav) {}
-extern void tracepeph(int level, const nav_t *nav) {}
-extern void tracepclk(int level, const nav_t *nav) {}
-extern void traceb  (int level, const unsigned char *p, int n) {}
+extern __declspec(dllexport) void __stdcall traceopen(const char *file) {}
+extern __declspec(dllexport) void __stdcall traceclose(void) {}
+extern __declspec(dllexport) void __stdcall tracelevel(int level) {}
+extern __declspec(dllexport) void __stdcall trace   (int level, const char *format, ...) {}
+extern __declspec(dllexport) void __stdcall tracet  (int level, const char *format, ...) {}
+extern __declspec(dllexport) void __stdcall tracemat(int level, const double *A, int n, int m, int p, int q) {}
+extern __declspec(dllexport) void __stdcall traceobs(int level, const obsd_t *obs, int n) {}
+extern __declspec(dllexport) void __stdcall tracenav(int level, const nav_t *nav) {}
+extern __declspec(dllexport) void __stdcall tracegnav(int level, const nav_t *nav) {}
+extern __declspec(dllexport) void __stdcall tracehnav(int level, const nav_t *nav) {}
+extern __declspec(dllexport) void __stdcall tracepeph(int level, const nav_t *nav) {}
+extern __declspec(dllexport) void __stdcall tracepclk(int level, const nav_t *nav) {}
+extern __declspec(dllexport) void __stdcall traceb  (int level, const unsigned char *p, int n) {}
 
 #endif /* TRACE */
 
@@ -3061,7 +3061,7 @@ extern void traceb  (int level, const unsigned char *p, int n) {}
 * args   : char   *cmd      I   command line
 * return : execution status (0:ok,0>:error)
 *-----------------------------------------------------------------------------*/
-extern int execcmd(const char *cmd)
+extern __declspec(dllexport) int __stdcall execcmd(const char *cmd)
 {
 #ifdef WIN32
     PROCESS_INFORMATION info;
@@ -3094,7 +3094,7 @@ extern int execcmd(const char *cmd)
 * return : number of expanded file paths
 * notes  : the order of expanded files is alphabetical order
 *-----------------------------------------------------------------------------*/
-extern int expath(const char *path, char *paths[], int nmax)
+extern __declspec(dllexport) int __stdcall expath(const char *path, char *paths[], int nmax)
 {
     int i,j,n=0;
     char tmp[1024];
@@ -3164,7 +3164,7 @@ extern int expath(const char *path, char *paths[], int nmax)
 * return : none
 * notes  : not recursive. only one level
 *-----------------------------------------------------------------------------*/
-extern void createdir(const char *path)
+extern __declspec(dllexport) void __stdcall createdir(const char *path)
 {
     char buff[1024],*p;
     
@@ -3225,7 +3225,7 @@ static int repstr(char *str, const char *pat, const char *rep)
 *              %r -> rrrr : rover id
 *              %b -> bbbb : base station id
 *-----------------------------------------------------------------------------*/
-extern int reppath(const char *path, char *rpath, gtime_t time, const char *rov,
+extern __declspec(dllexport) int __stdcall reppath(const char *path, char *rpath, gtime_t time, const char *rov,
                    const char *base)
 {
     double ep[6],ep0[6]={2000,1,1,0,0,0};
@@ -3281,7 +3281,7 @@ extern int reppath(const char *path, char *rpath, gtime_t time, const char *rov,
 * notes  : see reppath() for replacements of keywords.
 *          minimum interval of time replaced is 900s.
 *-----------------------------------------------------------------------------*/
-extern int reppaths(const char *path, char *rpath[], int nmax, gtime_t ts,
+extern __declspec(dllexport) int __stdcall reppaths(const char *path, char *rpath[], int nmax, gtime_t ts,
                     gtime_t te, const char *rov, const char *base)
 {
     gtime_t time;
@@ -3313,7 +3313,7 @@ extern int reppaths(const char *path, char *rpath[], int nmax, gtime_t ts,
 *          nav_t  *nav      I   navigation messages
 * return : carrier wave length (m) (0.0: error)
 *-----------------------------------------------------------------------------*/
-extern double satwavelen(int sat, int frq, const nav_t *nav)
+extern __declspec(dllexport) double __stdcall satwavelen(int sat, int frq, const nav_t *nav)
 {
     const double freq_glo[]={FREQ1_GLO,FREQ2_GLO};
     const double dfrq_glo[]={DFRQ1_GLO,DFRQ2_GLO};
@@ -3359,7 +3359,7 @@ extern double satwavelen(int sat, int frq, const nav_t *nav)
 * return : geometric distance (m) (0>:error/no satellite position)
 * notes  : distance includes sagnac effect correction
 *-----------------------------------------------------------------------------*/
-extern double geodist(const double *rs, const double *rr, double *e)
+extern __declspec(dllexport) double __stdcall geodist(const double *rs, const double *rr, double *e)
 {
     double r;
     int i;
@@ -3378,7 +3378,7 @@ extern double geodist(const double *rs, const double *rr, double *e)
 *                               (0.0<=azel[0]<2*pi,-pi/2<=azel[1]<=pi/2)
 * return : elevation angle (rad)
 *-----------------------------------------------------------------------------*/
-extern double satazel(const double *pos, const double *e, double *azel)
+extern __declspec(dllexport) double __stdcall satazel(const double *pos, const double *e, double *azel)
 {
     double az=0.0,el=PI/2.0,enu[3];
     
@@ -3402,7 +3402,7 @@ extern double satazel(const double *pos, const double *e, double *azel)
 *-----------------------------------------------------------------------------*/
 #define SQRT(x)     ((x)<0.0||(x)!=(x)?0.0:sqrt(x))
 
-extern void dops(int ns, const double *azel, double elmin, double *dop)
+extern __declspec(dllexport) void __stdcall dops(int ns, const double *azel, double elmin, double *dop)
 {
     double H[4*MAXSAT],Q[16],cosel,sinel;
     int i,n;
@@ -3435,7 +3435,7 @@ extern void dops(int ns, const double *azel, double elmin, double *dop)
 *          double *azel     I   azimuth/elevation angle {az,el} (rad)
 * return : ionospheric delay (L1) (m)
 *-----------------------------------------------------------------------------*/
-extern double ionmodel(gtime_t t, const double *ion, const double *pos,
+extern __declspec(dllexport) double __stdcall ionmodel(gtime_t t, const double *ion, const double *pos,
                        const double *azel)
 {
     const double ion_default[]={ /* 2004/1/1 */
@@ -3482,7 +3482,7 @@ extern double ionmodel(gtime_t t, const double *ion, const double *pos,
 *          double *azel     I   azimuth/elevation angle {az,el} (rad)
 * return : ionospheric mapping function
 *-----------------------------------------------------------------------------*/
-extern double ionmapf(const double *pos, const double *azel)
+extern __declspec(dllexport) double __stdcall ionmapf(const double *pos, const double *azel)
 {
     if (pos[2]>=HION) return 1.0;
     return 1.0/cos(asin((RE_WGS84+pos[2])/(RE_WGS84+HION)*sin(PI/2.0-azel[1])));
@@ -3498,7 +3498,7 @@ extern double ionmapf(const double *pos, const double *azel)
 * notes  : see ref [2], only valid on the earth surface
 *          fixing bug on ref [2] A.4.4.10.1 A-22,23
 *-----------------------------------------------------------------------------*/
-extern double ionppp(const double *pos, const double *azel, double re,
+extern __declspec(dllexport) double __stdcall ionppp(const double *pos, const double *azel, double re,
                      double hion, double *posp)
 {
     double cosaz,rp,ap,sinap,tanap;
@@ -3527,7 +3527,7 @@ extern double ionppp(const double *pos, const double *azel, double re,
 *          double humi      I   relative humidity
 * return : tropospheric delay (m)
 *-----------------------------------------------------------------------------*/
-extern double tropmodel(gtime_t time, const double *pos, const double *azel,
+extern __declspec(dllexport) double __stdcall tropmodel(gtime_t time, const double *pos, const double *azel,
                         double humi)
 {
     const double temp0=15.0; /* temparature at sea level */
@@ -3619,7 +3619,7 @@ static double nmf(gtime_t time, const double pos[], const double azel[],
 *          paper is obtained from:
 *          ftp://web.haystack.edu/pub/aen/nmf/NMF_JGR.pdf
 *-----------------------------------------------------------------------------*/
-extern double tropmapf(gtime_t time, const double pos[], const double azel[],
+extern __declspec(dllexport) double tropmapf(gtime_t time, const double pos[], const double azel[],
                        double *mapfw)
 {
 #ifdef IERS_MODEL
@@ -3666,7 +3666,7 @@ static double interpvar(double ang, const double *var)
 * return : none
 * notes  : current version does not support azimuth dependent terms
 *-----------------------------------------------------------------------------*/
-extern void antmodel(const pcv_t *pcv, const double *del, const double *azel,
+extern __declspec(dllexport) void __stdcall antmodel(const pcv_t *pcv, const double *del, const double *azel,
                      int opt, double *dant)
 {
     double e[3],off[3],cosel=cos(azel[1]);
@@ -3692,7 +3692,7 @@ extern void antmodel(const pcv_t *pcv, const double *del, const double *azel,
 *          double *dant     O   range offsets for each frequency (m)
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void antmodel_s(const pcv_t *pcv, double nadir, double *dant)
+extern __declspec(dllexport) void __stdcall antmodel_s(const pcv_t *pcv, double nadir, double *dant)
 {
     int i;
     
@@ -3758,7 +3758,7 @@ static void sunmoonpos_eci(gtime_t tut, double *rsun, double *rmoon)
 *          double *gmst     O   gmst (rad)
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void sunmoonpos(gtime_t tutc, const double *erpv, double *rsun,
+extern __declspec(dllexport) void __stdcall sunmoonpos(gtime_t tutc, const double *erpv, double *rsun,
                        double *rmoon, double *gmst)
 {
     gtime_t tut;
@@ -3785,7 +3785,7 @@ extern void sunmoonpos(gtime_t tutc, const double *erpv, double *rsun,
 *          int    ns        I   smoothing window size (epochs)
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void csmooth(obs_t *obs, int ns)
+extern __declspec(dllexport) void __stdcall csmooth(obs_t *obs, int ns)
 {
     double Ps[2][MAXSAT][NFREQ]={{{0}}},Lp[2][MAXSAT][NFREQ]={{{0}}},dcp;
     int i,j,s,r,n[2][MAXSAT][NFREQ]={{{0}}};
@@ -3817,7 +3817,7 @@ extern void csmooth(obs_t *obs, int ns)
 * note   : creates uncompressed file in tempolary directory
 *          gzip and crx2rnx commands have to be installed in commands path
 *-----------------------------------------------------------------------------*/
-extern int rtk_uncompress(const char *file, char *uncfile)
+extern __declspec(dllexport) int __stdcall rtk_uncompress(const char *file, char *uncfile)
 {
     int stat=0;
     char *p,cmd[2048]="",tmpfile[1024]="",buff[1024],*fname,*dir="";
@@ -3887,15 +3887,15 @@ extern int rtk_uncompress(const char *file, char *uncfile)
 }
 /* dummy application functions for shared library ----------------------------*/
 #ifdef WIN_DLL
-extern int showmsg(char *format,...) {return 0;}
-extern void settspan(gtime_t ts, gtime_t te) {}
-extern void settime(gtime_t time) {}
+extern __declspec(dllexport) int showmsg(char *format,...) {return 0;}
+extern __declspec(dllexport) void settspan(gtime_t ts, gtime_t te) {}
+extern __declspec(dllexport) void settime(gtime_t time) {}
 #endif
 
 /* dummy functions for lex extentions ----------------------------------------*/
 #ifndef EXTLEX
-extern int input_lexr(raw_t *raw, unsigned char data) {return 0;}
-extern int input_lexrf(raw_t *raw, FILE *fp) {return 0;}
-extern int gen_lexr(const char *msg, unsigned char *buff) {return 0;}
+extern __declspec(dllexport) int input_lexr(raw_t *raw, unsigned char data) {return 0;}
+extern __declspec(dllexport) int input_lexrf(raw_t *raw, FILE *fp) {return 0;}
+extern __declspec(dllexport) int gen_lexr(const char *msg, unsigned char *buff) {return 0;}
 #endif /* EXTLEX */
 

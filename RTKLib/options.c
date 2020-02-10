@@ -232,7 +232,7 @@ static int str2enum(const char *str, const char *comment, int *val)
 *                              (terminated with table[i].name="")
 * return : option record (NULL: not found)
 *-----------------------------------------------------------------------------*/
-extern opt_t *searchopt(const char *name, const opt_t *opts)
+extern __declspec(dllexport)  opt_t * __stdcall searchopt(const char *name, const opt_t *opts)
 {
     int i;
     
@@ -249,7 +249,7 @@ extern opt_t *searchopt(const char *name, const opt_t *opts)
 *          char   *str      I  option value string
 * return : status (1:ok,0:error)
 *-----------------------------------------------------------------------------*/
-extern int str2opt(opt_t *opt, const char *str)
+extern __declspec(dllexport)  int __stdcall str2opt(opt_t *opt, const char *str)
 {
     switch (opt->format) {
         case 0: *(int    *)opt->var=atoi(str); break;
@@ -266,7 +266,7 @@ extern int str2opt(opt_t *opt, const char *str)
 *          char   *str      O  option value string
 * return : length of output string
 *-----------------------------------------------------------------------------*/
-extern int opt2str(const opt_t *opt, char *str)
+extern __declspec(dllexport)  int __stdcall opt2str(const opt_t *opt, char *str)
 {
     char *p=str;
     
@@ -286,7 +286,7 @@ extern int opt2str(const opt_t *opt, char *str)
 *          char   *buff     O  option string
 * return : length of output string
 *-----------------------------------------------------------------------------*/
-extern int opt2buf(const opt_t *opt, char *buff)
+extern __declspec(dllexport)  int __stdcall opt2buf(const opt_t *opt, char *buff)
 {
     char *p=buff;
     int n;
@@ -308,7 +308,7 @@ extern int opt2buf(const opt_t *opt, char *buff)
 *                              (terminated with table[i].name="")
 * return : status (1:ok,0:error)
 *-----------------------------------------------------------------------------*/
-extern int loadopts(const char *file, opt_t *opts)
+extern __declspec(dllexport)  int __stdcall loadopts(const char *file, opt_t *opts)
 {
     FILE *fp;
     opt_t *opt;
@@ -353,7 +353,7 @@ extern int loadopts(const char *file, opt_t *opts)
 *                              (terminated with table[i].name="")
 * return : status (1:ok,0:error)
 *-----------------------------------------------------------------------------*/
-extern int saveopts(const char *file, const char *mode, const char *comment,
+extern __declspec(dllexport)  int __stdcall saveopts(const char *file, const char *mode, const char *comment,
                     const opt_t *opts)
 {
     FILE *fp;
@@ -481,7 +481,7 @@ static void sysopts2buff(void)
 * args   : none
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void resetsysopts(void)
+extern __declspec(dllexport)  void __stdcall resetsysopts(void)
 {
     int i,j;
     
@@ -514,7 +514,7 @@ extern void resetsysopts(void)
 * return : none
 * notes  : to load system options, use loadopts() before calling the function
 *-----------------------------------------------------------------------------*/
-extern void getsysopts(prcopt_t *popt, solopt_t *sopt, filopt_t *fopt)
+extern __declspec(dllexport)  void __stdcall getsysopts(prcopt_t *popt, solopt_t *sopt, filopt_t *fopt)
 {
     trace(3,"getsysopts:\n");
     
@@ -531,7 +531,7 @@ extern void getsysopts(prcopt_t *popt, solopt_t *sopt, filopt_t *fopt)
 * return : none
 * notes  : to save system options, use saveopts() after calling the function
 *-----------------------------------------------------------------------------*/
-extern void setsysopts(const prcopt_t *prcopt, const solopt_t *solopt,
+extern __declspec(dllexport)  void __stdcall setsysopts(const prcopt_t *prcopt, const solopt_t *solopt,
                        const filopt_t *filopt)
 {
     trace(3,"setsysopts:\n");

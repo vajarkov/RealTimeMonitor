@@ -420,7 +420,7 @@ static int decode_sbstype26(const sbsmsg_t *msg, sbsion_t *sbsion)
 *               seph[prn-MINPRNSBS+1]          : sat prn current epehmeris 
 *               seph[prn-MINPRNSBS+1+MAXPRNSBS]: sat prn previous epehmeris 
 *-----------------------------------------------------------------------------*/
-extern int sbsupdatecorr(const sbsmsg_t *msg, nav_t *nav)
+extern __declspec(dllexport)  int __stdcall sbsupdatecorr(const sbsmsg_t *msg, nav_t *nav)
 {
     int type=getbitu(msg->msg,8,6),stat=-1;
     
@@ -540,7 +540,7 @@ static int cmpmsgs(const void *p1, const void *p2)
 *          to read. others are skipped
 *          .sbs, .SBS, .ems, .EMS
 *-----------------------------------------------------------------------------*/
-extern int sbsreadmsgt(const char *file, int sel, gtime_t ts, gtime_t te,
+extern __declspec(dllexport)  int __stdcall sbsreadmsgt(const char *file, int sel, gtime_t ts, gtime_t te,
                        sbs_t *sbs)
 {
     char *efiles[MAXEXFILE]={0},*ext;
@@ -572,7 +572,7 @@ extern int sbsreadmsgt(const char *file, int sel, gtime_t ts, gtime_t te,
     }
     return sbs->n;
 }
-extern int sbsreadmsg(const char *file, int sel, sbs_t *sbs)
+extern __declspec(dllexport)  int __stdcall sbsreadmsg(const char *file, int sel, sbs_t *sbs)
 {
     gtime_t ts={0},te={0};
     
@@ -586,7 +586,7 @@ extern int sbsreadmsg(const char *file, int sel, sbs_t *sbs)
 *          sbsmsg_t *sbsmsg I   sbas messages
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void sbsoutmsg(FILE *fp, sbsmsg_t *sbsmsg)
+extern __declspec(dllexport)  void __stdcall sbsoutmsg(FILE *fp, sbsmsg_t *sbsmsg)
 {
     int i,type=sbsmsg->msg[1]>>2;
     
@@ -662,7 +662,7 @@ static void searchigp(gtime_t time, const double *pos, const sbsion_t *ion,
 *          in navigation data (nav->sbsion) must be set by callig 
 *          sbsupdatecorr()
 *-----------------------------------------------------------------------------*/
-extern int sbsioncorr(gtime_t time, const nav_t *nav, const double *pos,
+extern __declspec(dllexport)  int __stdcall sbsioncorr(gtime_t time, const nav_t *nav, const double *pos,
                       const double *azel, double *delay, double *var)
 {
     const double re=6378.1363,hion=350.0;
@@ -748,7 +748,7 @@ static void getmet(double lat, double *met)
 *          double   *var    O   variance of troposphric error (m^2)
 * return : slant tropospheric delay (m)
 *-----------------------------------------------------------------------------*/
-extern double sbstropcorr(gtime_t time, const double *pos, const double *azel,
+extern __declspec(dllexport)  double __stdcall sbstropcorr(gtime_t time, const double *pos, const double *azel,
                           double *var)
 {
     const double k1=77.604,k2=382000.0,rd=287.054,gm=9.784,g=9.80665;
@@ -858,7 +858,7 @@ static int sbsfastcorr(gtime_t time, int sat, const sbssat_t *sbssat,
 *          sbas clock correction is usually based on L1C/A code. TGD or DCB has
 *          to be considered for other codes
 *-----------------------------------------------------------------------------*/
-extern int sbssatcorr(gtime_t time, int sat, const nav_t *nav, double *rs,
+extern __declspec(dllexport)  int __stdcall sbssatcorr(gtime_t time, int sat, const nav_t *nav, double *rs,
                       double *dts, double *var)
 {
     double drs[3]={0},dclk=0.0,prc=0.0;
@@ -891,7 +891,7 @@ extern int sbssatcorr(gtime_t time, int sat, const nav_t *nav, double *rs,
 *          sbsmsg_t *sbsmsg O   sbas message
 * return : status (1:ok,0:crc error)
 *-----------------------------------------------------------------------------*/
-extern int sbsdecodemsg(gtime_t time, int prn, const unsigned int *words,
+extern __declspec(dllexport)  int __stdcall sbsdecodemsg(gtime_t time, int prn, const unsigned int *words,
                         sbsmsg_t *sbsmsg)
 {
     int i,j;

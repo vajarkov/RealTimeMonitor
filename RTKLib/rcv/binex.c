@@ -1295,7 +1295,7 @@ static int sync_bnx(unsigned char *buff, unsigned char data)
 *          -GALINAV : input only I/NAV for galileo ephemeris
 *          -GALFNAV : input only F/NAV for galileo ephemeris
 *-----------------------------------------------------------------------------*/
-extern int input_bnx(raw_t *raw, unsigned char data)
+extern __declspec(dllexport)  int __stdcall input_bnx(raw_t *raw, unsigned char data)
 {
     unsigned int len;
     int len_h,len_c;
@@ -1334,7 +1334,7 @@ extern int input_bnx(raw_t *raw, unsigned char data)
 *          FILE   *fp    I      file pointer
 * return : status(-2: end of file, -1...9: same as above)
 *-----------------------------------------------------------------------------*/
-extern int input_bnxf(raw_t *raw, FILE *fp)
+extern __declspec(dllexport)  int __stdcall input_bnxf(raw_t *raw, FILE *fp)
 {
     unsigned int len;
     int i,data,len_h,len_c;

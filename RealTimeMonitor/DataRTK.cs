@@ -1603,18 +1603,22 @@ namespace RealTimeMonitor
         public unsafe struct rtk_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 15)]        /* RTK control/result type */
+                   /* RTK control/result type */
             public sol_t sol;         /* RTK solution */
-            public fixed double rb[6];       /* base position/velocity (ecef) (m|m/s) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
+            public double[] rb;       /* base position/velocity (ecef) (m|m/s) */
             public int nx, na;          /* number of float states/fixed states */
             public double tt;          /* time difference between current and previous (s) */
-            public double* x, P;      /* float states and their covariance */
-            public double* xa, Pa;     /* fixed states and their covariance */
+            public double[] x, P;      /* float states and their covariance */
+            public double[] xa, Pa;     /* fixed states and their covariance */
             public int nfix;           /* number of continuous fixes of ambiguity */
-            public unsafe ambc_t* ambc; /* ambibuity control */
-            public unsafe ssat_t* ssat; /* satellite status */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
+            public ambc_t[] ambc; /* ambibuity control */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
+            public ssat_t[] ssat; /* satellite status */
             public int neb;            /* bytes in error message buffer */
-            public fixed char errbuf[MAXERRMSG]; /* error message buffer */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXERRMSG)]
+            public char[] errbuf; /* error message buffer */
             public prcopt_t opt;       /* processing options */
         };
 
@@ -1745,7 +1749,7 @@ namespace RealTimeMonitor
         public unsafe struct rtksvr_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 39)]        /* RTK server type */
+            /* RTK server type */
             public int state;          /* server state (0:stop,1:running) */
             public int cycle;          /* processing cycle (ms) */
             public int nmeacycle;      /* NMEA request cycle (ms) (0:no req) */
@@ -1755,7 +1759,8 @@ namespace RealTimeMonitor
             public int buffsize;       /* input buffer size (bytes) */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public int[] format;      /* input format {rov,base,corr} */
-            public solopt_t solopt; /* output solution options {sol1,sol2} */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public solopt_t[] solopt; /* output solution options {sol1,sol2} */
             public int navsel;         /* ephemeris select (0:all,1:rover,2:base,3:corr) */
             public int nsbs;           /* number of sbas message */
             public int nsol;           /* number of solution buffer */

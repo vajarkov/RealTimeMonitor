@@ -385,7 +385,7 @@ static int decode_lextype20(const lexmsg_t *msg, nav_t *nav, gtime_t *tof)
 *          gtime_t  *tof    O   time of frame
 * return : status (1:ok,0:error or not supported type)
 *-----------------------------------------------------------------------------*/
-extern int lexupdatecorr(const lexmsg_t *msg, nav_t *nav, gtime_t *tof)
+extern __declspec(dllexport)  int  __stdcall lexupdatecorr(const lexmsg_t *msg, nav_t *nav, gtime_t *tof)
 {
     trace(3,"lexupdatecorr: type=%d\n",msg->type);
     
@@ -406,7 +406,7 @@ extern int lexupdatecorr(const lexmsg_t *msg, nav_t *nav, gtime_t *tof)
 * return : status (1:ok,0:error)
 * notes  : only input file with extension .lex or .LEX.
 *-----------------------------------------------------------------------------*/
-extern int lexreadmsg(const char *file, int sel, lex_t *lex)
+extern __declspec(dllexport)  int  __stdcall lexreadmsg(const char *file, int sel, lex_t *lex)
 {
     lexmsg_t *lex_msgs;
     int i,prn,type,alert;
@@ -461,7 +461,7 @@ extern int lexreadmsg(const char *file, int sel, lex_t *lex)
 * return : none
 * notes  : see ref [1] 5.7.2.1
 *-----------------------------------------------------------------------------*/
-extern void lexoutmsg(FILE *fp, const lexmsg_t *msg)
+extern __declspec(dllexport)  void  __stdcall lexoutmsg(FILE *fp, const lexmsg_t *msg)
 {
     int i;
     
@@ -480,7 +480,7 @@ extern void lexoutmsg(FILE *fp, const lexmsg_t *msg)
 * return : status (1:ok,0:no correction)
 * notes  : see ref [1] 5.7.2.1
 *-----------------------------------------------------------------------------*/
-extern int lexconvbin(int type, int format, const char *infile,
+extern __declspec(dllexport)  int  __stdcall lexconvbin(int type, int format, const char *infile,
                       const char *outfile)
 {
     FILE *ifp,*ofp;
@@ -544,7 +544,7 @@ extern int lexconvbin(int type, int format, const char *infile,
 *          dts includes relativistic effect correction
 *          dts does not include code bias correction
 *-----------------------------------------------------------------------------*/
-extern int lexeph2pos(gtime_t time, int sat, const nav_t *nav, double *rs,
+extern __declspec(dllexport)  int __stdcall lexeph2pos(gtime_t time, int sat, const nav_t *nav, double *rs,
                       double *dts, double *var)
 {
     const lexeph_t *eph;
@@ -599,7 +599,7 @@ extern int lexeph2pos(gtime_t time, int sat, const nav_t *nav, double *rs,
 *          before calling the function, call lexupdatecorr() to set lex 
 *          corrections to navigation data
 *-----------------------------------------------------------------------------*/
-extern int lexioncorr(gtime_t time, const nav_t *nav, const double *pos,
+extern __declspec(dllexport)  int  __stdcall lexioncorr(gtime_t time, const nav_t *nav, const double *pos,
                       const double *azel, double *delay, double *var)
 {
     const double re=6378.137,hion=350.0;

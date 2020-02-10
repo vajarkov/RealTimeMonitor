@@ -251,7 +251,7 @@ static int sync_ss2(unsigned char *buff, unsigned char data)
 * notes  : needs #20 or #21 message to get proper week number of #23 raw
 *          observation data
 *-----------------------------------------------------------------------------*/
-extern int input_ss2(raw_t *raw, unsigned char data)
+extern __declspec(dllexport)  int __stdcall input_ss2(raw_t *raw, unsigned char data)
 {
     trace(5,"input_ss2: data=%02x\n",data);
     
@@ -282,7 +282,7 @@ extern int input_ss2(raw_t *raw, unsigned char data)
 *          FILE   *fp    I      file pointer
 * return : status(-2: end of file, -1...9: same as above)
 *-----------------------------------------------------------------------------*/
-extern int input_ss2f(raw_t *raw, FILE *fp)
+extern __declspec(dllexport)  int __stdcall input_ss2f(raw_t *raw, FILE *fp)
 {
     int i,data;
     

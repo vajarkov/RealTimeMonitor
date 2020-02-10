@@ -32,7 +32,7 @@
 
 /* function prototypes -------------------------------------------------------*/
 #ifdef IERS_MODEL
-extern int dehanttideinel_(double *xsta, int *year, int *mon, int *day,
+extern __declspec(dllexport) int dehanttideinel_(double *xsta, int *year, int *mon, int *day,
                            double *fhr, double *xsun, double *xmon,
                            double *dxtide);
 #endif
@@ -229,7 +229,7 @@ static void tide_pole(gtime_t tut, const double *pos, const double *erpv,
 *          see ref [4] 5.2.1, 5.2.2, 5.2.3
 *          ver.2.4.0 does not use ocean loading and pole tide corrections
 *-----------------------------------------------------------------------------*/
-extern void tidedisp(gtime_t tutc, const double *rr, int opt, const erp_t *erp,
+extern __declspec(dllexport) void __stdcall tidedisp(gtime_t tutc, const double *rr, int opt, const erp_t *erp,
                      const double *odisp, double *dr)
 {
     gtime_t tut;

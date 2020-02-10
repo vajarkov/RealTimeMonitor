@@ -1398,7 +1398,7 @@ static int sync_oem3(unsigned char *buff, unsigned char data)
 *          -GALFNAV: use F/NAV for GAL ephemeris
 *
 *-----------------------------------------------------------------------------*/
-extern int input_oem4(raw_t *raw, unsigned char data)
+extern __declspec(dllexport)  int __stdcall input_oem4(raw_t *raw, unsigned char data)
 {
     trace(5,"input_oem4: data=%02x\n",data);
     
@@ -1420,7 +1420,7 @@ extern int input_oem4(raw_t *raw, unsigned char data)
     /* decode oem4 message */
     return decode_oem4(raw);
 }
-extern int input_oem3(raw_t *raw, unsigned char data)
+extern __declspec(dllexport)  int __stdcall input_oem3(raw_t *raw, unsigned char data)
 {
     trace(5,"input_oem3: data=%02x\n",data);
     
@@ -1449,7 +1449,7 @@ extern int input_oem3(raw_t *raw, unsigned char data)
 *          FILE   *fp    I      file pointer
 * return : status(-2: end of file, -1...9: same as above)
 *-----------------------------------------------------------------------------*/
-extern int input_oem4f(raw_t *raw, FILE *fp)
+extern __declspec(dllexport)  int __stdcall input_oem4f(raw_t *raw, FILE *fp)
 {
     int i,data;
     
@@ -1477,7 +1477,7 @@ extern int input_oem4f(raw_t *raw, FILE *fp)
     /* decode oem4 message */
     return decode_oem4(raw);
 }
-extern int input_oem3f(raw_t *raw, FILE *fp)
+extern __declspec(dllexport)  int __stdcall input_oem3f(raw_t *raw, FILE *fp)
 {
     int i,data;
     

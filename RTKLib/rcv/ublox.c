@@ -1194,7 +1194,7 @@ static int sync_ubx(unsigned char *buff, unsigned char data)
 *          documented and not supported by u-blox.
 *          Users can use these messages by their own risk.
 *-----------------------------------------------------------------------------*/
-extern int input_ubx(raw_t *raw, unsigned char data)
+extern __declspec(dllexport)  int __stdcall input_ubx(raw_t *raw, unsigned char data)
 {
     trace(5,"input_ubx: data=%02x\n",data);
     
@@ -1225,7 +1225,7 @@ extern int input_ubx(raw_t *raw, unsigned char data)
 *          FILE   *fp    I      file pointer
 * return : status(-2: end of file, -1...9: same as above)
 *-----------------------------------------------------------------------------*/
-extern int input_ubxf(raw_t *raw, FILE *fp)
+extern __declspec(dllexport)  int __stdcall input_ubxf(raw_t *raw, FILE *fp)
 {
     int i,data;
     
@@ -1296,7 +1296,7 @@ extern int input_ubxf(raw_t *raw, FILE *fp)
 *          the following messages are not supported:
 *             CFG-DOSC,CFG-ESRC
 *-----------------------------------------------------------------------------*/
-extern int gen_ubx(const char *msg, unsigned char *buff)
+extern __declspec(dllexport)  int __stdcall gen_ubx(const char *msg, unsigned char *buff)
 {
     const char *cmd[]={
         "PRT","USB","MSG","NMEA","RATE","CFG","TP","NAV2","DAT","INF",

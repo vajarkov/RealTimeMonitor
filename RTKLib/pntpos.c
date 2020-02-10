@@ -125,7 +125,7 @@ static double prange(const obsd_t *obs, const nav_t *nav, const double *azel,
 *          double *var      O   ionospheric delay (L1) variance (m^2)
 * return : status(1:ok,0:error)
 *-----------------------------------------------------------------------------*/
-extern int ionocorr(gtime_t time, const nav_t *nav, int sat, const double *pos,
+extern __declspec(dllexport)  int __stdcall ionocorr(gtime_t time, const nav_t *nav, int sat, const double *pos,
                     const double *azel, int ionoopt, double *ion, double *var)
 {
     trace(4,"ionocorr: time=%s opt=%d sat=%2d pos=%.3f %.3f azel=%.3f %.3f\n",
@@ -171,7 +171,7 @@ extern int ionocorr(gtime_t time, const nav_t *nav, int sat, const double *pos,
 *          double *var      O   tropospheric delay variance (m^2)
 * return : status(1:ok,0:error)
 *-----------------------------------------------------------------------------*/
-extern int tropcorr(gtime_t time, const nav_t *nav, const double *pos,
+extern __declspec(dllexport)  int __stdcall tropcorr(gtime_t time, const nav_t *nav, const double *pos,
                     const double *azel, int tropopt, double *trp, double *var)
 {
     trace(4,"tropcorr: time=%s opt=%d pos=%.3f %.3f azel=%.3f %.3f\n",
@@ -536,7 +536,7 @@ static void estvel(const obsd_t *obs, int n, const double *rs, const double *dts
 *          receiver bias are negligible (only involving glonass-gps time offset
 *          and receiver bias)
 *-----------------------------------------------------------------------------*/
-extern int pntpos(const obsd_t *obs, int n, const nav_t *nav,
+extern __declspec(dllexport)  int __stdcall pntpos(const obsd_t *obs, int n, const nav_t *nav,
                   const prcopt_t *opt, sol_t *sol, double *azel, ssat_t *ssat,
                   char *msg)
 {

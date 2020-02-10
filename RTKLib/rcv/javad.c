@@ -1788,7 +1788,7 @@ static void clearbuff(raw_t *raw)
 *          -GALFNAV: input only F/NAV for galileo ephemeris
 *
 *-----------------------------------------------------------------------------*/
-extern int input_javad(raw_t *raw, unsigned char data)
+extern __declspec(dllexport)  int __stdcall input_javad(raw_t *raw, unsigned char data)
 {
     int len,stat;
     
@@ -1837,7 +1837,7 @@ static int endfile(raw_t *raw)
 *          FILE   *fp    I      file pointer
 * return : status(-2: end of file, -1...9: same as above)
 *-----------------------------------------------------------------------------*/
-extern int input_javadf(raw_t *raw, FILE *fp)
+extern __declspec(dllexport)  int __stdcall input_javadf(raw_t *raw, FILE *fp)
 {
     int i,data,len,stat;
     

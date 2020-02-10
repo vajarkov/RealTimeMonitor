@@ -102,7 +102,7 @@ static double getbitg(const unsigned char *buff, int pos, int len)
 *          eph_t    *eph    IO  ephemeris structure
 * return : status (1:ok,0:error)
 *-----------------------------------------------------------------------------*/
-extern int decode_gal_inav(const unsigned char *buff, eph_t *eph)
+extern __declspec(dllexport) int __stdcall decode_gal_inav(const unsigned char *buff, eph_t *eph)
 {
     double tow,toc,tt,sqrtA;
     int i,time_f,week,svid,e5b_hs,e1b_hs,e5b_dvs,e1b_dvs,type[6],iod_nav[4];
@@ -203,7 +203,7 @@ extern int decode_gal_inav(const unsigned char *buff, eph_t *eph)
 *          eph_t    *eph    IO  ephemeris structure
 * return : status (1:ok,0:error)
 *-----------------------------------------------------------------------------*/
-extern int decode_bds_d1(const unsigned char *buff, eph_t *eph)
+extern __declspec(dllexport) int __stdcall decode_bds_d1(const unsigned char *buff, eph_t *eph)
 {
     double toc_bds,sqrtA;
     unsigned int toe1,toe2,sow1,sow2,sow3;
@@ -285,7 +285,7 @@ extern int decode_bds_d1(const unsigned char *buff, eph_t *eph)
 *          eph_t    *eph    IO  ephemeris structure
 * return : status (1:ok,0:error)
 *-----------------------------------------------------------------------------*/
-extern int decode_bds_d2(const unsigned char *buff, eph_t *eph)
+extern __declspec(dllexport) int __stdcall decode_bds_d2(const unsigned char *buff, eph_t *eph)
 {
     double toc_bds,sqrtA;
     unsigned int f1p4,cucp5,ep6,cicp7,i0p8,OMGdp9,omgp10;
@@ -410,7 +410,7 @@ extern int decode_bds_d2(const unsigned char *buff, eph_t *eph)
 *                                  buff[10]: string bit  5- 1 (0 padded)
 * return : status (1:ok,0:error)
 *-----------------------------------------------------------------------------*/
-extern int test_glostr(const unsigned char *buff)
+extern __declspec(dllexport) int __stdcall test_glostr(const unsigned char *buff)
 {
     static const unsigned char xor_8bit[256]={ /* xor of 8 bits */
         0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,
@@ -456,7 +456,7 @@ extern int test_glostr(const unsigned char *buff)
 * notes  : geph->tof should be set to frame time witin 1/2 day before calling
 *          geph->frq is set to 0
 *-----------------------------------------------------------------------------*/
-extern int decode_glostr(const unsigned char *buff, geph_t *geph)
+extern __declspec(dllexport) int __stdcall decode_glostr(const unsigned char *buff, geph_t *geph)
 {
     double tow,tod,tof,toe;
     int P,P1,P2,P3,P4,tk_h,tk_m,tk_s,tb,ln,NT,slot,M,week;
@@ -833,7 +833,7 @@ static int decode_subfrm5(const unsigned char *buff, alm_t *alm, double *ion,
 *          ion and utc parameters by qzss indicate local iono and qzst-utc
 *          parameters.
 *-----------------------------------------------------------------------------*/
-extern int decode_frame(const unsigned char *buff, eph_t *eph, alm_t *alm,
+extern __declspec(dllexport) int __stdcall decode_frame(const unsigned char *buff, eph_t *eph, alm_t *alm,
                         double *ion, double *utc, int *leaps)
 {
     int id=getbitu(buff,43,3); /* subframe id */
@@ -856,7 +856,7 @@ extern int decode_frame(const unsigned char *buff, eph_t *eph, alm_t *alm,
 *          int    format I      stream format (STRFMT_???)
 * return : status (1:ok,0:memory allocation error)
 *-----------------------------------------------------------------------------*/
-extern int init_raw(raw_t *raw, int format)
+extern __declspec(dllexport) int __stdcall init_raw(raw_t *raw, int format)
 {
     const double lam_glo[NFREQ]={CLIGHT/FREQ1_GLO,CLIGHT/FREQ2_GLO};
     gtime_t time0={0};
@@ -954,7 +954,7 @@ extern int init_raw(raw_t *raw, int format)
 * args   : raw_t  *raw   IO     receiver raw data control struct
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void free_raw(raw_t *raw)
+extern __declspec(dllexport) void __stdcall free_raw(raw_t *raw)
 {
     half_cyc_t *p,*next;
     
@@ -990,7 +990,7 @@ extern void free_raw(raw_t *raw)
 *                  2: input ephemeris, 3: input sbas message,
 *                  9: input ion/utc parameter, 31: input lex message)
 *-----------------------------------------------------------------------------*/
-extern int input_raw(raw_t *raw, int format, unsigned char data)
+extern __declspec(dllexport) int __stdcall input_raw(raw_t *raw, int format, unsigned char data)
 {
     trace(5,"input_raw: format=%d data=0x%02x\n",format,data);
     
@@ -1020,7 +1020,7 @@ extern int input_raw(raw_t *raw, int format, unsigned char data)
 *          FILE   *fp    I      file pointer
 * return : status(-2: end of file/format error, -1...31: same as above)
 *-----------------------------------------------------------------------------*/
-extern int input_rawf(raw_t *raw, int format, FILE *fp)
+extern __declspec(dllexport) int __stdcall input_rawf(raw_t *raw, int format, FILE *fp)
 {
     trace(4,"input_rawf: format=%d\n",format);
     

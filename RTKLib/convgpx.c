@@ -132,7 +132,7 @@ static int savegpx(const char *file, const solbuf_t *solbuf, int outtrk,
 *          int    outtime   I   output time (0:off,1:gpst,2:utc,3:jst)
 * return : status (0:ok,-1:file read,-2:file format,-3:no data,-4:file write)
 *-----------------------------------------------------------------------------*/
-extern int convgpx(const char *infile, const char *outfile, gtime_t ts,
+extern __declspec(dllexport)  int __stdcall convgpx(const char *infile, const char *outfile, gtime_t ts,
                    gtime_t te, double tint, int qflg, double *offset,
                    int outtrk, int outpnt, int outalt, int outtime)
 {

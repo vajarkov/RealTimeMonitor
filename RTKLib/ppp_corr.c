@@ -21,7 +21,7 @@
 *          read data are added to ppp correction data.
 *          To clear data, call pppcorr_free()
 *-----------------------------------------------------------------------------*/
-extern int pppcorr_read(pppcorr_t *corr, const char *file)
+extern __declspec(dllexport)  int __stdcall pppcorr_read(pppcorr_t *corr, const char *file)
 {
     return 0;
 }
@@ -30,7 +30,7 @@ extern int pppcorr_read(pppcorr_t *corr, const char *file)
 * args   : pppcorr_t *corr  IO  ppp correction data
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void pppcorr_free(pppcorr_t *corr)
+extern __declspec(dllexport)  void __stdcall pppcorr_free(pppcorr_t *corr)
 {
 }
 /* get tropospheric correction -------------------------------------------------
@@ -42,7 +42,7 @@ extern void pppcorr_free(pppcorr_t *corr)
 *          double *std      O   standard deviation (m)
 * return : status (1:ok,0:error)
 *-----------------------------------------------------------------------------*/
-extern int pppcorr_trop(const pppcorr_t *corr, gtime_t time, const double *pos,
+extern __declspec(dllexport)  int __stdcall pppcorr_trop(const pppcorr_t *corr, gtime_t time, const double *pos,
                         double *trp, double *std)
 {
     return 0;
@@ -57,7 +57,7 @@ extern int pppcorr_trop(const pppcorr_t *corr, gtime_t time, const double *pos,
 *          double *std      O   standard deviation (m)
 * return : status (1:ok,0:error)
 *-----------------------------------------------------------------------------*/
-extern int pppcorr_stec(const pppcorr_t *corr, gtime_t time, const double *pos,
+extern __declspec(dllexport)  int __stdcall pppcorr_stec(const pppcorr_t *corr, gtime_t time, const double *pos,
                         double *ion, double *std)
 {
     return 0;

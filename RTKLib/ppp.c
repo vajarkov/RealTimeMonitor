@@ -122,7 +122,7 @@ static double STD(rtk_t *rtk, int i)
     return SQRT(rtk->P[i+i*rtk->nx]);
 }
 /* write solution status for PPP ---------------------------------------------*/
-extern int pppoutstat(rtk_t *rtk, char *buff)
+extern __declspec(dllexport)  int __stdcall pppoutstat(rtk_t *rtk, char *buff)
 {
     ssat_t *ssat;
     double tow,pos[3],vel[3],acc[3],*x;
@@ -234,7 +234,7 @@ static double yaw_nominal(double beta, double mu)
     return atan2(-tan(beta),sin(mu))+PI;
 }
 /* yaw-angle of satellite ----------------------------------------------------*/
-extern int yaw_angle(int sat, const char *type, int opt, double beta, double mu,
+extern __declspec(dllexport)  int yaw_angle(int sat, const char *type, int opt, double beta, double mu,
                      double *yaw)
 {
     *yaw=yaw_nominal(beta,mu);
@@ -1070,7 +1070,7 @@ static int ppp_res(int post, const obsd_t *obs, int n, const double *rs,
     return post?stat:nv;
 }
 /* number of estimated states ------------------------------------------------*/
-extern int pppnx(const prcopt_t *opt)
+extern __declspec(dllexport)  int __stdcall pppnx(const prcopt_t *opt)
 {
     return NX(opt);
 }
@@ -1146,7 +1146,7 @@ static int test_hold_amb(rtk_t *rtk)
     return ++rtk->nfix>=rtk->opt.minfix;
 }
 /* precise point positioning -------------------------------------------------*/
-extern void pppos(rtk_t *rtk, const obsd_t *obs, int n, const nav_t *nav)
+extern __declspec(dllexport)  void __stdcall pppos(rtk_t *rtk, const obsd_t *obs, int n, const nav_t *nav)
 {
     const prcopt_t *opt=&rtk->opt;
     double *rs,*dts,*var,*v,*H,*R,*azel,*xp,*Pp,dr[3]={0},std[3];

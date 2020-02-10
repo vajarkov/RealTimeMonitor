@@ -1252,7 +1252,7 @@ static int execses_b(gtime_t ts, gtime_t te, double ti, const prcopt_t *popt,
 *
 *          ssr corrections are valid only for forward estimation.
 *-----------------------------------------------------------------------------*/
-extern int postpos(gtime_t ts, gtime_t te, double ti, double tu,
+extern __declspec(dllexport)  int __stdcall postpos(gtime_t ts, gtime_t te, double ti, double tu,
                    const prcopt_t *popt, const solopt_t *sopt,
                    const filopt_t *fopt, char **infile, int n, char *outfile,
                    const char *rov, const char *base)

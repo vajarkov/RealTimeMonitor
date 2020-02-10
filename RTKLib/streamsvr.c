@@ -63,7 +63,7 @@ static int is_tint(gtime_t time, double tint)
 *          char   *opt      I   rtcm or receiver raw options
 * return : stream generator (NULL:error)
 *-----------------------------------------------------------------------------*/
-extern strconv_t *strconvnew(int itype, int otype, const char *msgs, int staid,
+extern __declspec(dllexport)  strconv_t * __stdcall strconvnew(int itype, int otype, const char *msgs, int staid,
                              int stasel, const char *opt)
 {
     strconv_t *conv;
@@ -111,7 +111,7 @@ extern strconv_t *strconvnew(int itype, int otype, const char *msgs, int staid,
 * args   : strconv_t *conv  IO  stream converter
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void strconvfree(strconv_t *conv)
+extern __declspec(dllexport)  void __stdcall strconvfree(strconv_t *conv)
 {
     if (!conv) return;
     free_rtcm(&conv->rtcm);
@@ -528,7 +528,7 @@ static void *strsvrthread(void *arg)
 *          int    nout      I   number of output streams
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void strsvrinit(strsvr_t *svr, int nout)
+extern __declspec(dllexport)  void __stdcall strsvrinit(strsvr_t *svr, int nout)
 {
     int i;
     
@@ -589,7 +589,7 @@ extern void strsvrinit(strsvr_t *svr, int nout)
 *          double *nmeapos  I   nmea request position (ecef) (m) (NULL: no)
 * return : status (0:error,1:ok)
 *-----------------------------------------------------------------------------*/
-extern int strsvrstart(strsvr_t *svr, int *opts, int *strs, char **paths,
+extern __declspec(dllexport)  int __stdcall strsvrstart(strsvr_t *svr, int *opts, int *strs, char **paths,
                        strconv_t **conv, char **cmds, char **cmds_periodic,
                        const double *nmeapos)
 {
@@ -670,7 +670,7 @@ extern int strsvrstart(strsvr_t *svr, int *opts, int *strs, char **paths,
 *              cmds[3]= output stream 3 command
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void strsvrstop(strsvr_t *svr, char **cmds)
+extern __declspec(dllexport)  void __stdcall strsvrstop(strsvr_t *svr, char **cmds)
 {
     int i;
     
@@ -697,7 +697,7 @@ extern void strsvrstop(strsvr_t *svr, char **cmds)
 *          char   *msg      O   messages
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void strsvrstat(strsvr_t *svr, int *stat, int *byte, int *bps, char *msg)
+extern __declspec(dllexport)  void __stdcall strsvrstat(strsvr_t *svr, int *stat, int *byte, int *bps, char *msg)
 {
     char s[MAXSTRMSG]="",*p=msg;
     int i,bps_in;
@@ -723,7 +723,7 @@ extern void strsvrstat(strsvr_t *svr, int *stat, int *byte, int *bps, char *msg)
 *          int    nmax      I  buffer size (bytes)
 * return : stream size (bytes)
 *-----------------------------------------------------------------------------*/
-extern int strsvrpeek(strsvr_t *svr, unsigned char *buff, int nmax)
+extern __declspec(dllexport)  int strsvrpeek(strsvr_t *svr, unsigned char *buff, int nmax)
 {
     int n;
     
@@ -747,7 +747,7 @@ extern int strsvrpeek(strsvr_t *svr, unsigned char *buff, int nmax)
 *          char  *file      I   source table file
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void strsvrsetsrctbl(strsvr_t *svr, const char *file)
+extern __declspec(dllexport)  void __stdcall strsvrsetsrctbl(strsvr_t *svr, const char *file)
 {
     int i;
     

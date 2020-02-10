@@ -184,8 +184,15 @@ namespace RealTimeMonitor
                 DCBFileF = "";
 
 
-
-            DataRTK.rtksvrinit(ref rtksvr);
+			try
+			{
+				DataRTK.rtksvrinit(ref rtksvr);
+			}
+			catch (TypeLoadException ex)
+			{
+				string strerr = ex.Message;
+			}
+            
             DataRTK.strinit(ref monistr);
 
             LocalDirectory = "C:\\Temp";

@@ -2199,7 +2199,7 @@ static int sync_sbf(unsigned char *buff, unsigned char data)
 *                  2: input ephemeris, 3: input sbas message,
 *                  9: input ion/utc parameter)
 *-----------------------------------------------------------------------------*/
-extern int input_sbf(raw_t *raw, unsigned char data)
+extern __declspec(dllexport)  int __stdcall input_sbf(raw_t *raw, unsigned char data)
 {
     trace(5,"input_sbf: data=%02x\n",data);
 
@@ -2227,7 +2227,7 @@ extern int input_sbf(raw_t *raw, unsigned char data)
 *          FILE   *fp    I      file pointer
 * return : status(-2: end of file, -1...9: same as above)
 *-----------------------------------------------------------------------------*/
-extern int input_sbff(raw_t *raw, FILE *fp)
+extern __declspec(dllexport)  int __stdcall input_sbff(raw_t *raw, FILE *fp)
 {
     int i,data;
 

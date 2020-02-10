@@ -251,7 +251,7 @@ static void combpeph(nav_t *nav, int opt)
 *          function
 *          only files with extensions of .sp3, .SP3, .eph* and .EPH* are read
 *-----------------------------------------------------------------------------*/
-extern void readsp3(const char *file, nav_t *nav, int opt)
+extern __declspec(dllexport) void __stdcall readsp3(const char *file, nav_t *nav, int opt)
 {
     FILE *fp;
     gtime_t time={0};
@@ -301,7 +301,7 @@ extern void readsp3(const char *file, nav_t *nav, int opt)
 * return : status (1:ok,0:error)
 * notes  : only support antex format for the antenna parameter file
 *-----------------------------------------------------------------------------*/
-extern int readsap(const char *file, gtime_t time, nav_t *nav)
+extern __declspec(dllexport) int __stdcall readsap(const char *file, gtime_t time, nav_t *nav)
 {
     pcvs_t pcvs={0};
     pcv_t pcv0={0},*pcv;
@@ -368,7 +368,7 @@ static int readdcbf(const char *file, nav_t *nav, const sta_t *sta)
 * return : status (1:ok,0:error)
 * notes  : currently only p1-c1 bias of code *.dcb file
 *-----------------------------------------------------------------------------*/
-extern int readdcb(const char *file, nav_t *nav, const sta_t *sta)
+extern __declspec(dllexport) int __stdcall readdcb(const char *file, nav_t *nav, const sta_t *sta)
 {
     int i,j,n;
     char *efiles[MAXEXFILE]={0};
@@ -469,7 +469,7 @@ static int cmpfcb(const void *p1, const void *p2)
 * return : status (1:ok,0:error)
 * notes  : fcb data appended to navigation data
 *-----------------------------------------------------------------------------*/
-extern int readfcb(const char *file, nav_t *nav)
+extern __declspec(dllexport) int __stdcall readfcb(const char *file, nav_t *nav)
 {
     char *efiles[MAXEXFILE]={0};
     int i,n;
@@ -653,7 +653,7 @@ static int pephclk(gtime_t time, int sat, const nav_t *nav, double *dts,
 *                                 {dx,dy,dz} (m) (iono-free LC value)
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void satantoff(gtime_t time, const double *rs, int sat, const nav_t *nav,
+extern __declspec(dllexport) void __stdcall satantoff(gtime_t time, const double *rs, int sat, const nav_t *nav,
                       double *dant)
 {
     const double *lam=nav->lam[sat-1];
@@ -709,7 +709,7 @@ extern void satantoff(gtime_t time, const double *rs, int sat, const nav_t *nav,
 *          nav->nc must be set by calling readsp3(), readrnx() or readrnxt()
 *          if precise clocks are not set, clocks in sp3 are used instead
 *-----------------------------------------------------------------------------*/
-extern int peph2pos(gtime_t time, int sat, const nav_t *nav, int opt,
+extern __declspec(dllexport) int __stdcall peph2pos(gtime_t time, int sat, const nav_t *nav, int opt,
                     double *rs, double *dts, double *var)
 {
     gtime_t time_tt;

@@ -665,7 +665,7 @@ static void *rtksvrthread(void *arg)
 * args   : rtksvr_t *svr    IO rtk server
 * return : status (0:error,1:ok)
 *-----------------------------------------------------------------------------*/
-extern int rtksvrinit(rtksvr_t *svr)
+extern __declspec(dllexport)  int __stdcall rtksvrinit(rtksvr_t *svr)
 {
     gtime_t time0={0};
     sol_t  sol0 ={{0}};
@@ -736,7 +736,7 @@ extern int rtksvrinit(rtksvr_t *svr)
 * args   : rtksvr_t *svr    IO rtk server
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void rtksvrfree(rtksvr_t *svr)
+extern __declspec(dllexport)  void __stdcall rtksvrfree(rtksvr_t *svr)
 {
     int i,j;
     
@@ -753,8 +753,8 @@ extern void rtksvrfree(rtksvr_t *svr)
 * args   : rtksvr_t *svr    IO rtk server
 * return : status (1:ok 0:error)
 *-----------------------------------------------------------------------------*/
-extern void rtksvrlock  (rtksvr_t *svr) {lock  (&svr->lock);}
-extern void rtksvrunlock(rtksvr_t *svr) {unlock(&svr->lock);}
+extern __declspec(dllexport)  void __stdcall rtksvrlock  (rtksvr_t *svr) {lock  (&svr->lock);}
+extern __declspec(dllexport)  void __stdcall rtksvrunlock(rtksvr_t *svr) {unlock(&svr->lock);}
 
 /* start rtk server ------------------------------------------------------------
 * start rtk server thread
@@ -801,7 +801,7 @@ extern void rtksvrunlock(rtksvr_t *svr) {unlock(&svr->lock);}
 *          char   *errmsg   O  error message
 * return : status (1:ok 0:error)
 *-----------------------------------------------------------------------------*/
-extern int rtksvrstart(rtksvr_t *svr, int cycle, int buffsize, int *strs,
+extern __declspec(dllexport)  int __stdcall rtksvrstart(rtksvr_t *svr, int cycle, int buffsize, int *strs,
                        char **paths, int *formats, int navsel, char **cmds,
                        char **cmds_periodic, char **rcvopts, int nmeacycle,
                        int nmeareq, const double *nmeapos, prcopt_t *prcopt,
@@ -936,7 +936,7 @@ extern int rtksvrstart(rtksvr_t *svr, int cycle, int buffsize, int *strs,
 *                              cmds[2]=input stream ephem (NULL: no command)
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void rtksvrstop(rtksvr_t *svr, char **cmds)
+extern __declspec(dllexport)  void __stdcall  rtksvrstop(rtksvr_t *svr, char **cmds)
 {
     int i;
     
@@ -971,7 +971,7 @@ extern void rtksvrstop(rtksvr_t *svr, char **cmds)
 *          solopt_t *solopt I  solution options
 * return : status (1:ok 0:error)
 *-----------------------------------------------------------------------------*/
-extern int rtksvropenstr(rtksvr_t *svr, int index, int str, const char *path,
+extern __declspec(dllexport)  int __stdcall rtksvropenstr(rtksvr_t *svr, int index, int str, const char *path,
                          const solopt_t *solopt)
 {
     tracet(3,"rtksvropenstr: index=%d str=%d path=%s\n",index,str,path);
@@ -1006,7 +1006,7 @@ extern int rtksvropenstr(rtksvr_t *svr, int index, int str, const char *path,
 *                               6:log base station,7:log correction)
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void rtksvrclosestr(rtksvr_t *svr, int index)
+extern __declspec(dllexport)  void __stdcall rtksvrclosestr(rtksvr_t *svr, int index)
 {
     tracet(3,"rtksvrclosestr: index=%d\n",index);
     
@@ -1031,7 +1031,7 @@ extern void rtksvrclosestr(rtksvr_t *svr, int index)
 *          int     *vsat    O  valid satellite flag
 * return : number of satellites
 *-----------------------------------------------------------------------------*/
-extern int rtksvrostat(rtksvr_t *svr, int rcv, gtime_t *time, int *sat,
+extern __declspec(dllexport)  int __stdcall rtksvrostat(rtksvr_t *svr, int rcv, gtime_t *time, int *sat,
                        double *az, double *el, int **snr, int *vsat)
 {
     int i,j,ns;
@@ -1068,7 +1068,7 @@ extern int rtksvrostat(rtksvr_t *svr, int rcv, gtime_t *time, int *sat,
 *          char    *msg     O  status messages
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void rtksvrsstat(rtksvr_t *svr, int *sstat, char *msg)
+extern __declspec(dllexport)  void __stdcall rtksvrsstat(rtksvr_t *svr, int *sstat, char *msg)
 {
     int i;
     char s[MAXSTRMSG],*p=msg;
@@ -1089,7 +1089,7 @@ extern void rtksvrsstat(rtksvr_t *svr, int *sstat, char *msg)
 *          char    *comment I  comment string
 * return : status (1:ok 0:error)
 *-----------------------------------------------------------------------------*/
-extern int rtksvrmark(rtksvr_t *svr, const char *name, const char *comment)
+extern __declspec(dllexport)  int __stdcall rtksvrmark(rtksvr_t *svr, const char *name, const char *comment)
 {
     char buff[MAXSOLMSG+1],tstr[32],*p,*q;
     double tow,pos[3];

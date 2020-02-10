@@ -155,7 +155,7 @@ static int savekml(const char *file, const solbuf_t *solbuf, int tcolor,
 * return : status (0:ok,-1:file read,-2:file format,-3:no data,-4:file write)
 * notes  : see ref [1] for google earth kml file format
 *-----------------------------------------------------------------------------*/
-extern int convkml(const char *infile, const char *outfile, gtime_t ts,
+extern __declspec(dllexport)  int __stdcall convkml(const char *infile, const char *outfile, gtime_t ts,
                    gtime_t te, double tint, int qflg, double *offset,
                    int tcolor, int pcolor, int outalt, int outtime)
 {

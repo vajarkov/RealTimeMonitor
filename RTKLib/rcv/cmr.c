@@ -1370,7 +1370,7 @@ static unsigned int ubitn(const unsigned char *Address, int BitPosition, int Bit
 */
 
 /* free_cmr - Free up CMR dependent private storage */
-EXPORT void free_cmr(raw_t *Raw)
+EXPORT __declspec(dllexport)  void __stdcall free_cmr(raw_t *Raw)
 {
     cmr_t *Cmr = NULL;
     
@@ -1409,7 +1409,7 @@ EXPORT void free_cmr(raw_t *Raw)
 }
 
 /* init_cmr = Initialize CMR dependent private storage */
-EXPORT int init_cmr(raw_t *Raw)
+EXPORT __declspec(dllexport)  int __stdcall init_cmr(raw_t *Raw)
 {
     cmr_t *Cmr = NULL;
     obsr_t *RoverObservables = NULL;
@@ -1473,7 +1473,7 @@ EXPORT int init_cmr(raw_t *Raw)
 |
 | Supported CMR messages: 0, 1, 2, 3, 4; CMR+ messages 1, 2, 3.
 */
-EXPORT int input_cmr(raw_t *Raw, unsigned char Data)
+EXPORT __declspec(dllexport)  int __stdcall input_cmr(raw_t *Raw, unsigned char Data)
 {
     cmr_t *Cmr = (cmr_t*) Raw->rcv_data;
     unsigned char *MessageBuffer = Cmr->MessageBuffer;
@@ -1571,7 +1571,7 @@ EXPORT int input_cmr(raw_t *Raw, unsigned char Data)
 |
 | Supported CMR messages: 0, 1, 2, 3, 4; CMR+ messages 1, 2, 3.
 */
-extern int input_cmrf(raw_t *Raw, FILE *fp)
+extern __declspec(dllexport)  int __stdcall input_cmrf(raw_t *Raw, FILE *fp)
 {
     int i, Data, Ret;
 
@@ -1595,7 +1595,7 @@ extern int input_cmrf(raw_t *Raw, FILE *fp)
 | Call this function in the RTK SERVER immediately
 | after any rover observations have been received.
 */
-extern int update_cmr(raw_t *Raw, rtksvr_t *Svr, obs_t *obs)
+extern __declspec(dllexport)  int __stdcall update_cmr(raw_t *Raw, rtksvr_t *Svr, obs_t *obs)
 {
     cmr_t *Cmr = (cmr_t*) Raw->rcv_data;
     obsr_t *RoverObsTable = (obsr_t*) Cmr->RoverObservables;

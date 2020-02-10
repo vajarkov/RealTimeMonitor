@@ -1561,7 +1561,7 @@ static int readrnxfile(const char *file, gtime_t ts, gtime_t te, double tint,
 *                               (sys=G:GPS,R:GLO,E:GAL,J:QZS,C:BDS,I:IRN,S:SBS)
 *
 *-----------------------------------------------------------------------------*/
-extern int readrnxt(const char *file, int rcv, gtime_t ts, gtime_t te,
+extern __declspec(dllexport) int __stdcall readrnxt(const char *file, int rcv, gtime_t ts, gtime_t te,
                     double tint, const char *opt, obs_t *obs, nav_t *nav,
                     sta_t *sta)
 {
@@ -1598,7 +1598,7 @@ extern int readrnxt(const char *file, int rcv, gtime_t ts, gtime_t te,
     
     return stat;
 }
-extern int readrnx(const char *file, int rcv, const char *opt, obs_t *obs,
+extern __declspec(dllexport) int __stdcall readrnx(const char *file, int rcv, const char *opt, obs_t *obs,
                    nav_t *nav, sta_t *sta)
 {
     gtime_t t={0};
@@ -1654,7 +1654,7 @@ static void combpclk(nav_t *nav)
 *          nav_t *nav    IO     navigation data    (NULL: no input)
 * return : number of precise clock
 *-----------------------------------------------------------------------------*/
-extern int readrnxc(const char *file, nav_t *nav)
+extern __declspec(dllexport) int __stdcall readrnxc(const char *file, nav_t *nav)
 {
     gtime_t t={0};
     int i,n,index=0,stat=1;
@@ -1694,7 +1694,7 @@ extern int readrnxc(const char *file, nav_t *nav)
 * args   : rnxctr_t *rnx IO     rinex control struct
 * return : status (1:ok,0:memory allocation error)
 *-----------------------------------------------------------------------------*/
-extern int init_rnxctr(rnxctr_t *rnx)
+extern __declspec(dllexport) int __stdcall init_rnxctr(rnxctr_t *rnx)
 {
     gtime_t time0={0};
     obsd_t data0={{0}};
@@ -1739,7 +1739,7 @@ extern int init_rnxctr(rnxctr_t *rnx)
 * args   : rnxctr_t *rnx IO  rinex control struct
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void free_rnxctr(rnxctr_t *rnx)
+extern __declspec(dllexport) void __stdcall free_rnxctr(rnxctr_t *rnx)
 {
     trace(3,"free_rnxctr:\n");
     
@@ -1755,7 +1755,7 @@ extern void free_rnxctr(rnxctr_t *rnx)
 * return : status (-2: end of file, 0: no message, 1: input observation data,
 *                   2: input navigation data)
 *-----------------------------------------------------------------------------*/
-extern int open_rnxctr(rnxctr_t *rnx, FILE *fp)
+extern __declspec(dllexport) int __stdcall open_rnxctr(rnxctr_t *rnx, FILE *fp)
 {
     const char *rnxtypes="ONGLJHC";
     double ver;
@@ -1790,7 +1790,7 @@ extern int open_rnxctr(rnxctr_t *rnx, FILE *fp)
 * return : status (-2: end of file, 0: no message, 1: input observation data,
 *                   2: input navigation data)
 *-----------------------------------------------------------------------------*/
-extern int input_rnxctr(rnxctr_t *rnx, FILE *fp)
+extern __declspec(dllexport) int __stdcall  input_rnxctr(rnxctr_t *rnx, FILE *fp)
 {
     eph_t eph={0};
     geph_t geph={0};
@@ -1906,7 +1906,7 @@ static void outobstype_ver3(FILE *fp, const rnxopt_t *opt)
 *          nav_t  *nav      I   navigation data
 * return : status (1:ok, 0:output error)
 *-----------------------------------------------------------------------------*/
-extern int outrnxobsh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
+extern __declspec(dllexport) int __stdcall outrnxobsh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
 {
     const char *glo_codes[]={"C1C","C1P","C2C","C2P"};
     double ep[6],pos[3]={0},del[3]={0};
@@ -2093,7 +2093,7 @@ static int obsindex(double ver, int sys, const unsigned char *code,
 *          int    flag      I   epoch flag (0:ok,1:power failure,>1:event flag)
 * return : status (1:ok, 0:output error)
 *-----------------------------------------------------------------------------*/
-extern int outrnxobsb(FILE *fp, const rnxopt_t *opt, const obsd_t *obs, int n,
+extern __declspec(dllexport) int __stdcall outrnxobsb(FILE *fp, const rnxopt_t *opt, const obsd_t *obs, int n,
                       int flag)
 {
     const char *mask;
@@ -2184,7 +2184,7 @@ static void outnavf(FILE *fp, double value)
 *          nav_t  nav       I   navigation data (NULL: no input)
 * return : status (1:ok, 0:output error)
 *-----------------------------------------------------------------------------*/
-extern int outrnxnavh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
+extern __declspec(dllexport) int __stdcall outrnxnavh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
 {
     int i;
     char date[64],*sys;
@@ -2318,7 +2318,7 @@ extern int outrnxnavh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
 *          eph_t  *eph      I   ephemeris
 * return : status (1:ok, 0:output error)
 *-----------------------------------------------------------------------------*/
-extern int outrnxnavb(FILE *fp, const rnxopt_t *opt, const eph_t *eph)
+extern __declspec(dllexport) int __stdcall outrnxnavb(FILE *fp, const rnxopt_t *opt, const eph_t *eph)
 {
     double ep[6],ttr;
     int week,sys,prn;
@@ -2431,7 +2431,7 @@ extern int outrnxnavb(FILE *fp, const rnxopt_t *opt, const eph_t *eph)
 *          nav_t  nav       I   navigation data (NULL: no input)
 * return : status (1:ok, 0:output error)
 *-----------------------------------------------------------------------------*/
-extern int outrnxgnavh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
+extern __declspec(dllexport) int __stdcall outrnxgnavh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
 {
     int i;
     char date[64];
@@ -2464,7 +2464,7 @@ extern int outrnxgnavh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
 *          geph_t  *geph    I   glonass ephemeris
 * return : status (1:ok, 0:output error)
 *-----------------------------------------------------------------------------*/
-extern int outrnxgnavb(FILE *fp, const rnxopt_t *opt, const geph_t *geph)
+extern __declspec(dllexport) int __stdcall outrnxgnavb(FILE *fp, const rnxopt_t *opt, const geph_t *geph)
 {
     gtime_t toe;
     double ep[6],tof;
@@ -2523,7 +2523,7 @@ extern int outrnxgnavb(FILE *fp, const rnxopt_t *opt, const geph_t *geph)
 *          nav_t  nav       I   navigation data (NULL: no input)
 * return : status (1:ok, 0:output error)
 *-----------------------------------------------------------------------------*/
-extern int outrnxhnavh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
+extern __declspec(dllexport) int __stdcall outrnxhnavh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
 {
     int i;
     char date[64];
@@ -2556,7 +2556,7 @@ extern int outrnxhnavh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
 *          seph_t  *seph    I   sbas ephemeris
 * return : status (1:ok, 0:output error)
 *-----------------------------------------------------------------------------*/
-extern int outrnxhnavb(FILE *fp, const rnxopt_t *opt, const seph_t *seph)
+extern __declspec(dllexport) int __stdcall outrnxhnavb(FILE *fp, const rnxopt_t *opt, const seph_t *seph)
 {
     double ep[6];
     int prn;
@@ -2610,7 +2610,7 @@ extern int outrnxhnavb(FILE *fp, const rnxopt_t *opt, const seph_t *seph)
 *          nav_t  nav       I   navigation data (NULL: no input)
 * return : status (1:ok, 0:output error)
 *-----------------------------------------------------------------------------*/
-extern int outrnxlnavh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
+extern __declspec(dllexport) int __stdcall outrnxlnavh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
 {
     int i;
     char date[64];
@@ -2638,7 +2638,7 @@ extern int outrnxlnavh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
 *          nav_t  nav       I   navigation data (NULL: no input)
 * return : status (1:ok, 0:output error)
 *-----------------------------------------------------------------------------*/
-extern int outrnxqnavh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
+extern __declspec(dllexport) int __stdcall outrnxqnavh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
 {
     int i;
     char date[64];
@@ -2666,7 +2666,7 @@ extern int outrnxqnavh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
 *          nav_t  nav       I   navigation data (NULL: no input)
 * return : status (1:ok, 0:output error)
 *-----------------------------------------------------------------------------*/
-extern int outrnxcnavh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
+extern __declspec(dllexport) int __stdcall outrnxcnavh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
 {
     int i;
     char date[64];
@@ -2694,7 +2694,7 @@ extern int outrnxcnavh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
 *          nav_t  nav       I   navigation data (NULL: no input)
 * return : status (1:ok, 0:output error)
 *-----------------------------------------------------------------------------*/
-extern int outrnxinavh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
+extern __declspec(dllexport) int __stdcall outrnxinavh(FILE *fp, const rnxopt_t *opt, const nav_t *nav)
 {
     int i;
     char date[64];

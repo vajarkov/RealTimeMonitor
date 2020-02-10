@@ -87,18 +87,18 @@
 
 #ifdef EXTGSI
 
-extern int resamb_WLNL(rtk_t *rtk, const obsd_t *obs, const int *sat,
+extern __declspec(dllexport)  int resamb_WLNL(rtk_t *rtk, const obsd_t *obs, const int *sat,
                        const int *iu, const int *ir, int ns, const nav_t *nav,
                        const double *azel);
-extern int resamb_TCAR(rtk_t *rtk, const obsd_t *obs, const int *sat,
+extern __declspec(dllexport)  int resamb_TCAR(rtk_t *rtk, const obsd_t *obs, const int *sat,
                        const int *iu, const int *ir, int ns, const nav_t *nav,
                        const double *azel);
 #else
 
-extern int resamb_WLNL(rtk_t *rtk, const obsd_t *obs, const int *sat,
+extern __declspec(dllexport)  int resamb_WLNL(rtk_t *rtk, const obsd_t *obs, const int *sat,
                        const int *iu, const int *ir, int ns, const nav_t *nav,
                        const double *azel) {return 0;}
-extern int resamb_TCAR(rtk_t *rtk, const obsd_t *obs, const int *sat,
+extern __declspec(dllexport)  int resamb_TCAR(rtk_t *rtk, const obsd_t *obs, const int *sat,
                        const int *iu, const int *ir, int ns, const nav_t *nav,
                        const double *azel) {return 0;}
 #endif
@@ -178,7 +178,7 @@ static gtime_t time_stat={0};    /* rtk status file time */
 *          rejc     : data reject (outlier) count
 *
 *-----------------------------------------------------------------------------*/
-extern int rtkopenstat(const char *file, int level)
+extern __declspec(dllexport)  int __stdcall rtkopenstat(const char *file, int level)
 {
     gtime_t time=utc2gpst(timeget());
     char path[1024];
@@ -203,7 +203,7 @@ extern int rtkopenstat(const char *file, int level)
 * args   : none
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void rtkclosestat(void)
+extern __declspec(dllexport)  void __stdcall rtkclosestat(void)
 {
     trace(3,"rtkclosestat:\n");
     
@@ -213,7 +213,7 @@ extern void rtkclosestat(void)
     statlevel=0;
 }
 /* write solution status to buffer -------------------------------------------*/
-extern int rtkoutstat(rtk_t *rtk, char *buff)
+extern __declspec(dllexport)  int __stdcall rtkoutstat(rtk_t *rtk, char *buff)
 {
     ssat_t *ssat;
     double tow,pos[3],vel[3],acc[3],vela[3]={0},acca[3]={0},xa[3];
@@ -1778,7 +1778,7 @@ static int relpos(rtk_t *rtk, const obsd_t *obs, int nu, int nr,
 *          prcopt_t *opt    I   positioning options (see rtklib.h)
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void rtkinit(rtk_t *rtk, const prcopt_t *opt)
+extern __declspec(dllexport)  void __stdcall rtkinit(rtk_t *rtk, const prcopt_t *opt)
 {
     sol_t sol0={{0}};
     ambc_t ambc0={{{0}}};
@@ -1809,7 +1809,7 @@ extern void rtkinit(rtk_t *rtk, const prcopt_t *opt)
 * args   : rtk_t    *rtk    IO  rtk control/result struct
 * return : none
 *-----------------------------------------------------------------------------*/
-extern void rtkfree(rtk_t *rtk)
+extern __declspec(dllexport)  void __stdcall rtkfree(rtk_t *rtk)
 {
     trace(3,"rtkfree :\n");
     
@@ -1877,7 +1877,7 @@ extern void rtkfree(rtk_t *rtk)
 * notes  : before calling function, base station position rtk->sol.rb[] should
 *          be properly set for relative mode except for moving-baseline
 *-----------------------------------------------------------------------------*/
-extern int rtkpos(rtk_t *rtk, const obsd_t *obs, int n, const nav_t *nav)
+extern __declspec(dllexport)  int __stdcall rtkpos(rtk_t *rtk, const obsd_t *obs, int n, const nav_t *nav)
 {
     prcopt_t *opt=&rtk->opt;
     sol_t solb={{0}};

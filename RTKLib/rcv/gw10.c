@@ -169,7 +169,7 @@ static int decode_gw10raw(raw_t *raw)
     return 1;
 }
 /* check partity -------------------------------------------------------------*/
-extern int check_parity(unsigned int word, unsigned char *data)
+extern __declspec(dllexport)  int check_parity(unsigned int word, unsigned char *data)
 {
     const unsigned int hamming[]={
         0xBB1F3480,0x5D8F9A40,0xAEC7CD00,0x5763E680,0x6BB1F340,0x8B7A89C0
@@ -372,7 +372,7 @@ static int decode_gw10(raw_t *raw)
 *          -EPHALL    : input all ephemerides
 *
 *-----------------------------------------------------------------------------*/
-extern int input_gw10(raw_t *raw, unsigned char data)
+extern __declspec(dllexport)  int __stdcall input_gw10(raw_t *raw, unsigned char data)
 {
     int stat;
     trace(5,"input_gw10: data=%02x\n",data);
@@ -410,7 +410,7 @@ extern int input_gw10(raw_t *raw, unsigned char data)
 *          FILE   *fp    I      file pointer
 * return : status(-2: end of file, -1...9: same as above)
 *-----------------------------------------------------------------------------*/
-extern int input_gw10f(raw_t *raw, FILE *fp)
+extern __declspec(dllexport)  int __stdcall input_gw10f(raw_t *raw, FILE *fp)
 {
     int i,data,ret;
     

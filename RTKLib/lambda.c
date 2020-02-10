@@ -160,7 +160,7 @@ static int search(int n, int m, const double *L, const double *D,
 * return : status (0:ok,other:error)
 * notes  : matrix stored by column-major order (fortran convension)
 *-----------------------------------------------------------------------------*/
-extern int lambda(int n, int m, const double *a, const double *Q, double *F,
+extern __declspec(dllexport)  int __stdcall lambda(int n, int m, const double *a, const double *Q, double *F,
                   double *s)
 {
     int info;
@@ -192,7 +192,7 @@ extern int lambda(int n, int m, const double *a, const double *Q, double *F,
 *          double *Z     O  lambda reduction matrix (n x n)
 * return : status (0:ok,other:error)
 *-----------------------------------------------------------------------------*/
-extern int lambda_reduction(int n, const double *Q, double *Z)
+extern __declspec(dllexport)  int __stdcall lambda_reduction(int n, const double *Q, double *Z)
 {
     double *L,*D;
     int i,j,info;
@@ -225,7 +225,7 @@ extern int lambda_reduction(int n, const double *Q, double *Z)
 *          double *s     O  sum of squared residulas of fixed solutions (1 x m)
 * return : status (0:ok,other:error)
 *-----------------------------------------------------------------------------*/
-extern int lambda_search(int n, int m, const double *a, const double *Q,
+extern __declspec(dllexport)  int __stdcall lambda_search(int n, int m, const double *a, const double *Q,
                          double *F, double *s)
 {
     double *L,*D;
