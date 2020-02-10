@@ -527,7 +527,7 @@ namespace RealTimeMonitor
         public unsafe struct gtime_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            
             public IntPtr time;                                          /* time (s) expressed by standard time_t */
             public double sec;                                          /* fraction of second under 1 s */
         }
