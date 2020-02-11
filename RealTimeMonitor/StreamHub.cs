@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 //using RealTimeMonitor.
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace RealTimeMonitor
 {
-    public class StreamHub : Hub 
+    public class StreamHub : Hub, IDisposable
     {
         private const int MAXSCALE = 18;
         private const int MAXMAPPNT	= 10;
@@ -42,11 +43,14 @@ namespace RealTimeMonitor
         private const int MAXPANELMODE = 7;                                // max panel mode
 
 
+		bool disposed = false;
+
         DataRTK.rtksvr_t rtksvr;
         DataRTK.stream_t monistr;
-
-        //Глобальные переменные
-        int RovPosTypeF, RefPosTypeF, RovAntPcvF, RefAntPcvF;
+		int iSizeRTKSRV; 
+		IntPtr rtksrv_ptr; 
+		//Глобальные переменные
+		int RovPosTypeF, RefPosTypeF, RovAntPcvF, RefAntPcvF;
         DataRTK.prcopt_t PrcOpt;
         DataRTK.solopt_t SolOpt;
         double[] RovAntDel = new double[3], RefAntDel = new double[3], RovPos = new double[3], RefPos = new double[3], NmeaPos = new double[3];
@@ -93,7 +97,32 @@ namespace RealTimeMonitor
 
         string IniFile;
 
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
 
+		protected override void Dispose(bool disposing)
+		{
+			if (disposed)
+				return;
+
+			if (disposing)
+			{
+
+			}
+
+			Marshal.FreeCoTaskMem(rtksrv_ptr);
+			rtksrv_ptr = IntPtr.Zero;
+
+			disposed = true;
+
+
+		}
+
+
+		
 
 		public ChannelReader<double> DelayCounter(int delay)
         {
@@ -104,14 +133,18 @@ namespace RealTimeMonitor
 
         private async Task WriteItems(ChannelWriter<double> writer, int count, int delay)
         {
+			iSizeRTKSRV = Marshal.SizeOf(typeof(DataRTK.rtksvr_t));
+			rtksrv_ptr = Marshal.AllocCoTaskMem(iSizeRTKSRV);
+			DataRTK.rtksvr_t rtksrv = (DataRTK.rtksvr_t)(Marshal.PtrToStructure(rtksrv_ptr, typeof(DataRTK.rtksvr_t)));
+			//char[] p = new char[];
+			char[] argv = new char[32], buff = new char[1024];// file = new char[1024];
+            string file = "rtknavi.exe";
+            //Option Reciver
+            SvrCycle = SvrBuffSize = 0;
+            SolBuffSize = 1000;
             
-                //char[] p = new char[];
-                char[] argv = new char[32], buff = new char[1024];// file = new char[1024];
-                string file = "rtknavi.exe";
-                //Option Reciver
-                SvrCycle = SvrBuffSize = 0;
-                SolBuffSize = 1000;
-            for (int i = 0; i < 8; i++)
+			
+			for (int i = 0; i < 8; i++)
             {
 				StreamC[i] = Stream[i] = Format[i] = 0;
             }
@@ -186,9 +219,14 @@ namespace RealTimeMonitor
 
 			try
 			{
-				DataRTK.rtksvrinit(ref rtksvr);
+				
+				DataRTK.rtksvrinit(rtksrv);
 			}
 			catch (TypeLoadException ex)
+			{
+				string strerr = ex.Message;
+			}
+			catch (MarshalDirectiveException ex)
 			{
 				string strerr = ex.Message;
 			}

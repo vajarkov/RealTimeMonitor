@@ -1604,22 +1604,24 @@ namespace RealTimeMonitor
 #pragma warning restore IDE1006 // Naming Styles
         {
                    /* RTK control/result type */
-            public sol_t sol;         /* RTK solution */
+            public sol_t sol;           /* RTK solution */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
-            public double[] rb;       /* base position/velocity (ecef) (m|m/s) */
+            public double[] rb;         /* base position/velocity (ecef) (m|m/s) */
             public int nx, na;          /* number of float states/fixed states */
-            public double tt;          /* time difference between current and previous (s) */
-            public double[] x, P;      /* float states and their covariance */
+            public double tt;           /* time difference between current and previous (s) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
+            public double[] x, P;       /* float states and their covariance */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
             public double[] xa, Pa;     /* fixed states and their covariance */
-            public int nfix;           /* number of continuous fixes of ambiguity */
+            public int nfix;            /* number of continuous fixes of ambiguity */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
-            public ambc_t[] ambc; /* ambibuity control */
+            public ambc_t[] ambc;       /* ambibuity control */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
-            public ssat_t[] ssat; /* satellite status */
-            public int neb;            /* bytes in error message buffer */
+            public ssat_t[] ssat;       /* satellite status */
+            public int neb;             /* bytes in error message buffer */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXERRMSG)]
-            public char[] errbuf; /* error message buffer */
-            public prcopt_t opt;       /* processing options */
+            public char[] errbuf;       /* error message buffer */
+            public prcopt_t opt;         /* processing options */
         };
 
 
@@ -1781,16 +1783,22 @@ namespace RealTimeMonitor
             public sol_t[] solbuf; /* solution buffer */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3 * 10)]
             public int[] nmsg; /* input message counts */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public raw_t[] raw;     /* receiver raw control {rov,base,corr} */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public rtcm_t[] rtcm;     /* RTCM control {rov,base,corr} */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public gtime_t[] ftime;   /* download time {rov,base,corr} */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3 * MAXSTRPATH)]
             public char[] files; /* download paths {rov,base,corr} */
-            public unsafe obs_t** obs; /* observation data {rov,base,corr} */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3 * MAXOBSBUF)]
+            public obs_t obs; /* observation data {rov,base,corr} */
             public nav_t nav;          /* navigation data */
-            public unsafe sbsmsg_t* sbsmsg; /* SBAS message buffer */
-            public unsafe stream_t* stream; /* streams {rov,base,corr,sol1,sol2,logr,logb,logc} */
-            public unsafe stream_t* moni;     /* monitor stream */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSBSMSG)]
+            public sbsmsg_t sbsmsg; /* SBAS message buffer */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
+            public stream_t stream; /* streams {rov,base,corr,sol1,sol2,logr,logb,logc} */
+            public IntPtr moni;     /* monitor stream */
             public uint tick;  /* start tick */
             public IntPtr thread;    /* server thread */
             public int cputime;        /* CPU time (ms) for a processing cycle */
@@ -1984,7 +1992,7 @@ namespace RealTimeMonitor
         public static extern void strinitcom();
 
         [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtksvrinit")]
-        public static extern int rtksvrinit(ref rtksvr_t svr);
+        public static extern int rtksvrinit(rtksvr_t svr);
 
         [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strinit")]
         public static extern void strinit(ref stream_t stream);
