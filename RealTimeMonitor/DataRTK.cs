@@ -1241,7 +1241,7 @@ namespace RealTimeMonitor
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 #pragma warning disable IDE1006 // Naming Styles
-        public unsafe struct sta_t
+        public struct sta_t
 #pragma warning restore IDE1006 // Naming Styles
         {
             //[MarshalAs(UnmanagedType.ByValArray, SizeConst = 13)]        /* station parameter type */
@@ -1272,10 +1272,10 @@ namespace RealTimeMonitor
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 #pragma warning disable IDE1006 // Naming Styles
-        public unsafe struct sol_t
+        public struct sol_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 11)]        /* solution type */
+            /* solution type */
 
             public gtime_t time;       /* time (GPST) */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
@@ -1300,10 +1300,10 @@ namespace RealTimeMonitor
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 #pragma warning disable IDE1006 // Naming Styles
-        public unsafe struct solbuf_t
+        public struct solbuf_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]        /* solution buffer type */
+            /* solution buffer type */
             public int n, nmax;         /* number of solution/max number of buffer */
             public int cyclic;         /* cyclic buffer flag */
             public int start, end;      /* start/end index */
@@ -1322,7 +1322,7 @@ namespace RealTimeMonitor
         public struct solstat_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 13)]        /* solution status type */
+            /* solution status type */
             public gtime_t time;       /* time (GPST) */
             public char sat;  /* satellite number */
             public char frq;  /* frequency (1:L1,2:L2,...) */
@@ -1342,18 +1342,18 @@ namespace RealTimeMonitor
         public struct solstatbuf_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]        /* solution status buffer type */
+            /* solution status buffer type */
             public int n, nmax;         /* number of solution/max number of buffer */
-            public unsafe solstat_t* data;    /* solution status data */
+            public solstat_t data;    /* solution status data */
         };
 
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 #pragma warning disable IDE1006 // Naming Styles
-        public unsafe struct rtcm_t
+        public struct rtcm_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 28)]        /* RTCM control struct type */
+            /* RTCM control struct type */
             public int staid;          /* station id */
             public int stah;           /* station health */
             public int seqno;          /* sequence number for rtcm 2 or iods msm */
@@ -1363,57 +1363,73 @@ namespace RealTimeMonitor
             public obs_t obs;          /* observation data (uncorrected) */
             public nav_t nav;          /* satellite ephemerides */
             public sta_t sta;          /* station parameters */
-            public unsafe dgps_t* dgps;       /* output of dgps corrections */
-            public unsafe ssr_t* ssr;  /* output of ssr corrections */
-            public fixed char msg[128];      /* special message */
-            public fixed char msgtype[256];  /* last message type */
-            public fixed char msmtype[6 * 128]; /* msm signal types */
+            public dgps_t dgps;       /* output of dgps corrections */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
+            public ssr_t[] ssr;  /* output of ssr corrections */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 128)]
+            public char[] msg;      /* special message */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
+            public char[] msgtype;  /* last message type */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6 * 128)]
+            public char[] msmtype; /* msm signal types */
             public int obsflag;        /* obs data complete flag (1:ok,0:not complete) */
             public int ephsat;         /* update satellite of ephemeris */
-            public fixed double cp[MAXSAT * (NFREQ + NEXOBS)]; /* carrier-phase measurement */
-            public fixed short time_lock[MAXSAT * (NFREQ + NEXOBS)]; /* lock time */
-            public fixed short loss[MAXSAT * (NFREQ + NEXOBS)]; /* loss of lock count */
-            public unsafe gtime_t** lltime; /* last lock time */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT * (NFREQ + NEXOBS))]
+            public double[] cp; /* carrier-phase measurement */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT * (NFREQ + NEXOBS))]
+            public short[] time_lock; /* lock time */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT * (NFREQ + NEXOBS))]
+            public short[] loss; /* loss of lock count */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT * (NFREQ + NEXOBS))]
+            public gtime_t[] lltime; /* last lock time */
             public int nbyte;          /* number of bytes in message buffer */
             public int nbit;           /* number of bits in word buffer */
             public int len;            /* message length (bytes) */
-            public fixed byte buff[1200]; /* message buffer */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1200)]
+            public byte[] buff; /* message buffer */
             public uint word;  /* word buffer for rtcm 2 */
-            public fixed uint nmsg2[100]; /* message count of RTCM 2 (1-99:1-99,0:other) */
-            public fixed uint nmsg3[400]; /* message count of RTCM 3 (1-299:1001-1299,300-399:2000-2099,0:ohter) */
-            public fixed char opt[256];      /* RTCM dependent options */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 100)]
+            public uint[] nmsg2; /* message count of RTCM 2 (1-99:1-99,0:other) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 400)]
+            public uint[] nmsg3; /* message count of RTCM 3 (1-299:1001-1299,300-399:2000-2099,0:ohter) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
+            public char[] opt;      /* RTCM dependent options */
         };
 
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 #pragma warning disable IDE1006 // Naming Styles
-        public unsafe struct rnxctr_t
+        public struct rnxctr_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 11)]        /* rinex control struct type */
+                    /* rinex control struct type */
             public gtime_t time;       /* message time */
             public double ver;         /* rinex version */
             public char type;        /* rinex file type ('O','N',...) */
             public int sys;         /* navigation system */
             public int tsys;        /* time system */
-            public fixed char tobs[7 * MAXOBSTYPE * 4]; /* rinex obs types */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 7 * MAXOBSTYPE * 4)]
+            public char[] tobs; /* rinex obs types */
             public obs_t obs;         /* observation data */
             public nav_t nav;         /* navigation data */
             public sta_t sta;         /* station info */
             public int ephsat;      /* ephemeris satellite number */
-            public fixed char opt[256];    /* rinex dependent options */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
+            public char[] opt;    /* rinex dependent options */
         };
 
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 #pragma warning disable IDE1006 // Naming Styles
-        public unsafe struct url_t
+        public struct url_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]        /* download url type */
-            public fixed char type[32];      /* data type */
-            public fixed char path[1024];    /* url path */
-            public fixed char dir[1024];    /* local directory */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]        /* download url type */
+            public char[] type;      /* data type */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1024)]
+            public char[] path;    /* url path */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1024)]
+            public char[] dir;    /* local directory */
             public double tint;        /* time interval (s) */
         };
 
@@ -1423,7 +1439,7 @@ namespace RealTimeMonitor
         public struct opt_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]        /* option type */
+            /* option type */
             public string name;   /* option name */
             public int format;         /* option format (0:int,1:double,2:string,3:enum) */
             public IntPtr var;          /* pointer to option variable */
@@ -1433,7 +1449,7 @@ namespace RealTimeMonitor
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 #pragma warning disable IDE1006 // Naming Styles
-        public unsafe struct exterr_t
+        public struct exterr_t
 #pragma warning restore IDE1006 // Naming Styles
         {
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]        /* extended receiver error model */
@@ -1453,27 +1469,23 @@ namespace RealTimeMonitor
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 #pragma warning disable IDE1006 // Naming Styles
-        public unsafe struct snrmask_t
+        public struct snrmask_t
 #pragma warning restore IDE1006 // Naming Styles
         {
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]        /* SNR mask type */
-            public fixed int ena[2];         /* enable flag {rover,base} */
-            public fixed double mask[NFREQ * 9]; /* mask (dBHz) at 5,10,...85 deg */
+            public int[] ena;         /* enable flag {rover,base} */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = NFREQ * 9)]
+            public double[] mask; /* mask (dBHz) at 5,10,...85 deg */
 
-            public snrmask_t(int ena1, int ena2)
-            {
-                this.ena[0] = ena1;
-                this.ena[1] = ena2;
-            }
         };
 
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 #pragma warning disable IDE1006 // Naming Styles
-        public unsafe struct prcopt_t
+        public struct prcopt_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 54)]        /* processing options type */
+            /* processing options type */
             public int mode;           /* positioning mode (PMODE_???) */
             public int soltype;        /* solution type (0:forward,1:backward,2:combined) */
             public int nf;             /* number of frequencies (1:L1,2:L1+L2,3:L1+L2+L5) */
@@ -1531,7 +1543,7 @@ namespace RealTimeMonitor
             public char[] anttype; /* antenna types {rover,base} */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2 * 3)]
             public double[] antdel; /* antenna delta {{rov_e,rov_n,rov_u},{ref_e,ref_n,ref_u}} */
-            public unsafe pcv_t* pcvr;      /* receiver antenna parameters {rov,base} */
+            public pcv_t pcvr;      /* receiver antenna parameters {rov,base} */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
             public char[] exsats; /* excluded satellites (1:excluded,2:included) */
             public int maxaveep;      /* max averaging epoches */
@@ -1588,22 +1600,34 @@ namespace RealTimeMonitor
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 #pragma warning disable IDE1006 // Naming Styles
-        public unsafe struct filopt_t
+        public struct filopt_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 12)]        /* file options type */
-            public fixed char satantp[MAXSTRPATH]; /* satellite antenna parameters file */
-            public fixed char rcvantp[MAXSTRPATH]; /* receiver antenna parameters file */
-            public fixed char stapos[MAXSTRPATH]; /* station positions file */
-            public fixed char geoid[MAXSTRPATH]; /* external geoid data file */
-            public fixed char iono[MAXSTRPATH]; /* ionosphere data file */
-            public fixed char dcb[MAXSTRPATH]; /* dcb data file */
-            public fixed char eop[MAXSTRPATH]; /* eop data file */
-            public fixed char blq[MAXSTRPATH]; /* ocean tide loading blq file */
-            public fixed char tempdir[MAXSTRPATH]; /* ftp/http temporaly directory */
-            public fixed char geexe[MAXSTRPATH]; /* google earth exec file */
-            public fixed char solstat[MAXSTRPATH]; /* solution statistics file */
-            public fixed char trace[MAXSTRPATH]; /* debug trace file */
+            /* file options type */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSTRPATH)]        
+            public char[] satantp; /* satellite antenna parameters file */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSTRPATH)]
+            public char[] rcvantp; /* receiver antenna parameters file */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSTRPATH)]
+            public char[] stapos; /* station positions file */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSTRPATH)]
+            public char[] geoid; /* external geoid data file */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSTRPATH)]
+            public char[] iono; /* ionosphere data file */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSTRPATH)]
+            public char[] dcb; /* dcb data file */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSTRPATH)]
+            public char[] eop; /* eop data file */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSTRPATH)]
+            public char[] blq; /* ocean tide loading blq file */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSTRPATH)]
+            public char[] tempdir; /* ftp/http temporaly directory */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSTRPATH)]
+            public char[] geexe; /* google earth exec file */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSTRPATH)]
+            public char[] solstat; /* solution statistics file */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSTRPATH)]
+            public char[] trace; /* debug trace file */
         };
 
 
@@ -1793,10 +1817,10 @@ namespace RealTimeMonitor
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 #pragma warning disable IDE1006 // Naming Styles
-        public unsafe struct stream_t
+        public struct stream_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]        /* stream type */
+            /* stream type */
             public int type;           /* type (STR_???) */
             public int mode;           /* mode (STR_MODE_?) */
             public int state;          /* state (-1:error,0:close,1:open) */
@@ -1808,23 +1832,29 @@ namespace RealTimeMonitor
             public uint inbt, outbt; /* input/output bytes at tick */
             public CRITICAL_SECTION lock_flag;        /* lock flag */
             public IntPtr port;         /* type dependent port control struct */
-            public fixed char path[MAXSTRPATH]; /* stream path */
-            public fixed char msg[MAXSTRMSG];  /* stream message */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSTRPATH)]
+            public char[] path; /* stream path */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSTRMSG)]
+            public char[] ms;  /* stream message */
         };
 
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 #pragma warning disable IDE1006 // Naming Styles
-        public unsafe struct strconv_t
+        public struct strconv_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 11)]        /* stream converter type */
+            /* stream converter type */
             public int itype, otype;    /* input and output stream type */
             public int nmsg;           /* number of output messages */
-            public fixed int msgs[32];       /* output message types */
-            public fixed double tint[32];    /* output message intervals (s) */
-            public fixed int tick[32]; /* cycle tick of output message */
-            public fixed int ephsat[32];     /* satellites of output ephemeris */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
+            public int[] msgs;       /* output message types */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
+            public double[] tint;    /* output message intervals (s) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
+            public int[] tick; /* cycle tick of output message */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
+            public int[] ephsat;     /* satellites of output ephemeris */
             public int stasel;         /* station info selection (0:remote,1:local) */
             public rtcm_t rtcm;        /* rtcm input data buffer */
             public raw_t raw;          /* raw  input data buffer */
@@ -1834,10 +1864,10 @@ namespace RealTimeMonitor
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 #pragma warning disable IDE1006 // Naming Styles
-        public unsafe struct strsvr_t
+        public struct strsvr_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]        /* stream server type */
+            /* stream server type */
             public int state;          /* server state (0:stop,1:running) */
             public int cycle;          /* server cycle (ms) */
             public int buffsize;       /* input/monitor buffer size (bytes) */
@@ -1845,13 +1875,19 @@ namespace RealTimeMonitor
             public int relayback;      /* relay back of output streams (0:no) */
             public int nstr;           /* number of streams (1 input + (nstr-1) outputs */
             public int npb;            /* data length in peek buffer (bytes) */
-            public fixed char cmds_periodic[16 * MAXRCVCMD]; /* periodic commands */
-            public fixed double nmeapos[3];  /* NMEA request position (ecef) (m) */
-            public byte* buff; /* input buffers */
-            public byte* pbuf; /* peek buffer */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16 * MAXRCVCMD)]
+            public char[] cmds_periodic; /* periodic commands */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public double[] nmeapos;  /* NMEA request position (ecef) (m) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1024)]
+            public byte[] buff; /* input buffers */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1024)]
+            public byte[] pbuf; /* peek buffer */
             public uint tick;  /* start tick */
-            public stream_t stream; /* input/output streams */
-            public strconv_t conv; /* stream converter */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
+            public stream_t[] stream; /* input/output streams */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
+            public strconv_t[] conv; /* stream converter */
             public IntPtr thread;    /* server thread */
             public CRITICAL_SECTION lock_flag;        /* lock flag */
         };
@@ -1928,42 +1964,47 @@ namespace RealTimeMonitor
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 #pragma warning disable IDE1006 // Naming Styles
-        public unsafe struct gis_pnt_t
+        public struct gis_pnt_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]        /* gis data point type */
-            public fixed double pos[3];      /* point data {lat,lon,height} (rad,m) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]        /* gis data point type */
+            public double[] pos;      /* point data {lat,lon,height} (rad,m) */
         };
 
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 #pragma warning disable IDE1006 // Naming Styles
-        public unsafe struct gis_poly_t
+        public struct gis_poly_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]        /* gis data polyline type */
+            /* gis data polyline type */
             public int npnt;           /* number of points */
-            public fixed double bound[4];    /* boundary {lat0,lat1,lon0,lon1} */
-            public double* pos;        /* position data (3 x npnt) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public double[] bound;    /* boundary {lat0,lat1,lon0,lon1} */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public double[] pos;        /* position data (3 x npnt) */
         };
 
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 #pragma warning disable IDE1006 // Naming Styles
-        public unsafe struct gis_polygon_t
+        public struct gis_polygon_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]        /* gis data polygon type */
+            /* gis data polygon type */
             public int npnt;           /* number of points */
-            public fixed double bound[4];    /* boundary {lat0,lat1,lon0,lon1} */
-            public double* pos;        /* position data (3 x npnt) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public double[] bound;    /* boundary {lat0,lat1,lon0,lon1} */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public double[] pos;        /* position data (3 x npnt) */
         };
 
 
 
         #region ВОПРОС
 #pragma warning disable IDE1006 // Naming Styles
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)] public struct gisd_t
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)] 
+        public struct gisd_t
 #pragma warning restore IDE1006 // Naming Styles
         {
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
@@ -1977,41 +2018,47 @@ namespace RealTimeMonitor
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 #pragma warning disable IDE1006 // Naming Styles
-        public unsafe struct gis_t
+        public struct gis_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]        /* gis type */
-            public fixed char name[MAXGISLAYER * 256]; /* name */
-            public fixed int flag[MAXGISLAYER];     /* flag */
-            public unsafe gisd_t* data; /* gis data list */
-            public fixed double bound[4];    /* boundary {lat0,lat1,lon0,lon1} */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXGISLAYER * 256)]        /* gis type */
+            public char name; /* name */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXGISLAYER)]
+            public int flag;     /* flag */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXGISLAYER)]
+            public gisd_t[] data; /* gis data list */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public double[] bound;    /* boundary {lat0,lat1,lon0,lon1} */
         };
 
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 #pragma warning disable IDE1006 // Naming Styles
-        public unsafe struct imud_t
+        public struct imud_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]        /* imu data type */
+            /* imu data type */
             public gtime_t time;       /* time */
             public int stat;           /* status */
             public int seqno;          /* sequence number */
             public float temp;         /* temperature (C) */
-            public fixed double rot[3];      /* rotation rate {x,y,z} (rad/s) */
-            public fixed double acc[3];      /* acceleration data {x,y,z} (m/s^2) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public double[] rot;      /* rotation rate {x,y,z} (rad/s) */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public double[] acc;      /* acceleration data {x,y,z} (m/s^2) */
         };
 
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 #pragma warning disable IDE1006 // Naming Styles
-        public unsafe struct imu_t
+        public struct imu_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]        /* imu type */
+            /* imu type */
             public imud_t data;        /* imu data */
             public int nbyte;          /* bytes in imu data buffer */
-            public fixed byte buff[256]; /* imu data buffer */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
+            public byte[] buff; /* imu data buffer */
         };
 
         #endregion
