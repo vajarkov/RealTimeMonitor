@@ -133,8 +133,25 @@ namespace RealTimeMonitor
 
         private async Task WriteItems(ChannelWriter<double> writer, int count, int delay)
         {
-			iSizeRTKSRV = Marshal.SizeOf(typeof(DataRTK.rtksvr_t));
-			rtksrv_ptr = Marshal.AllocCoTaskMem(iSizeRTKSRV);
+			try
+			{
+				iSizeRTKSRV = Marshal.SizeOf<DataRTK.rtksvr_t>(rtksvr);
+			}
+			catch(ArgumentException ex)
+			{
+				string strerr = ex.Message;
+			}
+			
+			
+			
+			try
+			{
+				rtksrv_ptr = Marshal.AllocCoTaskMem(iSizeRTKSRV);
+			}
+			catch(ArgumentException ex)
+			{
+				string strerr = ex.Message;
+			}
 			DataRTK.rtksvr_t rtksrv = (DataRTK.rtksvr_t)(Marshal.PtrToStructure(rtksrv_ptr, typeof(DataRTK.rtksvr_t)));
 			//char[] p = new char[];
 			char[] argv = new char[32], buff = new char[1024];// file = new char[1024];
