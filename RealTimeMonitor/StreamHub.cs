@@ -45,7 +45,7 @@ namespace RealTimeMonitor
 
 		bool disposed = false;
 
-        DataRTK.rtksvr_t rtksvr;
+        DataRTK.rtksvr_t rtksrv = new DataRTK.rtksvr_t();
         DataRTK.stream_t monistr;
 		int iSizeRTKSRV; 
 		IntPtr rtksrv_ptr; 
@@ -135,9 +135,13 @@ namespace RealTimeMonitor
         {
 			try
 			{
-				iSizeRTKSRV = Marshal.SizeOf<DataRTK.rtksvr_t>(rtksvr);
+				iSizeRTKSRV = Marshal.SizeOf(typeof(DataRTK.rtksvr_t));
 			}
 			catch(ArgumentException ex)
+			{
+				string strerr = ex.Message;
+			}
+			catch(TypeLoadException ex)
 			{
 				string strerr = ex.Message;
 			}
@@ -146,13 +150,27 @@ namespace RealTimeMonitor
 			
 			try
 			{
+				//Marshal.FreeHGlobal(rtksrv_ptr);
+				//Marshal.StructureToPtr(rtksrv, rtksrv_ptr, false);
+				//int ret
 				rtksrv_ptr = Marshal.AllocCoTaskMem(iSizeRTKSRV);
 			}
 			catch(ArgumentException ex)
 			{
 				string strerr = ex.Message;
 			}
-			DataRTK.rtksvr_t rtksrv = (DataRTK.rtksvr_t)(Marshal.PtrToStructure(rtksrv_ptr, typeof(DataRTK.rtksvr_t)));
+
+
+			try
+			{
+				rtksrv = (DataRTK.rtksvr_t)(Marshal.PtrToStructure(rtksrv_ptr, typeof(DataRTK.rtksvr_t)));
+			}
+			catch(TypeLoadException ex)
+			{
+				string strerr = ex.Message;
+			}
+
+
 			//char[] p = new char[];
 			char[] argv = new char[32], buff = new char[1024];// file = new char[1024];
             string file = "rtknavi.exe";
@@ -237,7 +255,7 @@ namespace RealTimeMonitor
 			try
 			{
 				
-				DataRTK.rtksvrinit(rtksrv);
+				DataRTK.rtksvrinit(out rtksrv);
 			}
 			catch (TypeLoadException ex)
 			{
@@ -258,7 +276,7 @@ namespace RealTimeMonitor
             while (true)
             {
 				Timer();
-                await writer.WriteAsync(rtksvr.rtcm[1].sta.pos[0]);
+                await writer.WriteAsync(rtksrv.rtcm[1].sta.pos[0]);
                 await Task.Delay(delay);
             }
             /*
@@ -358,12 +376,12 @@ namespace RealTimeMonitor
 			//char buf_cpy[1024];
 			// Локальные переменные
 
-			DataRTK.rtksvrlock(ref rtksvr);
-			format = rtksvr.format[1];
-			rtcm = rtksvr.rtcm[1];
-			DataRTK.rtksvrunlock(ref rtksvr);
+			DataRTK.rtksvrlock(ref rtksrv);
+			//format = rtksvr.format[1];
+			//rtcm = rtksvr.rtcm[1];
+			DataRTK.rtksvrunlock(ref rtksrv);
 
-
+			/*
 			if (RovPosTypeF <= 2)
 			{ // LLH,XYZ
 				PrcOpt.rovpos = DataRTK.POSOPT_POS;
@@ -402,7 +420,7 @@ namespace RealTimeMonitor
 			{
 				PrcOpt.exsats[i] = '\0';
 			}
-			
+			*/
 			
 			/* Исключить спутники
 			if (string.IsNullOrEmpty(ExSats))
@@ -500,7 +518,7 @@ namespace RealTimeMonitor
 				free(pcvs.pcv);
 			}
 			*/
-
+			/*
 			// Базовая линия
 			if (BaselineC==0)
 			{
@@ -512,7 +530,7 @@ namespace RealTimeMonitor
 				PrcOpt.baseline[0] = 0.0;
 				PrcOpt.baseline[1] = 0.0;
 			}
-
+			*/
 			//Если есть источники, то их записываем, если нет, то присваиваем нужному типу или указываем, что источника нет
 			for (i = 0; i < 3; i++) strs[i] = StreamC[i] = (StreamC[i] != 0) ? itype[Stream[i]] : DataRTK.STR_NONE;
 			for (i = 3; i < 5; i++) strs[i] = StreamC[i] = (StreamC[i] != 0) ? otype[Stream[i]] : DataRTK.STR_NONE;
@@ -625,7 +643,7 @@ namespace RealTimeMonitor
 
 			if (!string.IsNullOrEmpty(DCBFileF))
 			{
-				DataRTK.readdcb(DCBFileF, ref rtksvr.nav, ref sta_temp);
+				//DataRTK.readdcb(DCBFileF, ref rtksvr.nav, ref sta_temp);
 			}
 			for (i = 0; i < 2; i++)
 			{
@@ -638,11 +656,11 @@ namespace RealTimeMonitor
 			stropt[3] = SvrBuffSize;
 			stropt[4] = FileSwapMargin;
 			DataRTK.strsetopt(stropt);
-			rtksvr.cmd_reset =  ResetCmd.ToCharArray();
-			rtksvr.bl_reset = MaxBL;
+			//rtksvr.cmd_reset =  ResetCmd.ToCharArray();
+			//rtksvr.bl_reset = MaxBL;
 
 			// start rtk server
-			if (DataRTK.rtksvrstart(ref rtksvr, SvrCycle, SvrBuffSize, strs, paths, Format, NavSelect,
+			if (DataRTK.rtksvrstart(ref rtksrv, SvrCycle, SvrBuffSize, strs, paths, Format, NavSelect,
 				cmds, cmds_periodic, rcvopts, NmeaCycle, NmeaReq, nmeapos,
 				ref PrcOpt, solopt, ref monistr, errmsg)!=1)
 			{
@@ -736,7 +754,7 @@ namespace RealTimeMonitor
 
 			//trace(4, "UpdatePos\n");
 
-			if (rtksvr.rtk.opt.mode == DataRTK.PMODE_STATIC || rtksvr.rtk.opt.mode == DataRTK.PMODE_PPP_STATIC)
+			/*if (rtksvr.rtk.opt.mode == DataRTK.PMODE_STATIC || rtksvr.rtk.opt.mode == DataRTK.PMODE_PPP_STATIC)
 			{
 				ext = " (S)";
 			}
@@ -744,7 +762,7 @@ namespace RealTimeMonitor
 			{
 				ext = " (F)";
 			}
-			
+			*/
 			if (DataRTK.norm(rr, 3) > 0.0 && DataRTK.norm(rb, 3) > 0.0)
 			{
 				for (i = 0; i < 3; i++) bl[i] = rr[i] - rb[i];
@@ -973,8 +991,8 @@ namespace RealTimeMonitor
 
 			//trace(4, "TimerTimer\n");
 
-			DataRTK.rtksvrlock(ref rtksvr);
-
+			DataRTK.rtksvrlock(ref rtksrv);
+			/*
 			for (i = 0; i < rtksvr.nsol; i++)
 			{
 				sol = rtksvr.solbuf[i];
@@ -984,8 +1002,8 @@ namespace RealTimeMonitor
 			}
 			rtksvr.nsol = 0;
 			SolCurrentStat = (rtksvr.state==1) ? rtksvr.rtk.sol.stat : 0;
-
-			DataRTK.rtksvrunlock(ref rtksvr);
+			*/
+			DataRTK.rtksvrunlock(ref rtksrv);
 
 			if (update==1)
 			{
@@ -1018,7 +1036,7 @@ namespace RealTimeMonitor
 
 			//trace(4, "UpdateStr\n");
 
-			DataRTK.rtksvrsstat(ref rtksvr, sstat, msg.ToCharArray());
+			DataRTK.rtksvrsstat(ref rtksrv, sstat, msg.ToCharArray());
 			for (i = 0; i < DataRTK.MAXSTRRTK; i++)
 			{
 				//ind[i]->Color = color[sstat[i] + 1];

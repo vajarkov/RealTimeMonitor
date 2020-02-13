@@ -540,14 +540,14 @@ namespace RealTimeMonitor
             
             public gtime_t time;                                        /* receiver sampling time (GPST) */
             public byte sat, rcv;                                       /* satellite/receiver number */
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = NFREQ + NEXOBS]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = NFREQ + NEXOBS)]
             public byte[] SNR;                            /* signal strength (0.25 dBHz) */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = NFREQ + NEXOBS)]
             public byte[] LLI;                            /* loss of lock indicator */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = NFREQ + NEXOBS)]
             public byte[] code;                           /* code indicator (CODE_???) */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = NFREQ + NEXOBS)]
-            public double L;                            /* observation data carrier-phase (cycle) */
+            public double[] L;                            /* observation data carrier-phase (cycle) */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = NFREQ + NEXOBS)] 
             public double[] P;                            /* observation data pseudorange (m) */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = NFREQ + NEXOBS)]
@@ -737,7 +737,7 @@ namespace RealTimeMonitor
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT * 3)]
             public float[] cov; /* satellite position covariance (m^2) */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT * 3)]
-            public float vco; /* satellite velocity covariance (m^2) */
+            public float[] vco; /* satellite velocity covariance (m^2) */
         };
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -831,7 +831,7 @@ namespace RealTimeMonitor
             public double rb;          /* earth radius (km) */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public double[] lats;     /* latitude start/interval (deg) */
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public double[] lons;     /* longitude start/interval (deg) */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public double[] hgts;     /* heights start/interval (km) */
@@ -1227,15 +1227,15 @@ namespace RealTimeMonitor
             public pcv_t[] pcvs; /* satellite antenna pcv */
             public sbssat_t sbssat;    /* SBAS satellite corrections */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXBAND + 1)]
-            public sbsion_t sbsion; /* SBAS ionosphere corrections */
+            public sbsion_t[] sbsion; /* SBAS ionosphere corrections */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
-            public dgps_t dgps; /* DGPS corrections */
+            public dgps_t[] dgps; /* DGPS corrections */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
-            public ssr_t ssr;  /* SSR corrections */
+            public ssr_t[] ssr;  /* SSR corrections */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
-            public lexeph_t lexeph; /* LEX ephemeris */
-            public lexion_t lexion;    /* LEX ionosphere correction */
-            public pppcorr_t pppcorr;  /* ppp corrections */
+            public lexeph_t[] lexeph; /* LEX ephemeris */
+            public lexion_t lexion;   /* LEX ionosphere correction */
+            public pppcorr_t pppcorr; /* ppp corrections */
         };
 
 
@@ -1452,10 +1452,11 @@ namespace RealTimeMonitor
         public struct exterr_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]        /* extended receiver error model */
+            /* extended receiver error model */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]        
             public int[] ena;         /* model enabled */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4 * NFREQ * 2)]
-            public double cerr; /* code errors (m) */
+            public double[] cerr; /* code errors (m) */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4 * NFREQ * 2)]
             public double[] perr; /* carrier-phase errors (m) */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = NFREQ)]
@@ -1477,6 +1478,22 @@ namespace RealTimeMonitor
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = NFREQ * 9)]
             public double[] mask; /* mask (dBHz) at 5,10,...85 deg */
 
+
+            public snrmask_t(int ena0, int ena1)
+            {
+                ena = new int[2];
+                mask = new double[NFREQ * 9];
+                ena[0] = ena0;
+                ena[1] = ena1;
+
+                for(int i = 0; i < NFREQ * 9; i++)
+                {
+                    mask[i] = 0.00;
+                }
+            }
+
+
+            
         };
 
 
@@ -1570,7 +1587,7 @@ namespace RealTimeMonitor
         public struct solopt_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 18)]        /* solution options type */
+            /* solution options type */
             public int posf;           /* solution format (SOLF_???) */
             public int times;          /* time system (TIMES_???) */
             public int timef;          /* time format (0:sssss.s,1:yyyy/mm/dd hh:mm:ss.s) */
@@ -1735,10 +1752,10 @@ namespace RealTimeMonitor
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
             public double[] xa, Pa;     /* fixed states and their covariance */
             public int nfix;            /* number of continuous fixes of ambiguity */
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
-            public ambc_t[] ambc;       /* ambibuity control */
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
-            public ssat_t[] ssat;       /* satellite status */
+            //[MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
+            //public ambc_t[] ambc;       /* ambibuity control */
+            //[MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
+            //public ssat_t[] ssat;       /* satellite status */
             public int neb;             /* bytes in error message buffer */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXERRMSG)]
             public char[] errbuf;       /* error message buffer */
@@ -1751,12 +1768,13 @@ namespace RealTimeMonitor
         public struct half_cyc_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 7)]   /* half-cycle correction list type */
+            /* half-cycle correction list type */
             public byte sat;  /* satellite number */
             public byte freq; /* frequency number (0:L1,1:L2,2:L5) */
             public byte valid; /* half-cycle valid flag */
             public char corr;          /* half-cycle corrected (x 0.5 cyc) */
             public gtime_t ts, te;      /* time start, time end */
+            //[MarshalAs(UnmanagedType.ByValArray, SizeConst = )]
             public unsafe half_cyc_t* next; /* pointer to next correction */
         };
 
@@ -1767,10 +1785,10 @@ namespace RealTimeMonitor
         public  struct raw_t
 #pragma warning restore IDE1006 // Naming Styles
         {
-                   /* receiver raw data control type */
+            /* receiver raw data control type */
             public gtime_t time;       /* message time */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT * (NFREQ + NEXOBS))]
-            public gtime_t tobs;//[MAXSAT*(NFREQ+NEXOBS)]; /* observation data time */
+            public gtime_t[] tobs;     /* observation data time */
             public obs_t obs;          /* observation data */
             public obs_t obuf;         /* observation data buffer */
             public nav_t nav;          /* satellite ephemerides */
@@ -1903,10 +1921,10 @@ namespace RealTimeMonitor
             public int cycle;          /* processing cycle (ms) */
             public int nmeacycle;      /* NMEA request cycle (ms) (0:no req) */
             public int nmeareq;        /* NMEA request (0:no,1:nmeapos,2:single sol) */
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3, ArraySubType = UnmanagedType.R8)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public double[] nmeapos;  /* NMEA request position (ecef) (m) */
             public int buffsize;       /* input buffer size (bytes) */
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3, ArraySubType = UnmanagedType.I4)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public int[] format;      /* input format {rov,base,corr} */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
             public solopt_t[] solopt; /* output solution options {sol1,sol2} */
@@ -1914,21 +1932,21 @@ namespace RealTimeMonitor
             public int nsbs;           /* number of sbas message */
             public int nsol;           /* number of solution buffer */
             public rtk_t rtk;          /* RTK control/result struct */
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3, ArraySubType = UnmanagedType.I4)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public int[] nb;         /* bytes in input buffers {rov,base} */
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2, ArraySubType = UnmanagedType.I4)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
             public int[] nsb;         /* bytes in soulution buffers */
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3, ArraySubType = UnmanagedType.I4)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public int[] npb;         /* bytes in input peek buffers */
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3, ArraySubType = UnmanagedType.I2)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public byte[] buff; /* input buffers {rov,base,corr} */
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2, ArraySubType = UnmanagedType.I2)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
             public byte[] sbuf; /* output buffers {sol1,sol2} */
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3, ArraySubType = UnmanagedType.I2)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public byte[] pbuf; /* peek buffers {rov,base,corr} */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSOLBUF)]
             public sol_t[] solbuf; /* solution buffer */
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3 * 10, ArraySubType = UnmanagedType.I4)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3 * 10)]
             public int[] nmsg; /* input message counts */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public raw_t[] raw;     /* receiver raw control {rov,base,corr} */
@@ -1936,26 +1954,26 @@ namespace RealTimeMonitor
             public rtcm_t[] rtcm;     /* RTCM control {rov,base,corr} */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public gtime_t[] ftime;   /* download time {rov,base,corr} */
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 3 * MAXSTRPATH)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3 * MAXSTRPATH)]
             public char[] files; /* download paths {rov,base,corr} */
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 3 * MAXOBSBUF)]
-            public obs_t obs; /* observation data {rov,base,corr} */
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3 * MAXOBSBUF)]
+            public obs_t[] obs; /* observation data {rov,base,corr} */
             public nav_t nav;          /* navigation data */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSBSMSG)]
-            public sbsmsg_t sbsmsg; /* SBAS message buffer */
+            public sbsmsg_t[] sbsmsg; /* SBAS message buffer */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
-            public stream_t stream; /* streams {rov,base,corr,sol1,sol2,logr,logb,logc} */
+            public stream_t[] stream; /* streams {rov,base,corr,sol1,sol2,logr,logb,logc} */
             public IntPtr moni;     /* monitor stream */
             public uint tick;  /* start tick */
             public IntPtr thread;    /* server thread */
             public int cputime;        /* CPU time (ms) for a processing cycle */
             public int prcout;         /* missing observation data count */
             public int nave;           /* number of averaging base pos */
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3, ArraySubType = UnmanagedType.R8)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public double[] rb_ave;   /* averaging base pos */
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 3 * MAXRCVCMD)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3 * MAXRCVCMD)]
             public char[] cmds_periodic; /* periodic commands */
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MAXRCVCMD)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXRCVCMD)]
             public char[] cmd_reset; /* reset command */
             public double bl_reset;    /* baseline length to reset (km) */
             public CRITICAL_SECTION lock_flag;        /* lock flag */
@@ -2064,7 +2082,10 @@ namespace RealTimeMonitor
         #endregion
 
 
-        #region Инициализация структур по-умолчанию
+#region Инициализация структур по-умолчанию
+#if DEBUG
+
+        
         public static prcopt_t prcopt_default = new prcopt_t
         { /* defaults processing options */
             mode = PMODE_SINGLE,
@@ -2072,7 +2093,7 @@ namespace RealTimeMonitor
             nf = 2,
             navsys = SYS_GPS,   /* mode,soltype,nf,navsys */
             elmin = 15.0 * D2R,
-            snrmask = new snrmask_t(0, 0),           /* elmin,snrmask */
+            snrmask = new snrmask_t(0,0),           /* elmin,snrmask */
 
             sateph = 0,
             modear = 1,
@@ -2138,11 +2159,11 @@ namespace RealTimeMonitor
             maxsolstd = 0.00
 
         };
+#endif
+#endregion
 
-        #endregion
 
-
-        #region Функции из библиотеки
+#region Функции из библиотеки
         [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\RTKLib\debug\RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "epoch2time")] //, EntryPoint = "epoch2time"
         public static extern gtime_t epoch2time(double[] ep);
         
@@ -2150,7 +2171,7 @@ namespace RealTimeMonitor
         public static extern void strinitcom();
 
         [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtksvrinit")]
-        public static extern int rtksvrinit(rtksvr_t svr);
+        public static extern int rtksvrinit(out rtksvr_t svr);
 
         [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strinit")]
         public static extern void strinit(ref stream_t stream);
@@ -2230,6 +2251,6 @@ namespace RealTimeMonitor
 
 
 
-        #endregion
+#endregion
     }
 }

@@ -1222,8 +1222,8 @@ typedef struct half_cyc_tag {  /* half-cycle correction list type */
     unsigned char valid; /* half-cycle valid flag */
     char corr;          /* half-cycle corrected (x 0.5 cyc) */
     gtime_t ts,te;      /* time start, time end */
-    half_cyc_tag *next; /* pointer to next correction */
-};
+    struct half_cyc_tag *next; /* pointer to next correction */
+}half_cyc_t;
 
 typedef struct {        /* receiver raw data control type */
     gtime_t time;       /* message time */
