@@ -132,44 +132,28 @@ namespace RealTimeMonitor
         }
 
         private async Task WriteItems(ChannelWriter<double> writer, int count, int delay)
-        {
+		{
 			try
 			{
-				iSizeRTKSRV = Marshal.SizeOf(typeof(DataRTK.rtksvr_t));
-			}
-			catch(ArgumentException ex)
-			{
-				string strerr = ex.Message;
-			}
-			catch(TypeLoadException ex)
-			{
-				string strerr = ex.Message;
-			}
-			
-			
-			
-			try
-			{
-				//Marshal.FreeHGlobal(rtksrv_ptr);
-				//Marshal.StructureToPtr(rtksrv, rtksrv_ptr, false);
-				//int ret
-				rtksrv_ptr = Marshal.AllocCoTaskMem(iSizeRTKSRV);
-			}
-			catch(ArgumentException ex)
-			{
-				string strerr = ex.Message;
-			}
-
-
-			try
-			{
+				string str = string.Empty;
+				rtksrv_ptr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(DataRTK.rtksvr_t)));
+				Marshal.StructureToPtr(rtksrv, rtksrv_ptr, false);
 				rtksrv = (DataRTK.rtksvr_t)(Marshal.PtrToStructure(rtksrv_ptr, typeof(DataRTK.rtksvr_t)));
+				//iSizeRTKSRV = Marshal.SizeOf(typeof(DataRTK.rtksvr_t));
+				//rtksrv_ptr = Marshal.AllocCoTaskMem(iSizeRTKSRV);
+				//rtksrv = (DataRTK.rtksvr_t)(Marshal.PtrToStructure(rtksrv_ptr, typeof(DataRTK.rtksvr_t)));
+				//Marshal.FreeHGlobal(rtksrv_ptr);
+				//rtksrv_ptr = IntPtr.Zero;
+			}
+			catch(ArgumentException ex)
+			{
+				string strerr = ex.Message;
 			}
 			catch(TypeLoadException ex)
 			{
 				string strerr = ex.Message;
 			}
-
+			
 
 			//char[] p = new char[];
 			char[] argv = new char[32], buff = new char[1024];// file = new char[1024];
@@ -219,9 +203,9 @@ namespace RealTimeMonitor
                     TrkOri[i] = 0.0;
                 }
 
-                if (file.IndexOf('.') != 0) _ = file.Replace("exe", "ini");
+                if (file.IndexOf('.') != 0) IniFile = file.Replace("exe", "ini");
                 
-                IniFile = file;
+                //IniFile = file;
 
                 InitSolBuff();
                 DataRTK.strinitcom();
@@ -254,14 +238,19 @@ namespace RealTimeMonitor
 
 			try
 			{
+				int result = DataRTK.rtksvrinit(rtksrv_ptr);
 				
-				DataRTK.rtksvrinit(out rtksrv);
+				//_ = DataRTK.rtksvrinit(ref rtksrv);
 			}
 			catch (TypeLoadException ex)
 			{
 				string strerr = ex.Message;
 			}
 			catch (MarshalDirectiveException ex)
+			{
+				string strerr = ex.Message;
+			}
+			catch(AccessViolationException ex)
 			{
 				string strerr = ex.Message;
 			}
@@ -276,7 +265,7 @@ namespace RealTimeMonitor
             while (true)
             {
 				Timer();
-                await writer.WriteAsync(rtksrv.rtcm[1].sta.pos[0]);
+                //await writer.WriteAsync(rtksrv.rtcm[1].sta.pos[0]);
                 await Task.Delay(delay);
             }
             /*
@@ -375,11 +364,12 @@ namespace RealTimeMonitor
 			DataRTK.pcv_t[] pcv;
 			//char buf_cpy[1024];
 			// Локальные переменные
+			
 
-			DataRTK.rtksvrlock(ref rtksrv);
+			DataRTK.rtksvrlock(rtksrv_ptr);
 			//format = rtksvr.format[1];
 			//rtcm = rtksvr.rtcm[1];
-			DataRTK.rtksvrunlock(ref rtksrv);
+			DataRTK.rtksvrunlock(rtksrv_ptr);
 
 			/*
 			if (RovPosTypeF <= 2)
@@ -660,7 +650,7 @@ namespace RealTimeMonitor
 			//rtksvr.bl_reset = MaxBL;
 
 			// start rtk server
-			if (DataRTK.rtksvrstart(ref rtksrv, SvrCycle, SvrBuffSize, strs, paths, Format, NavSelect,
+			if (DataRTK.rtksvrstart(rtksrv_ptr, SvrCycle, SvrBuffSize, strs, paths, Format, NavSelect,
 				cmds, cmds_periodic, rcvopts, NmeaCycle, NmeaReq, nmeapos,
 				ref PrcOpt, solopt, ref monistr, errmsg)!=1)
 			{
@@ -991,7 +981,7 @@ namespace RealTimeMonitor
 
 			//trace(4, "TimerTimer\n");
 
-			DataRTK.rtksvrlock(ref rtksrv);
+			DataRTK.rtksvrlock(rtksrv_ptr);
 			/*
 			for (i = 0; i < rtksvr.nsol; i++)
 			{
@@ -1003,7 +993,7 @@ namespace RealTimeMonitor
 			rtksvr.nsol = 0;
 			SolCurrentStat = (rtksvr.state==1) ? rtksvr.rtk.sol.stat : 0;
 			*/
-			DataRTK.rtksvrunlock(ref rtksrv);
+			DataRTK.rtksvrunlock(rtksrv_ptr);
 
 			if (update==1)
 			{
@@ -1036,7 +1026,7 @@ namespace RealTimeMonitor
 
 			//trace(4, "UpdateStr\n");
 
-			DataRTK.rtksvrsstat(ref rtksrv, sstat, msg.ToCharArray());
+			DataRTK.rtksvrsstat(rtksrv_ptr, sstat, msg.ToCharArray());
 			for (i = 0; i < DataRTK.MAXSTRRTK; i++)
 			{
 				//ind[i]->Color = color[sstat[i] + 1];
