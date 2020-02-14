@@ -1926,7 +1926,7 @@ namespace RealTimeMonitor
             public int buffsize;       /* input buffer size (bytes) */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public int[] format;      /* input format {rov,base,corr} */
-            [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.LPStruct, SizeConst = 2)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
             public solopt_t[] solopt; /* output solution options {sol1,sol2} */
             public int navsel;         /* ephemeris select (0:all,1:rover,2:base,3:corr) */
             public int nsbs;           /* number of sbas message */
@@ -1939,29 +1939,29 @@ namespace RealTimeMonitor
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public int[] npb;         /* bytes in input peek buffers */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
-            public byte[] buff; /* input buffers {rov,base,corr} */
+            public IntPtr[] buff; /* input buffers {rov,base,corr} */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
-            public byte[] sbuf; /* output buffers {sol1,sol2} */
+            public IntPtr[] sbuf; /* output buffers {sol1,sol2} */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
-            public byte[] pbuf; /* peek buffers {rov,base,corr} */
+            public IntPtr[] pbuf; /* peek buffers {rov,base,corr} */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSOLBUF)]
             public sol_t[] solbuf; /* solution buffer */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3 * 10)]
             public int[] nmsg; /* input message counts */
-            [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.LPStruct, SizeConst = 3)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public raw_t[] raw;     /* receiver raw control {rov,base,corr} */
-            [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.LPStruct, SizeConst = 3)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public rtcm_t[] rtcm;     /* RTCM control {rov,base,corr} */
-            [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.LPStruct, SizeConst = 3)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public gtime_t[] ftime;   /* download time {rov,base,corr} */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3 * MAXSTRPATH)]
             public char[] files; /* download paths {rov,base,corr} */
-            [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.LPStruct, SizeConst = 3 * MAXOBSBUF)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3 * MAXOBSBUF)]
             public obs_t[] obs; /* observation data {rov,base,corr} */
             public nav_t nav;          /* navigation data */
-            [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.LPStruct, SizeConst = MAXSBSMSG)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSBSMSG)]
             public sbsmsg_t[] sbsmsg; /* SBAS message buffer */
-            [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.LPStruct, SizeConst = 8)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
             public stream_t[] stream; /* streams {rov,base,corr,sol1,sol2,logr,logb,logc} */
             public IntPtr moni;     /* monitor stream */
             public uint tick;  /* start tick */

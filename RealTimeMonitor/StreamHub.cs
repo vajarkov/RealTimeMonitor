@@ -113,7 +113,7 @@ namespace RealTimeMonitor
 
 			}
 
-			Marshal.FreeCoTaskMem(rtksrv_ptr);
+			Marshal.FreeHGlobal(rtksrv_ptr);
 			rtksrv_ptr = IntPtr.Zero;
 
 			disposed = true;
