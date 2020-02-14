@@ -562,7 +562,7 @@ namespace RealTimeMonitor
         {
             
             public int n, nmax;                                         /* number of obervation data/allocated */
-            public obsd_t data;                                         /* observation data records */
+            public IntPtr data;                                         /* observation data records */
 
         }
 
@@ -588,7 +588,7 @@ namespace RealTimeMonitor
         {
             
             public int n, nmax;                                         /* number and max number of data */
-            public erpd_t data;                                         /* earth rotation parameter data */
+            public IntPtr data;                                         /* earth rotation parameter data */
 
         }
 
@@ -621,7 +621,7 @@ namespace RealTimeMonitor
         {
             
             public int n, nmax;                                         /* number of data/allocated */
-            public pcv_t pcv;                                          /* antenna parameters data */
+            public IntPtr pcv;                                          /* antenna parameters data */
 
         }
 
@@ -815,7 +815,7 @@ namespace RealTimeMonitor
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             /* norad two line element type */
             public int n, nmax;         /* number/max number of two line element data */
-            public tled_t data;       /* norad two line element data */
+            public IntPtr data;       /* norad two line element data */
         };
 
 
@@ -837,8 +837,7 @@ namespace RealTimeMonitor
             public double[] hgts;     /* heights start/interval (km) */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
             public double[] data;       /* ???????TEC grid data (tecu) */
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
-            public float[] rms;         /* ????RMS values (tecu) */
+            public IntPtr rms;         /* ????RMS values (tecu) */
         };
 
 
@@ -879,8 +878,7 @@ namespace RealTimeMonitor
             
             /* SBAS messages type */
             public int n, nmax;         /* number of SBAS messages/allocated */
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
-            public sbsmsg_t[] msgs;     /* SBAS messages */
+            public IntPtr msgs;     /* SBAS messages */
         };
 
 
@@ -1063,7 +1061,7 @@ namespace RealTimeMonitor
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]        /* QZSS LEX messages type */
             public int n, nmax;         /* number of LEX messages and allocated */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSAT)]
-            public lexmsg_t[] msgs;     /* LEX messages */
+            public IntPtr msgs;     /* LEX messages */
         };
 
 
@@ -1156,10 +1154,10 @@ namespace RealTimeMonitor
             public int[] nt;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSTA)]
             public int[] ntmax; /* number of trop data */
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSTA)]
-            public stec_t[] stec; /* stec data */
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSTA)]
-            public trop_t[] trop; /* trop data */
+            //[MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSTA)]
+            public IntPtr stec; /* stec data */
+            //[MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSTA)]
+            public IntPtr trop; /* trop data */
         };
 
 
@@ -1177,14 +1175,14 @@ namespace RealTimeMonitor
             public int na, namax;       /* number of almanac data */
             public int nt, ntmax;       /* number of tec grid data */
             public int nf, nfmax;       /* number of satellite fcb data */
-            public eph_t eph;         /* GPS/QZS/GAL ephemeris */
-            public geph_t geph;       /* GLONASS ephemeris */
-            public seph_t seph;       /* SBAS ephemeris */
-            public peph_t peph;       /* precise ephemeris */
-            public pclk_t pclk;       /* precise clock */
-            public alm_t alm;         /* almanac data */
-            public tec_t tec;         /* tec grid data */
-            public fcbd_t fcb;        /* satellite fcb data */
+            public IntPtr eph;         /* GPS/QZS/GAL ephemeris */
+            public IntPtr geph;       /* GLONASS ephemeris */
+            public IntPtr seph;       /* SBAS ephemeris */
+            public IntPtr peph;       /* precise ephemeris */
+            public IntPtr pclk;       /* precise clock */
+            public IntPtr alm;         /* almanac data */
+            public IntPtr tec;         /* tec grid data */
+            public IntPtr fcb;        /* satellite fcb data */
             public erp_t erp;         /* earth rotation parameters */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
             public double[] utc_gps;  /* GPS delta-UTC parameters {A0,A1,T,W} */
@@ -1308,7 +1306,7 @@ namespace RealTimeMonitor
             public int cyclic;         /* cyclic buffer flag */
             public int start, end;      /* start/end index */
             public gtime_t time;       /* current solution time */
-            public sol_t data;        /* solution data */
+            public IntPtr data;        /* solution data */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public double[] rb;       /* reference position {x,y,z} (ecef) (m) */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAXSOLMSG + 1)]
@@ -1324,13 +1322,13 @@ namespace RealTimeMonitor
         {
             /* solution status type */
             public gtime_t time;       /* time (GPST) */
-            public char sat;  /* satellite number */
-            public char frq;  /* frequency (1:L1,2:L2,...) */
+            public byte sat;  /* satellite number */
+            public byte frq;  /* frequency (1:L1,2:L2,...) */
             public float az, el;        /* azimuth/elevation angle (rad) */
             public float resp;         /* pseudorange residual (m) */
             public float resc;         /* carrier-phase residual (m) */
-            public char flag; /* flags: (vsat<<5)+(slip<<3)+fix */
-            public char snr;  /* signal strength (0.25 dBHz) */
+            public byte flag; /* flags: (vsat<<5)+(slip<<3)+fix */
+            public byte snr;  /* signal strength (0.25 dBHz) */
             public short var_lock;  /* lock counter */
             public short outc;  /* outage counter */
             public short slipc; /* slip counter */
@@ -1344,7 +1342,7 @@ namespace RealTimeMonitor
         {
             /* solution status buffer type */
             public int n, nmax;         /* number of solution/max number of buffer */
-            public solstat_t data;    /* solution status data */
+            public IntPtr data;    /* solution status data */
         };
 
 
@@ -1700,6 +1698,7 @@ namespace RealTimeMonitor
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]        /* satellite status type */
             public byte sys;  /* navigation system */
             public byte vs;   /* valid satellite flag single */
+            
             public fixed double azel[2];     /* azimuth/elevation angles {az,el} (rad) */
             public fixed double resp[NFREQ]; /* residuals of pseudorange (m) */
             public fixed double resc[NFREQ]; /* residuals of carrier-phase (m) */
