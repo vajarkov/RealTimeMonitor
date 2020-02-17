@@ -1762,7 +1762,7 @@ namespace RealTimeMonitor
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
             public double[] LC;      /* linear combination average */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-            public double[] LCv[4];      /* linear combination variance */
+            public double[] LCv;      /* linear combination variance */
             public int fixcnt;         /* fix count */
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
             public char[] flags; /* fix flags */
