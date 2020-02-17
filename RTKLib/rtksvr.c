@@ -690,7 +690,7 @@ extern __declspec(dllexport)  int __stdcall rtksvrinit(rtksvr_t *svr)
     for (i=0;i<2;i++) svr->sbuf[i]=NULL;
     for (i=0;i<3;i++) svr->pbuf[i]=NULL;
     for (i=0;i<MAXSOLBUF;i++) svr->solbuf[i]=sol0;
-    for (i=0;i<3;i++) for (j=0;j<10;j++) svr->nmsg[i][j]=0;
+    for (i=0;i<3*10;i++) for (j=0;j<10;j++) svr->nmsg[i][j]=0;
     for (i=0;i<3;i++) svr->ftime[i]=time0;
     for (i=0;i<3;i++) svr->files[i][0]='\0';
     svr->moni=NULL;

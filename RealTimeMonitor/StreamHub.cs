@@ -46,9 +46,11 @@ namespace RealTimeMonitor
 		bool disposed = false;
 
         DataRTK.rtksvr_t rtksrv = new DataRTK.rtksvr_t();
-        DataRTK.stream_t monistr;
+        DataRTK.stream_t monistr = new DataRTK.stream_t();
 		int iSizeRTKSRV; 
-		IntPtr rtksrv_ptr; 
+		IntPtr rtksrv_ptr;
+		IntPtr monistr_ptr;
+		IntPtr prcopt_ptr;
 		//Глобальные переменные
 		int RovPosTypeF, RefPosTypeF, RovAntPcvF, RefAntPcvF;
         DataRTK.prcopt_t PrcOpt;
@@ -113,6 +115,9 @@ namespace RealTimeMonitor
 
 			}
 
+			Marshal.FreeHGlobal(monistr_ptr);
+			monistr_ptr = IntPtr.Zero;
+
 			Marshal.FreeHGlobal(rtksrv_ptr);
 			rtksrv_ptr = IntPtr.Zero;
 
@@ -135,10 +140,28 @@ namespace RealTimeMonitor
 		{
 			try
 			{
-				string str = string.Empty;
-				rtksrv_ptr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(DataRTK.rtksvr_t)));
+				//string str = string.Empty;
+				//int rtksvr_msz = Marshal.SizeOf(typeof(DataRTK.rtksvr_t));
+				//int solopt_msz = Marshal.SizeOf(typeof(DataRTK.solopt_t))*2;
+				//int rtk_msz = Marshal.SizeOf(typeof(DataRTK.rtk_t))*3;
+				//int gtime_msz = Marshal.SizeOf(typeof(DataRTK.gtime_t));
+				//int sol_msz = Marshal.SizeOf(typeof(DataRTK.sol_t));
+				//int raw_msz = Marshal.SizeOf(typeof(DataRTK.raw_t))*3;
+				//int rtcm_msz = Marshal.SizeOf(typeof(DataRTK.rtcm_t))*3;
+				//int obs_msz = Marshal.SizeOf(typeof(DataRTK.obs_t))* 3 * DataRTK.MAXOBSBUF;
+				//int nav_msz = Marshal.SizeOf(typeof(DataRTK.nav_t));
+				//int sbsmg_msz = Marshal.SizeOf(typeof(DataRTK.sbsmsg_t)) * DataRTK.MAXOBSBUF;
+				//int stream_msz = Marshal.SizeOf(typeof(DataRTK.stream_t))* 8;
+
+				
+				rtksrv_ptr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(DataRTK.rtksvr_t))*3);
 				Marshal.StructureToPtr(rtksrv, rtksrv_ptr, false);
 				rtksrv = (DataRTK.rtksvr_t)(Marshal.PtrToStructure(rtksrv_ptr, typeof(DataRTK.rtksvr_t)));
+
+				monistr_ptr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(DataRTK.stream_t)));
+				Marshal.StructureToPtr(monistr, monistr_ptr, false);
+				monistr = (DataRTK.stream_t)(Marshal.PtrToStructure(monistr_ptr, typeof(DataRTK.stream_t)));
+
 				//iSizeRTKSRV = Marshal.SizeOf(typeof(DataRTK.rtksvr_t));
 				//rtksrv_ptr = Marshal.AllocCoTaskMem(iSizeRTKSRV);
 				//rtksrv = (DataRTK.rtksvr_t)(Marshal.PtrToStructure(rtksrv_ptr, typeof(DataRTK.rtksvr_t)));
@@ -255,7 +278,7 @@ namespace RealTimeMonitor
 				string strerr = ex.Message;
 			}
             
-            DataRTK.strinit(ref monistr);
+            DataRTK.strinit(monistr_ptr);
 
             LocalDirectory = "C:\\Temp";
             SvrStart();
@@ -337,10 +360,33 @@ namespace RealTimeMonitor
 			// Локальные переменные
 			//char* s;
 			DataRTK.solopt_t[] solopt = new DataRTK.solopt_t[2]; // структура для параметров "решения"
-
+			IntPtr solopt_ptr;
 			DataRTK.rtcm_t rtcm;  //Структура данных для выходных данных с приемника
+			try
+			{
+				solopt_ptr = Marshal.AllocHGlobal(solopt.Length);
+				Marshal.StructureToPtr(solopt[0], solopt_ptr, false);
+				//solopt = (DataRTK.solopt_t)(Marshal.PtrToStructure(solopt_ptr, typeof(DataRTK.solopt_t)));
+			}
+			catch(ArgumentException exc)
+			{
+				string strerr = exc.Message;
+				solopt_ptr = IntPtr.Zero;
+			}
 
 
+			try
+			{
+				prcopt_ptr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(DataRTK.prcopt_t))); ;
+				Marshal.StructureToPtr(PrcOpt, prcopt_ptr, false);
+
+			}
+			catch (ArgumentException exc)
+			{
+				string strerr = exc.Message;
+				prcopt_ptr = IntPtr.Zero;
+			}
+			//monistr = (DataRTK.stream_t)(Marshal.PtrToStructure(monistr_ptr, typeof(DataRTK.prcopt_t)));
 			//
 			double[] pos = new double[3], nmeapos = new double[3]; // 
 			//Типы источника данных
@@ -601,7 +647,7 @@ namespace RealTimeMonitor
 			DataRTK.pos2ecef(pos, nmeapos);
 			//Устанавлтиваем локальные директории и прокс-сервер
 			DataRTK.strsetdir(LocalDirectory);
-			DataRTK.strsetproxy(ProxyAddr);
+			DataRTK.strsetproxy(ProxyAddr == null ? string.Empty : ProxyAddr);
 
 
 			//Если источник "решения" файл, то выходим из цикла
@@ -633,7 +679,7 @@ namespace RealTimeMonitor
 
 			if (!string.IsNullOrEmpty(DCBFileF))
 			{
-				//DataRTK.readdcb(DCBFileF, ref rtksvr.nav, ref sta_temp);
+				DataRTK.readdcb(DCBFileF, rtksrv.nav, sta_temp);
 			}
 			for (i = 0; i < 2; i++)
 			{
@@ -646,18 +692,27 @@ namespace RealTimeMonitor
 			stropt[3] = SvrBuffSize;
 			stropt[4] = FileSwapMargin;
 			DataRTK.strsetopt(stropt);
-			//rtksvr.cmd_reset =  ResetCmd.ToCharArray();
-			//rtksvr.bl_reset = MaxBL;
+			rtksrv.cmd_reset =  ResetCmd.ToCharArray();
+			rtksrv.bl_reset = MaxBL;
 
 			// start rtk server
-			if (DataRTK.rtksvrstart(rtksrv_ptr, SvrCycle, SvrBuffSize, strs, paths, Format, NavSelect,
-				cmds, cmds_periodic, rcvopts, NmeaCycle, NmeaReq, nmeapos,
-				ref PrcOpt, solopt, ref monistr, errmsg)!=1)
+			try
 			{
-				//trace(2, "rtksvrstart error %s\n", errmsg);
-				DataRTK.traceclose();
-				return;
+				if (DataRTK.rtksvrstart(rtksrv_ptr, SvrCycle, SvrBuffSize, strs, paths, Format, NavSelect,
+				cmds, cmds_periodic, rcvopts, NmeaCycle, NmeaReq, nmeapos,
+				prcopt_ptr, solopt_ptr, monistr_ptr, errmsg) != 1)
+				{
+					//trace(2, "rtksvrstart error %s\n", errmsg);
+					DataRTK.traceclose();
+					return;
+				}
+
 			}
+			catch (ArgumentException exception)
+			{
+				string strerr = exception.Message;
+			}
+			
 			PSol = PSolS = PSolE = 0;
 			SolStat[0] = Nvsat[0] = 0;
 			for (i = 0; i < 3; i++) SolRov[i] = SolRef[i] = VelRov[i] = 0.0;
