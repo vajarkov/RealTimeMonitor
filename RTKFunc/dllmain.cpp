@@ -3,7 +3,11 @@
 
 #include "pch.h"
 
-
+#ifdef MATHLIBRARY_EXPORTS
+#define MATHLIBRARY_API __declspec(dllexport)
+#else
+#define MATHLIBRARY_API __declspec(dllimport)
+#endif
 
 
 
@@ -21,6 +25,14 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     case DLL_PROCESS_DETACH:
         break;
     }
+
+//	std::cout << "Hello World!\n";
+    return TRUE;
+}
+
+
+void Init(void) 
+{
 	char* p, * argv[32], buff[1024], file[1024] = "rtknavi.exe";
 
 
@@ -35,7 +47,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 		else {
 			CmdEna[i][0] = CmdEna[i][1] = CmdEna[i][2] = 0;
 		}
-			
+
 	}
 	TimeSys = SolType = PlotType1 = PlotType2 = FreqType1 = FreqType2 = 0;
 	TrkType1 = TrkType2 = 0;
@@ -108,13 +120,10 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 		Timer();
 		Sleep(1000);
 	}
-	std::cout << "Hello World!\n";
-    return TRUE;
 }
 
 
-
-void __fastcall Timer(void)
+void Timer(void)
 {
 	static int n = 0, inactive = 0;
 	sol_t* sol;
@@ -154,7 +163,7 @@ void __fastcall Timer(void)
 }
 
 // update stream status indicators ------------------------------------------
-void __fastcall UpdateStr(void)
+void UpdateStr(void)
 {
 	//TColor color[] = { clRed,clWindow,CLORANGE,clGreen,clLime };
 	//TPanel *ind[MAXSTRRTK] = { Str1,Str2,Str3,Str4,Str5,Str6,Str7,Str8 };
@@ -174,7 +183,7 @@ void __fastcall UpdateStr(void)
 	}
 }
 
-void __fastcall SvrStart(void)
+void SvrStart(void)
 {
 	// Локальные переменные
 	char* s;
@@ -432,7 +441,7 @@ void __fastcall SvrStart(void)
 
 
 // confirm overwrite --------------------------------------------------------
-int __fastcall ConfOverwrite(const char* path)
+int ConfOverwrite(const char* path)
 {
 	char* s;
 	FILE* fp;
@@ -471,7 +480,7 @@ int __fastcall ConfOverwrite(const char* path)
 }
 
 // update solution plot ------------------------------------------------------
-void __fastcall UpdatePlot(void)
+void UpdatePlot(void)
 {
 	/*
 	if (Panel22->Visible) {
@@ -494,7 +503,7 @@ void __fastcall UpdatePlot(void)
 }
 
 // convert degree to deg-min-sec --------------------------------------------
-static void __fastcall degtodms(double deg, double* dms)
+static void degtodms(double deg, double* dms)
 {
 	double sgn = 1.0;
 	if (deg < 0.0) { deg = -deg; sgn = -1.0; }
@@ -505,7 +514,7 @@ static void __fastcall degtodms(double deg, double* dms)
 }
 
 // update solution display --------------------------------------------------
-void __fastcall UpdatePos(void)
+void UpdatePos(void)
 {
 	//TLabel *label[] = { Plabel1,Plabel2,Plabel3,Pos1,Pos2,Pos3,LabelStd,LabelNSat };
 	wstring  sol[] = { L"----",L"FIX",L"FLOAT",L"SBAS",L"DGPS",L"SINGLE",L"PPP" };
@@ -665,7 +674,7 @@ void __fastcall UpdatePos(void)
 
 
 // initialize solution buffer -----------------------------------------------
-void __fastcall InitSolBuff(void)
+void InitSolBuff(void)
 {
 	double ep[] = { 2000,1,1,0,0,0 };
 	int i, j;

@@ -49,14 +49,14 @@
 #define SQRT(x)     ((x)<0.0||(x)!=(x)?0.0:sqrt(x))
 #define MIN(x,y)    ((x)<(y)?(x):(y))
 
-
-void __fastcall UpdatePos(void);
-int  __fastcall ConfOverwrite(const char* path);
-void __fastcall UpdatePlot(void);
-void __fastcall SvrStart(void);
-void __fastcall InitSolBuff(void);
-void __fastcall Timer(void);
-void __fastcall UpdateStr(void);
+__declspec(dllexport) extern "C" void Init(void);
+__declspec(dllexport) extern "C" void UpdatePos(void);
+__declspec(dllexport) extern "C" int  ConfOverwrite(const char* path);
+__declspec(dllexport) extern "C" void UpdatePlot(void);
+__declspec(dllexport) extern "C" void SvrStart(void);
+__declspec(dllexport) extern "C" void InitSolBuff(void);
+__declspec(dllexport) extern "C" void Timer(void);
+__declspec(dllexport) extern "C" void UpdateStr(void);
 
 
 rtksvr_t rtksvr;
