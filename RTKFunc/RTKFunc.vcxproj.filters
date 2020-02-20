@@ -35,9 +35,6 @@
     <ClCompile Include="dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pch.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="rtklibsrc\convgpx.c">
       <Filter>rtklibsrv</Filter>
     </ClCompile>
@@ -179,10 +176,8 @@
     <ClCompile Include="rtklibsrc\rcv\ublox.c">
       <Filter>rtklibsrv\rcv</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="rtklibsrc\src.pro">
+    <ClCompile Include="rtklibsrc\rnx2rtkp.c">
       <Filter>rtklibsrv</Filter>
-    </None>
+    </ClCompile>
   </ItemGroup>
 </Project>
