@@ -51,9 +51,10 @@ namespace RealTimeMonitor
 		IntPtr rtksrv_ptr;
 		IntPtr monistr_ptr;
 		IntPtr prcopt_ptr;
+		IntPtr solopt_ptr;
 		//Глобальные переменные
 		int RovPosTypeF, RefPosTypeF, RovAntPcvF, RefAntPcvF;
-        DataRTK.prcopt_t PrcOpt;
+        //DataRTK.prcopt_t PrcOpt;
         DataRTK.solopt_t SolOpt;
         double[] RovAntDel = new double[3], RefAntDel = new double[3], RovPos = new double[3], RefPos = new double[3], NmeaPos = new double[3];
         //string ExSats = ""; 
@@ -62,7 +63,7 @@ namespace RealTimeMonitor
         double[] Baseline = new double[2];
         int[] Stream = new int[DataRTK.MAXSTRRTK], StreamC = new int [DataRTK.MAXSTRRTK], Format = new int[DataRTK.MAXSTRRTK];
         string[,] Paths = new string[DataRTK.MAXSTRRTK, 4], Cmds = new string[3, 3], CmdsTcp = new string[3,3];
-        int[,] CmdEna = new int[3, 3], CmdEnaTcp = new int [3, 3];
+		int[,] CmdEna = new int[3, 3], CmdEnaTcp = new int[3, 3];
         int NmeaReq, NmeaCycle, InTimeTag, InTime64Bit;
     
         string TLESatFileF, LocalDirectory;
@@ -114,6 +115,12 @@ namespace RealTimeMonitor
 			{
 
 			}
+
+			Marshal.FreeHGlobal(prcopt_ptr);
+			prcopt_ptr = IntPtr.Zero;
+
+			Marshal.FreeHGlobal(solopt_ptr);
+			solopt_ptr = IntPtr.Zero;
 
 			Marshal.FreeHGlobal(monistr_ptr);
 			monistr_ptr = IntPtr.Zero;
@@ -194,10 +201,19 @@ namespace RealTimeMonitor
 			for(int i = 0; i < 3; i++)
 			{
 				CmdEna[i, 0] = CmdEna[i, 1] = CmdEna[i, 2] = 0;
+				CmdEnaTcp[i, 0] = CmdEnaTcp[i, 1] = CmdEnaTcp[i, 2] = 0;
+			}
+
+
+			for(int i = 0; i < 8; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					Paths[i, j] = string.Empty;
+				}
 			}
 			
-
-				TimeSys = SolType = PlotType1 = PlotType2 = FreqType1 = FreqType2 = 0;
+			TimeSys = SolType = PlotType1 = PlotType2 = FreqType1 = FreqType2 = 0;
                 TrkType1 = TrkType2 = 0;
                 TrkScale1 = TrkScale2 = 5;
                 BLMode1 = BLMode2 = BLMode3 = BLMode4 = 0;
@@ -215,7 +231,7 @@ namespace RealTimeMonitor
                         for (int k = 0; k < DataRTK.NFREQ; k++) Snr[i, j, k] = 0;
                     }
 
-                PrcOpt = DataRTK.prcopt_default;
+                //PrcOpt = DataRTK.prcopt_default;
                 SolOpt = DataRTK.solopt_default;
 
                 TLEData.n = TLEData.nmax = 0;
@@ -287,7 +303,7 @@ namespace RealTimeMonitor
 
             while (true)
             {
-				Timer();
+				//Timer();
                 //await writer.WriteAsync(rtksrv.rtcm[1].sta.pos[0]);
                 await Task.Delay(delay);
             }
@@ -357,10 +373,69 @@ namespace RealTimeMonitor
 		/// </summary>
 		private void  SvrStart()
 		{
+			DataRTK.prcopt_t PrcOpt = new DataRTK.prcopt_t
+			{ /* defaults processing options */
+				mode = DataRTK.PMODE_SINGLE,
+				soltype = 0,
+				nf = 2,
+				navsys = DataRTK.SYS_GPS,   /* mode,soltype,nf,navsys */
+				elmin = 15.0 * DataRTK.D2R,
+				snrmask = new DataRTK.snrmask_t(),           /* elmin,snrmask */
+				sateph = 0,
+				modear = 1,
+				glomodear = 1,
+				bdsmodear = 1,                    /* sateph,modear,glomodear,bdsmodear */
+				maxout = 5,
+				minlock = 0,
+				minfix = 10,
+				armaxiter = 1,                   /* maxout,minlock,minfix,armaxiter */
+				ionoopt = 0,
+				tropopt = 0,
+				dynamics = 0,
+				tidecorr = 0,
+				niter = 1,
+				codesmooth = 0,
+				intpref = 0,
+				sbascorr = 0,
+				sbassatsel = 0,
+				rovpos = 0,
+				refpos = 0,
+				eratio = new double[] { 100.0, 100.0, 0.0 },              /* eratio[] */
+				err = new double[] { 100.0, 0.003, 0.003, 0.0, 1.0 },
+				std = new double[] { 30.0, 0.03, 0.3 },            /* std[] */
+				prn = new double[] { 1E-4, 1E-3, 1E-4, 1E-1, 1E-2, 0.0 }, /* prn[] */
+				sclkstab = 5E-12,                      /* sclkstab */
+				thresar = new double[] { 3.0, 0.9999, 0.25, 0.1, 0.05, 0.0, 0.0, 0.0 }, /* thresar */
+				elmaskar = 0.0,
+				elmaskhold = 0.0,
+				thresslip = 0.05,               /* elmaskar,almaskhold,thresslip */
+				maxtdiff = 30.0,
+				maxinno = 30.0,
+				maxgdop = 30.0,             /* maxtdif,maxinno,maxgdop */
+				baseline = new double[2] { 0.0, 0.0 },
+				ru = new double[3] { 0.0, 0.0, 0.0 },
+				rb = new double[3] { 0.0, 0.0, 0.0 },                /* baseline,ru,rb */
+				anttype = new char[2, DataRTK.MAXANT],                    /* anttype */
+				antdel = new double[2, 3],
+				pcvr = new DataRTK.pcv_t[2],
+				exsats = new byte[DataRTK.MAXSAT],
+				maxaveep = new int(),
+				initrst = new int(),
+				outsingle = new int(),
+				rnxopt = new char[2, 256],
+				posopt = new int[6],
+				syncsol = new int(),
+				odisp = new double[2, 6 * 11],
+				exterr = new DataRTK.exterr_t(),
+				freqopt = new int(),
+				pppopt = new char[256]
+				/* antdel,pcv,exsats */
+			};
 			// Локальные переменные
 			//char* s;
+			//double[] nmeapos = new double[3];
 			DataRTK.solopt_t[] solopt = new DataRTK.solopt_t[2]; // структура для параметров "решения"
-			IntPtr solopt_ptr;
+			//IntPtr solopt_ptr;
 			DataRTK.rtcm_t rtcm;  //Структура данных для выходных данных с приемника
 			try
 			{
@@ -374,21 +449,28 @@ namespace RealTimeMonitor
 				solopt_ptr = IntPtr.Zero;
 			}
 
-
+				
 			try
 			{
-				prcopt_ptr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(DataRTK.prcopt_t))); ;
+				//string str = string.Empty;
+				prcopt_ptr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(DataRTK.prcopt_t)));
 				Marshal.StructureToPtr(PrcOpt, prcopt_ptr, false);
+
 
 			}
 			catch (ArgumentException exc)
 			{
 				string strerr = exc.Message;
-				prcopt_ptr = IntPtr.Zero;
+				//prcopt_ptr = IntPtr.Zero;
+			}
+			catch (Exception exall)
+			{
+				string strerr = exall.Message;
+
 			}
 			//monistr = (DataRTK.stream_t)(Marshal.PtrToStructure(monistr_ptr, typeof(DataRTK.prcopt_t)));
 			//
-			double[] pos = new double[3], nmeapos = new double[3]; // 
+			double[] pos = new double[3] { NmeaPos[0] * DataRTK.D2R, NmeaPos[1] * DataRTK.D2R, NmeaPos[2] }, nmeapos = new double[3] { 0,0,0 }; // 
 			//Типы источника данных
 			int[] itype = new int[] {
 		DataRTK.STR_SERIAL,DataRTK.STR_TCPCLI,DataRTK.STR_TCPSVR,DataRTK.STR_NTRIPCLI,DataRTK.STR_FILE,DataRTK.STR_FTP,DataRTK.STR_HTTP
@@ -396,28 +478,29 @@ namespace RealTimeMonitor
 			int[] otype = new int[] {
 		DataRTK.STR_SERIAL,DataRTK.STR_TCPCLI,DataRTK.STR_TCPSVR,DataRTK.STR_NTRIPSVR,DataRTK.STR_NTRIPC_C,DataRTK.STR_FILE
 	};
-			int i, sat, ex;
+			int i, j, sat, ex, format;
 			int[] strs = new int[DataRTK.MAXSTRRTK] { 0, 0, 0, 0, 0, 0, 0, 0 };  
 			int[] stropt = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
-			string[] paths = new string[8], cmds = new string[3], cmds_periodic= new string [3], rcvopts = new string[3];
+			string[] paths = new string[8] { "", "", "", "", "", "", "", "" }, cmds = new string[3] { "", "", "" }, cmds_periodic= new string[3] { "", "", "" }, rcvopts = new string[3] { "", "", "" };
 			string buff , p;
 			string file, type, errmsg = "";
-			int j, format;
+			
 			//char tstr[64] = "-", mstr1[1024] = "", mstr2[1024] = "", *p1 = mstr1, *p2 = mstr2;
 			//File fp;
-			DataRTK.gtime_t time = DataRTK.timeget();
-			DataRTK.pcvs_t pcvr, pcvs;
-			DataRTK.pcv_t[] pcv;
+			//DataRTK.gtime_t time = new DataRTK.gtime_t(); 
+			//	DataRTK.TimeGet();
+			//DataRTK.pcvs_t pcvr;
+			//DataRTK.pcv_t[] pcv = new DataRTK.pcv_t[2];
 			//char buf_cpy[1024];
 			// Локальные переменные
 			
 
 			DataRTK.rtksvrlock(rtksrv_ptr);
-			//format = rtksvr.format[1];
-			//rtcm = rtksvr.rtcm[1];
+			format = rtksrv.format[1];
+			rtcm = rtksrv.rtcm[1];
 			DataRTK.rtksvrunlock(rtksrv_ptr);
-
-			/*
+            #region Пока закоментировал проверки
+            /*
 			if (RovPosTypeF <= 2)
 			{ // LLH,XYZ
 				PrcOpt.rovpos = DataRTK.POSOPT_POS;
@@ -457,8 +540,8 @@ namespace RealTimeMonitor
 				PrcOpt.exsats[i] = '\0';
 			}
 			*/
-			
-			/* Исключить спутники
+
+            /* Исключить спутники
 			if (string.IsNullOrEmpty(ExSats))
 			{ // excluded satellites
 				buff = ExSats;
@@ -478,7 +561,7 @@ namespace RealTimeMonitor
 			}
 			*/
 
-			/*  Обработка ошибок 
+            /*  Обработка ошибок 
 			if ((RovAntPcvF || RefAntPcvF) && !readpcv(AntPcvFileF.c_str(), &pcvr))
 			{
 				printf_s("rcv ant file read error %s", AntPcvFileF);
@@ -489,7 +572,7 @@ namespace RealTimeMonitor
 
 			*/
 
-			/* Нет антены ровера
+            /* Нет антены ровера
 			if (RovAntPcvF)
 			{
 				strcpy(type, RovAntF.c_str());
@@ -509,7 +592,7 @@ namespace RealTimeMonitor
 
 			*/
 
-			/* Нет антены базы
+            /* Нет антены базы
 			if (RefAntPcvF)
 			{
 				strcpy(type, RefAntF.c_str());
@@ -529,14 +612,14 @@ namespace RealTimeMonitor
 
 			*/
 
-			/* Очистка ошибок
+            /* Очистка ошибок
 			if (RovAntPcvF || RefAntPcvF)
 			{
 				free(pcvr.pcv);
 			}
 			*/
 
-			/*
+            /*
 			if (PrcOpt.sateph == DataRTK.EPHOPT_PREC || PrcOpt.sateph == DataRTK.EPHOPT_SSRCOM)
 			{
 				if (DataRTK.readpcv(SatPcvFileF, ref pcvs)!=1)
@@ -554,7 +637,7 @@ namespace RealTimeMonitor
 				free(pcvs.pcv);
 			}
 			*/
-			/*
+            /*
 			// Базовая линия
 			if (BaselineC==0)
 			{
@@ -567,41 +650,51 @@ namespace RealTimeMonitor
 				PrcOpt.baseline[1] = 0.0;
 			}
 			*/
-			//Если есть источники, то их записываем, если нет, то присваиваем нужному типу или указываем, что источника нет
-			for (i = 0; i < 3; i++) strs[i] = StreamC[i] = (StreamC[i] != 0) ? itype[Stream[i]] : DataRTK.STR_NONE;
+
+            #endregion
+            //Если есть источники, то их записываем, если нет, то присваиваем нужному типу или указываем, что источника нет
+            for (i = 0; i < 3; i++) strs[i] = StreamC[i] = (StreamC[i] != 0) ? itype[Stream[i]] : DataRTK.STR_NONE;
 			for (i = 3; i < 5; i++) strs[i] = StreamC[i] = (StreamC[i] != 0) ? otype[Stream[i]] : DataRTK.STR_NONE;
 			for (i = 5; i < 8; i++) strs[i] = StreamC[i] = (StreamC[i] != 0) ? otype[Stream[i]] : DataRTK.STR_NONE;
-			
-			//Прописываем пути к каждому источнику
+			for (i = 0; i < 8; i++)
+			{
+				paths[i] = string.Empty;
+				
+			}
+				//Прописываем пути к каждому источнику
 			for (i = 0; i < 8; i++)
 			{
 				if (strs[i] == DataRTK.STR_NONE) paths[i] = "";
 				else if (strs[i] == DataRTK.STR_SERIAL)
 				{
-					paths[i] = Paths[i,1];
+					paths[i] = Paths[i, 0].Substring(0, Paths[i, 0].Length - 1);
 					//strcpy(paths[i], Paths[i][0].c_str());//paths[i] = Paths[i][0].c_str();
 
 				}
 				else if (strs[i] == DataRTK.STR_FILE)
 				{
-					paths[i] = Paths[i, 1];//.size() + 1];
-					//strcpy(paths[i], Paths[i][2].c_str());
+					paths[i] = Paths[i, 2].Substring(0, Paths[i, 2].Length - 1);//.size() + 1];
+														//strcpy(paths[i], Paths[i][2].c_str());
 				}
 				else if (strs[i] == DataRTK.STR_FTP || strs[i] == DataRTK.STR_HTTP)
 				{
-					paths[i] = Paths[i, 1];//new char[Paths[i][1].size() + 1];
-					//strcpy(paths[i], Paths[i][3].c_str());
+					paths[i] = Paths[i, 3].Substring(0, Paths[i, 3].Length - 1);//new char[Paths[i][1].size() + 1];
+														//strcpy(paths[i], Paths[i][3].c_str());
 				}
 				else
 				{
-					paths[i] = Paths[i, 1];//new char[Paths[i][1].size() + 1];
+					if( !string.IsNullOrEmpty( Paths[i, 1]) )
+					{
+						paths[i] = Paths[i, 1].Substring(0, Paths[i, 1].Length - 1);
+					}
+					 //new char[Paths[i][1].size() + 1];
 					//strcpy(paths[i], Paths[i][1].c_str());//TCP
 
 				}
 
 			}
 
-
+			/*
 			//Проверяем каждый из настроенных узлов
 			for (i = 0; i < 3; i++)
 			{	
@@ -624,7 +717,7 @@ namespace RealTimeMonitor
 				else if (strs[i] == DataRTK.STR_TCPCLI || strs[i] == DataRTK.STR_TCPSVR ||
 					strs[i] == DataRTK.STR_NTRIPCLI)
 				{
-					if (CmdEnaTcp[i,0]!=0)
+					if (CmdEnaTcp[i, 0] != 0)
 					{
 						cmds[i] = Cmds[i, 0];//new char[Cmds[i][0].size() + 1];
 						//strcpy(cmds[i], CmdsTcp[i][0].c_str());
@@ -639,14 +732,18 @@ namespace RealTimeMonitor
 				//strcpy(rcvopts[i], RcvOpt[i].c_str());
 
 			}
-
+			*/
 			NmeaCycle = NmeaCycle < 1000 ? 1000 : NmeaCycle;
 			pos[0] = NmeaPos[0] * DataRTK.D2R;
 			pos[1] = NmeaPos[1] * DataRTK.D2R;
 			pos[2] = NmeaPos[2];
+			for(i = 0; i < 3; i++)
+			{
+				nmeapos[i] = 0;
+			}
 			DataRTK.pos2ecef(pos, nmeapos);
 			//Устанавлтиваем локальные директории и прокс-сервер
-			DataRTK.strsetdir(LocalDirectory);
+			DataRTK.strsetdir(LocalDirectory.ToCharArray());
 			DataRTK.strsetproxy(ProxyAddr == null ? string.Empty : ProxyAddr);
 
 

@@ -21,6 +21,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RTK_NAVI", "..\RTK_NAVI\RTK_NAVI\RTK_NAVI.vcxproj", "{62D7A408-7347-4A51-AB27-6C1D898D5DE2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RTKFunc", "RTKFunc\RTKFunc.vcxproj", "{6AC20822-3F68-4A82-9D31-7A78E68E1E51}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -94,6 +96,16 @@ Global
 		{62D7A408-7347-4A51-AB27-6C1D898D5DE2}.Release|x64.Build.0 = Release|x64
 		{62D7A408-7347-4A51-AB27-6C1D898D5DE2}.Release|x86.ActiveCfg = Release|Win32
 		{62D7A408-7347-4A51-AB27-6C1D898D5DE2}.Release|x86.Build.0 = Release|Win32
+		{6AC20822-3F68-4A82-9D31-7A78E68E1E51}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{6AC20822-3F68-4A82-9D31-7A78E68E1E51}.Debug|x64.ActiveCfg = Debug|x64
+		{6AC20822-3F68-4A82-9D31-7A78E68E1E51}.Debug|x64.Build.0 = Debug|x64
+		{6AC20822-3F68-4A82-9D31-7A78E68E1E51}.Debug|x86.ActiveCfg = Debug|Win32
+		{6AC20822-3F68-4A82-9D31-7A78E68E1E51}.Debug|x86.Build.0 = Debug|Win32
+		{6AC20822-3F68-4A82-9D31-7A78E68E1E51}.Release|Any CPU.ActiveCfg = Release|Win32
+		{6AC20822-3F68-4A82-9D31-7A78E68E1E51}.Release|x64.ActiveCfg = Release|x64
+		{6AC20822-3F68-4A82-9D31-7A78E68E1E51}.Release|x64.Build.0 = Release|x64
+		{6AC20822-3F68-4A82-9D31-7A78E68E1E51}.Release|x86.ActiveCfg = Release|Win32
+		{6AC20822-3F68-4A82-9D31-7A78E68E1E51}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
