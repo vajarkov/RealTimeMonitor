@@ -3,11 +3,7 @@
 
 #include "pch.h"
 
-#ifdef MATHLIBRARY_EXPORTS
-#define MATHLIBRARY_API __declspec(dllexport)
-#else
-#define MATHLIBRARY_API __declspec(dllimport)
-#endif
+
 
 
 
@@ -31,7 +27,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 }
 
 
-void Init(void) 
+extern __declspec(dllexport) void __stdcall Init(void)
 {
 	char* p, * argv[32], buff[1024], file[1024] = "rtknavi.exe";
 
@@ -123,7 +119,7 @@ void Init(void)
 }
 
 
-void Timer(void)
+extern __declspec(dllexport) void __stdcall Timer(void)
 {
 	static int n = 0, inactive = 0;
 	sol_t* sol;
@@ -163,7 +159,7 @@ void Timer(void)
 }
 
 // update stream status indicators ------------------------------------------
-void UpdateStr(void)
+extern __declspec(dllexport) void __stdcall UpdateStr(void)
 {
 	//TColor color[] = { clRed,clWindow,CLORANGE,clGreen,clLime };
 	//TPanel *ind[MAXSTRRTK] = { Str1,Str2,Str3,Str4,Str5,Str6,Str7,Str8 };
@@ -183,7 +179,7 @@ void UpdateStr(void)
 	}
 }
 
-void SvrStart(void)
+extern __declspec(dllexport) void __stdcall SvrStart(void)
 {
 	// Локальные переменные
 	char* s;
@@ -441,7 +437,7 @@ void SvrStart(void)
 
 
 // confirm overwrite --------------------------------------------------------
-int ConfOverwrite(const char* path)
+extern __declspec(dllexport) int __stdcall ConfOverwrite(const char* path)
 {
 	char* s;
 	FILE* fp;
@@ -480,7 +476,7 @@ int ConfOverwrite(const char* path)
 }
 
 // update solution plot ------------------------------------------------------
-void UpdatePlot(void)
+extern __declspec(dllexport) void __stdcall UpdatePlot(void)
 {
 	/*
 	if (Panel22->Visible) {
@@ -514,7 +510,7 @@ static void degtodms(double deg, double* dms)
 }
 
 // update solution display --------------------------------------------------
-void UpdatePos(void)
+extern __declspec(dllexport) void __stdcall UpdatePos(void)
 {
 	//TLabel *label[] = { Plabel1,Plabel2,Plabel3,Pos1,Pos2,Pos3,LabelStd,LabelNSat };
 	wstring  sol[] = { L"----",L"FIX",L"FLOAT",L"SBAS",L"DGPS",L"SINGLE",L"PPP" };
@@ -674,7 +670,7 @@ void UpdatePos(void)
 
 
 // initialize solution buffer -----------------------------------------------
-void InitSolBuff(void)
+extern __declspec(dllexport) void __stdcall InitSolBuff(void)
 {
 	double ep[] = { 2000,1,1,0,0,0 };
 	int i, j;

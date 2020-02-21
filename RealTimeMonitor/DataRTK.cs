@@ -2227,129 +2227,167 @@ namespace RealTimeMonitor
 
 
         #region Функции из библиотеки
-        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\RTKLib\debug\RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "epoch2time")] //, EntryPoint = "epoch2time"
-        public static extern gtime_t epoch2time(double[] ep);
+        //[DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\RTKLib\debug\RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "epoch2time")] //, EntryPoint = "epoch2time"
+        //public static extern gtime_t epoch2time(double[] ep);
         
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strinitcom")]
-        public static extern void strinitcom();
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strinitcom")]
+        //public static extern void strinitcom();
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtksvrinit")]
-        public static extern int rtksvrinit(IntPtr svr);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtksvrinit")]
+        //public static extern int rtksvrinit(IntPtr svr);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strinit")]
-        public static extern void strinit(IntPtr stream);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strinit")]
+        //public static extern void strinit(IntPtr stream);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "timeget")]
-        public static extern gtime_t timeget();
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "timeget")]
+        //public static extern gtime_t timeget();
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtksvrlock")]
-        public static extern void rtksvrlock(IntPtr svr);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtksvrlock")]
+        //public static extern void rtksvrlock(IntPtr svr);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtksvrunlock")]
-        public static extern void rtksvrunlock(IntPtr svr);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtksvrunlock")]
+        //public static extern void rtksvrunlock(IntPtr svr);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "readpcv")]
-        public static extern int readpcv(string file, ref pcvs_t pcvs);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "readpcv")]
+        //public static extern int readpcv(string file, ref pcvs_t pcvs);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "pos2ecef")]
-        public static extern void pos2ecef(double[] pos, double[] r);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "pos2ecef")]
+        //public static extern void pos2ecef(double[] pos, double[] r);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strsetdir")]
-        public static extern void strsetdir(char[] dir);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strsetdir")]
+        //public static extern void strsetdir(char[] dir);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strsetproxy")]
-        public static extern void strsetproxy(string addr);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strsetproxy")]
+        //public static extern void strsetproxy(string addr);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "traceopen")]
-        public static extern void traceopen(string file);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "traceopen")]
+        //public static extern void traceopen(string file);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "tracelevel")]
-        public static extern void tracelevel(int level);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "tracelevel")]
+        //public static extern void tracelevel(int level);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtkopenstat")]
-        public static extern int rtkopenstat(string file, int level);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtkopenstat")]
+        //public static extern int rtkopenstat(string file, int level);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "opengeoid")]
-        public static extern int opengeoid(int model, string file);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "opengeoid")]
+        //public static extern int opengeoid(int model, string file);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "readdcb")]
-        public static extern int readdcb(string file,  nav_t nav, sta_t sta);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "readdcb")]
+        //public static extern int readdcb(string file,  nav_t nav, sta_t sta);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strsetopt")]
-        public static extern void strsetopt(int[] opt);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strsetopt")]
+        //public static extern void strsetopt(int[] opt);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtksvrstart")]
-        public static extern int rtksvrstart(IntPtr svr, int cycle, int buffsize, int[] strs,
-                         string[] paths, int[] formats, int navsel, string[] cmds,
-                         string[] cmds_periodic, string[] rcvopts, int nmeacycle,
-                         int nmeareq, double[] nmeapos, IntPtr prcopt,
-                         IntPtr solopt, IntPtr moni, string errmsg);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtksvrstart")]
+        //public static extern int rtksvrstart(IntPtr svr, int cycle, int buffsize, int[] strs,
+        //                 string[] paths, int[] formats, int navsel, string[] cmds,
+        //                 string[] cmds_periodic, string[] rcvopts, int nmeacycle,
+        //                 int nmeareq, double[] nmeapos, IntPtr prcopt,
+        //                 IntPtr solopt, IntPtr moni, string errmsg);
 
-        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "trace")]
-        //public static extern void trace(int level, string format, ...);
+        ////[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "trace")]
+        ////public static extern void trace(int level, string format, ...);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "traceclose")]
-        public static extern void traceclose();
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "traceclose")]
+        //public static extern void traceclose();
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "ecef2pos")]
-        public static extern void ecef2pos(double[] r, double[] pos);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "ecef2pos")]
+        //public static extern void ecef2pos(double[] r, double[] pos);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "ecef2enu")]
-        public static extern void ecef2enu(double[] pos, double[] r, double[] e);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "ecef2enu")]
+        //public static extern void ecef2enu(double[] pos, double[] r, double[] e);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "covenu")]
-        public static extern void covenu(double[] pos, double[] P, double[] Q);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "covenu")]
+        //public static extern void covenu(double[] pos, double[] P, double[] Q);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "geoidh")]
-        public static extern double geoidh(double[] pos);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "geoidh")]
+        //public static extern double geoidh(double[] pos);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "norm")]
-        public static extern double norm(double[] a, int n);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "norm")]
+        //public static extern double norm(double[] a, int n);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtksvrsstat")]
-        public static extern void rtksvrsstat(IntPtr svr, int[] sstat, char[] msg);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "rtksvrsstat")]
+        //public static extern void rtksvrsstat(IntPtr svr, int[] sstat, char[] msg);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strwrite")]
-        public static extern int strwrite(ref stream_t stream, byte[] buff, int n);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "strwrite")]
+        //public static extern int strwrite(ref stream_t stream, byte[] buff, int n);
 
-        [DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "timeadd")]
-        public static extern gtime_t timeadd(gtime_t t, double sec);
+        //[DllImport("RTKLib.dll", CharSet = CharSet.Ansi, EntryPoint = "timeadd")]
+        //public static extern gtime_t timeadd(gtime_t t, double sec);
 
         #endregion
 
 
 
         #region Функции, которые не работают из библиотеки корректно
-        public static gtime_t TimeGet()
-        {
-            gtime_t time;
-            double[] ep = new double[6];
+//        public static gtime_t TimeGet()
+//        {
+//            gtime_t time;
+//            double[] ep = new double[6];
 
-            //SYSTEMTIME ts;
-            DateTime ts = DateTime.UtcNow;
+//            //SYSTEMTIME ts;
+//            DateTime ts = DateTime.UtcNow;
 
 
-            //GetSystemTime(&ts); /* utc */
-            ep[0] = ts.Year; ep[1] = ts.Month; ep[2] = ts.Day;
-            ep[3] = ts.Hour; ep[4] = ts.Minute; ep[5] = ts.Second + ts.Millisecond * 1E-3;
-            /*
-                struct timeval tv;
-                struct tm *tt;
+//            //GetSystemTime(&ts); /* utc */
+//            ep[0] = ts.Year; ep[1] = ts.Month; ep[2] = ts.Day;
+//            ep[3] = ts.Hour; ep[4] = ts.Minute; ep[5] = ts.Second + ts.Millisecond * 1E-3;
+//            /*
+//                struct timeval tv;
+//                struct tm *tt;
     
-                if (!gettimeofday(&tv, NULL)&&(tt=gmtime(&tv.tv_sec))) {
-                    ep[0]=tt->tm_year+1900; ep[1]=tt->tm_mon+1; ep[2]=tt->tm_mday;
-                    ep[3]=tt->tm_hour; ep[4]=tt->tm_min; ep[5]=tt->tm_sec+tv.tv_usec*1E-6;
-                }
-            */
-            time=epoch2time(ep);
+//                if (!gettimeofday(&tv, NULL)&&(tt=gmtime(&tv.tv_sec))) {
+//                    ep[0]=tt->tm_year+1900; ep[1]=tt->tm_mon+1; ep[2]=tt->tm_mday;
+//                    ep[3]=tt->tm_hour; ep[4]=tt->tm_min; ep[5]=tt->tm_sec+tv.tv_usec*1E-6;
+//                }
+//            */
+//            time=epoch2time(ep);
 
-//# ifdef CPUTIME_IN_GPST /* cputime operated in gpst */
-//    time=gpst2utc(time);
-//#endif
+////# ifdef CPUTIME_IN_GPST /* cputime operated in gpst */
+////    time=gpst2utc(time);
+////#endif
                 
-            return timeadd(time, timeoffset_);
-        }
+//            return timeadd(time, timeoffset_);
+//        }
 
         #endregion
+
+        #region Функции из самописной библиотеки-обертки для функционала RTKLib
+        //Функция для инициализации основных параметров
+        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\Debug\RTKFunc.dll", EntryPoint = "?Init@@YGXXZ")]
+        public static extern void Init();
+
+        //Функция для обновления параметров позиции
+        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\Debug\RTKFunc.dll", CharSet = CharSet.Auto, EntryPoint = "?UpdatePos@@YGXXZ")]
+        public static extern void UpdatePos();
+
+        //Функция для конвертации ???
+        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\Debug\RTKFunc.dll", CharSet = CharSet.Auto, EntryPoint = "?ConfOverwrite@@YGHPBD@Z")]
+        public static extern int ConfOverwrite(string path);
+
+        //Функция для обновления данных на графике
+        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\Debug\RTKFunc.dll", CharSet = CharSet.Auto, EntryPoint = "?UpdatePlot@@YGXXZ")]
+        public static extern void UpdatePlot();
+
+        //Функция для запуска потока сервиса обмена данных по каналу связи
+        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\Debug\RTKFunc.dll", CharSet = CharSet.Auto, EntryPoint = "?SvrStart@@YGXXZ")]
+        public static extern void SvrStart();
+
+        //Функция для инициализации буфера решения
+        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\Debug\RTKFunc.dll", CharSet = CharSet.Auto, EntryPoint = "?InitSolBuff@@YGXXZ")]
+        public static extern void InitSolBuff();
+
+        //Функция для запроса обновления данных 
+        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\Debug\RTKFunc.dll", CharSet = CharSet.Auto, EntryPoint = "?Timer@@YGXXZ")]
+        public static extern void Timer();
+
+        //Функция для обновления ???
+        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\Debug\RTKFunc.dll", CharSet = CharSet.Auto, EntryPoint = "?UpdateStr@@YGXXZ")]
+        public static extern void UpdateStr();
+        
+
+        #endregion
+
+
     }
 }
