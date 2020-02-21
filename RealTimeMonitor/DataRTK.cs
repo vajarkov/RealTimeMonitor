@@ -2354,7 +2354,7 @@ namespace RealTimeMonitor
 
         #region Функции из самописной библиотеки-обертки для функционала RTKLib
         //Функция для инициализации основных параметров
-        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\Debug\RTKFunc.dll", EntryPoint = "?Init@@YGXXZ")]
+        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", EntryPoint = "?Init@@YAXXZ", CallingConvention = CallingConvention.StdCall)]
         public static extern void Init();
 
         //Функция для обновления параметров позиции

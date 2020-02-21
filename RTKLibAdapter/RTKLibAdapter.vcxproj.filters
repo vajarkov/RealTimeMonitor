@@ -1,0 +1,177 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\rcv">
+      <UniqueIdentifier>{74030b60-73aa-4d55-965f-7698dc13cd72}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="rtklibsrc\rtklib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RTKLibAdapter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="rtklibsrc\convgpx.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\convkml.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\convrnx.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\datum.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\download.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\ephemeris.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\geoid.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\gis.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\ionex.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\lambda.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\options.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\pntpos.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\postpos.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\ppp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\ppp_ar.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\ppp_corr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\preceph.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\qzslex.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rcvraw.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rinex.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rnx2rtkp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rtcm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rtcm2.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rtcm3.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rtcm3e.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rtkcmn.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rtkpos.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rtksvr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\sbas.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\solution.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\stream.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\streamsvr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\tides.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\tle.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rcv\binex.c">
+      <Filter>Source Files\rcv</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rcv\cmr.c">
+      <Filter>Source Files\rcv</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rcv\crescent.c">
+      <Filter>Source Files\rcv</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rcv\gw10.c">
+      <Filter>Source Files\rcv</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rcv\javad.c">
+      <Filter>Source Files\rcv</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rcv\novatel.c">
+      <Filter>Source Files\rcv</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rcv\nvs.c">
+      <Filter>Source Files\rcv</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rcv\rcvlex.c">
+      <Filter>Source Files\rcv</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rcv\rt17.c">
+      <Filter>Source Files\rcv</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rcv\septentrio.c">
+      <Filter>Source Files\rcv</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rcv\skytraq.c">
+      <Filter>Source Files\rcv</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rcv\ss2.c">
+      <Filter>Source Files\rcv</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rcv\tersus.c">
+      <Filter>Source Files\rcv</Filter>
+    </ClCompile>
+    <ClCompile Include="rtklibsrc\rcv\ublox.c">
+      <Filter>Source Files\rcv</Filter>
+    </ClCompile>
+    <ClCompile Include="RTKLibAdapter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

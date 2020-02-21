@@ -1,40 +1,15 @@
-// dllmain.cpp : Defines the entry point for the DLL application.
+
+#include "RTKLibAdapter.h"
 
 
-#include "pch.h"
-
-
-
-
-
-
-//BOOL APIENTRY DllMain( HMODULE hModule,
-//                       DWORD  ul_reason_for_call,
-//                       LPVOID lpReserved
-//                     )
-//{
-//    switch (ul_reason_for_call)
-//    {
-//    case DLL_PROCESS_ATTACH:
-//    case DLL_THREAD_ATTACH:
-//    case DLL_THREAD_DETACH:
-//    case DLL_PROCESS_DETACH:
-//        break;
-//    }
-//
-////	std::cout << "Hello World!\n";
-//    return TRUE;
-//}
-
-
-extern __declspec(dllexport) int __stdcall Init(void)
+extern __declspec(dllexport) void __stdcall Init(void)
 {
-	/*
-	char* p, * argv[32], buff[1024], file[1024] = "rtknavi.exe";
+	
+	//char* p, * argv[32], buff[1024], file[1024] = "rtknavi.exe";
 
 
 	//Option Reciver
-	SvrCycle = SvrBuffSize = 0;
+	/*SvrCycle = SvrBuffSize = 0;
 	SolBuffSize = 1000;
 	for (int i = 0; i < 8; i++) {
 		StreamC[i] = Stream[i] = Format[i] = 0;
@@ -55,27 +30,27 @@ extern __declspec(dllexport) int __stdcall Init(void)
 	OpenPort = 0;
 	Time = NULL;
 	SolStat = Nvsat = NULL;
-	SolCurrentStat = 0;
-	SolRov = SolRef = Qr = VelRov = Age = Ratio = NULL;
-	for (int i = 0; i < 2; i++) for (int j = 0; j < MAXSAT; j++) {
+	SolCurrentStat = 0;*/
+	//SolRov = SolRef = Qr = VelRov = Age = Ratio = NULL;
+	/*for (int i = 0; i < 2; i++) for (int j = 0; j < MAXSAT; j++) {
 		Sat[i][j] = Vsat[i][j] = 0;
 		Az[i][j] = El[i][j] = 0.0;
 		for (int k = 0; k < NFREQ; k++) Snr[i][j][k] = 0;
-	}
+	}*/
 
 	PrcOpt = prcopt_default;
 	SolOpt = solopt_default;
 
-	TLEData.n = TLEData.nmax = 0;
-	TLEData.data = NULL;
+	//TLEData.n = TLEData.nmax = 0;
+	//TLEData.data = NULL;
 
-	for (int i = 0; i < 3; i++) {
-		TrkOri[i] = 0.0;
-	}
+	//for (int i = 0; i < 3; i++) {
+	//	TrkOri[i] = 0.0;
+	//}
 
-	if (!(p = strrchr(file, '.'))) p = file + strlen(file);
-	strcpy(p, ".ini");
-	IniFile = file;
+	//if (!(p = strrchr(file, '.'))) p = file + strlen(file);
+	//strcpy(p, ".ini");
+	//IniFile = file;
 
 	InitSolBuff();
 	strinitcom();
@@ -116,10 +91,10 @@ extern __declspec(dllexport) int __stdcall Init(void)
 	while (true) {
 		Timer();
 		Sleep(1000);
-		
-	}*/
 
-	return 0;
+	}
+
+	//return 0;
 }
 
 
@@ -415,12 +390,13 @@ extern __declspec(dllexport) void __stdcall SvrStart(void)
 		traceclose();
 		return;
 	}
-	PSol = PSolS = PSolE = 0;
-	SolStat[0] = Nvsat[0] = 0;
-	for (i = 0; i < 3; i++) SolRov[i] = SolRef[i] = VelRov[i] = 0.0;
-	for (i = 0; i < 9; i++) Qr[i] = 0.0;
-	Age[0] = Ratio[0] = 0.0;
-	Nsat[0] = Nsat[1] = 0;
+
+	//PSol = PSolS = PSolE = 0;
+	//SolStat[0] = Nvsat[0] = 0;
+	//for (i = 0; i < 3; i++) SolRov[i] = SolRef[i] = VelRov[i] = 0.0;
+	//for (i = 0; i < 9; i++) Qr[i] = 0.0;
+	//Age[0] = Ratio[0] = 0.0;
+	//Nsat[0] = Nsat[1] = 0;
 	UpdatePos();
 	UpdatePlot();
 	/*
@@ -558,16 +534,16 @@ extern __declspec(dllexport) void __stdcall UpdatePos(void)
 		s[2] = SolOpt.height == 1 ? L"H:" : L"He:";
 		//_swprintf((wchar_t*)s[3].c_str(), L"%.0f%c %02.0f' %07.4f\"", fabs(dms1[0]), CHARDEG, dms1[1], dms1[2]);
 		//_buf_char = new wchar_t[100];
-		_swprintf(_buf_char, L"%.0f%c %02.0f' %07.4f\"", fabs(dms1[0]), CHARDEG, dms1[1], dms1[2]);
+		//_swprintf(_buf_char, L"%.0f%c %02.0f' %07.4f\"", fabs(dms1[0]), CHARDEG, dms1[1], dms1[2]);
 		s[3] = _buf_char;
 		//s[3].sprintf(L"%.0f%c %02.0f' %07.4f\"", fabs(dms1[0]), CHARDEG, dms1[1], dms1[2]);
-		_swprintf(_buf_char, L"%.0f%c %02.0f' %07.4f\"", fabs(dms2[0]), CHARDEG, dms2[1], dms2[2]);
+		//_swprintf(_buf_char, L"%.0f%c %02.0f' %07.4f\"", fabs(dms2[0]), CHARDEG, dms2[1], dms2[2]);
 		s[4] = _buf_char;
 		//s[4].sprintf(L"%.0f%c %02.0f' %07.4f\"", fabs(dms2[0]), CHARDEG, dms2[1], dms2[2]);
-		_swprintf(_buf_char, L"%.3f m", pos[2]);
+		//_swprintf(_buf_char, L"%.3f m", pos[2]);
 		s[5] = _buf_char;
 		//s[5].sprintf(L"%.3f m", pos[2]);
-		_swprintf(_buf_char, L"N:%6.3f E:%6.3f U:%6.3f m", SQRT(Qe[4]), SQRT(Qe[0]), SQRT(Qe[8]));
+		//_swprintf(_buf_char, L"N:%6.3f E:%6.3f U:%6.3f m", SQRT(Qe[4]), SQRT(Qe[0]), SQRT(Qe[8]));
 		s[6] = _buf_char;
 		//s[6].sprintf(L"N:%6.3f E:%6.3f U:%6.3f m", SQRT(Qe[4]), SQRT(Qe[0]), SQRT(Qe[8]));
 	}
@@ -578,31 +554,31 @@ extern __declspec(dllexport) void __stdcall UpdatePos(void)
 		}
 		s[0] = pos[0] < 0 ? L"S:" : L"N:"; s[1] = pos[1] < 0 ? L"W:" : L"E:";
 		s[2] = SolOpt.height == 1 ? L"H:" : L"He:";
-		_swprintf(_buf_char, L"%.8f %c", fabs(pos[0]) * R2D, CHARDEG);
+		//_swprintf(_buf_char, L"%.8f %c", fabs(pos[0]) * R2D, CHARDEG);
 		s[3] = _buf_char;
 		//s[3].sprintf(L"%.8f %c", fabs(pos[0])*R2D, CHARDEG);
-		_swprintf(_buf_char, L"%.8f %c", fabs(pos[1]) * R2D, CHARDEG);
+		//_swprintf(_buf_char, L"%.8f %c", fabs(pos[1]) * R2D, CHARDEG);
 		s[4] = _buf_char;
 		//s[4].sprintf(L"%.8f %c", fabs(pos[1])*R2D, CHARDEG);
-		_swprintf(_buf_char, L"%.3f m", pos[2]);
+		//_swprintf(_buf_char, L"%.3f m", pos[2]);
 		s[5] = _buf_char;
 		//s[5].sprintf(L"%.3f m", pos[2]);
-		_swprintf(_buf_char, L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[0]), SQRT(Qe[4]), SQRT(Qe[8]));
+		//_swprintf(_buf_char, L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[0]), SQRT(Qe[4]), SQRT(Qe[8]));
 		s[6] = _buf_char;
 		//s[6].sprintf(L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[0]), SQRT(Qe[4]), SQRT(Qe[8]));
 	}
 	else if (SolType == 2) {
 		s[0] = L"X:"; s[1] = L"Y:"; s[2] = L"Z:";
-		_swprintf(_buf_char, L"%.3f m", rr[0]);
+		//_swprintf(_buf_char, L"%.3f m", rr[0]);
 		s[3] = _buf_char;
 		//s[3].sprintf(L"%.3f m", rr[0]);
-		_swprintf(_buf_char, L"%.3f m", rr[1]);
+		//_swprintf(_buf_char, L"%.3f m", rr[1]);
 		s[4] = _buf_char;
 		//s[4].sprintf(L"%.3f m", rr[1]);
-		_swprintf(_buf_char, L"%.3f m", rr[2]);
+		//_swprintf(_buf_char, L"%.3f m", rr[2]);
 		s[5] = _buf_char;
 		//s[5].sprintf(L"%.3f m", rr[2]);
-		_swprintf(_buf_char, L"X:%6.3f Y:%6.3f Z:%6.3f m", SQRT(qr[0]), SQRT(qr[4]), SQRT(qr[8]));
+		//_swprintf(_buf_char, L"X:%6.3f Y:%6.3f Z:%6.3f m", SQRT(qr[0]), SQRT(qr[4]), SQRT(qr[8]));
 		s[6] = _buf_char;
 		//s[6].sprintf(L"X:%6.3f Y:%6.3f Z:%6.3f m", SQRT(qr[0]), SQRT(qr[4]), SQRT(qr[8]));
 	}
@@ -611,16 +587,16 @@ extern __declspec(dllexport) void __stdcall UpdatePos(void)
 			ecef2pos(rb, pos); ecef2enu(pos, bl, enu); covenu(pos, qr, Qe);
 		}
 		s[0] = L"E:"; s[1] = L"N:"; s[2] = L"U:";
-		_swprintf(_buf_char, L"%.3f m", enu[0]);
+		//_swprintf(_buf_char, L"%.3f m", enu[0]);
 		s[3] = _buf_char;
 		//s[3].sprintf(L"%.3f m", enu[0]);
-		_swprintf(_buf_char, L"%.3f m", enu[1]);
+		//_swprintf(_buf_char, L"%.3f m", enu[1]);
 		s[4] = _buf_char;
 		//s[4].sprintf(L"%.3f m", enu[1]);
-		_swprintf(_buf_char, L"%.3f m", enu[2]);
+		//_swprintf(_buf_char, L"%.3f m", enu[2]);
 		s[5] = _buf_char;
 		//s[5].sprintf(L"%.3f m", enu[2]);
-		_swprintf(_buf_char, L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[0]), SQRT(Qe[4]), SQRT(Qe[8]));
+		//_swprintf(_buf_char, L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[0]), SQRT(Qe[4]), SQRT(Qe[8]));
 		s[6] = _buf_char;
 		//s[6].sprintf(L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[0]), SQRT(Qe[4]), SQRT(Qe[8]));
 	}
@@ -645,16 +621,16 @@ extern __declspec(dllexport) void __stdcall UpdatePos(void)
 		//s[6].sprintf(L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[0]), SQRT(Qe[4]), SQRT(Qe[8]));
 	}
 	_swprintf(_buf_char, L"Age:%4.1f s Ratio:%4.1f #Sat:%2d", Age[PSol], Ratio[PSol], Nvsat[PSol]);
-	s[7] = _buf_char;
+	//s[7] = _buf_char;
 	//s[7].sprintf(L"Age:%4.1f s Ratio:%4.1f #Sat:%2d", Age[PSol], Ratio[PSol], Nvsat[PSol]);
-	if (Ratio[PSol] > 0.0) s[8] = _swprintf(_buf_char, L" R:%4.1f", Ratio[PSol]);
+	//if (Ratio[PSol] > 0.0) s[8] = _swprintf(_buf_char, L" R:%4.1f", Ratio[PSol]);
 	/*
 	for (i = 0; i < 8; i++) label[i]->Caption = s[i];
 	*/
 	for (i = 0; i < 8; i++) {
-		wcout << s[i] << '\n';
+		//wcout << s[i] << '\n';
 	}
-	wcout << rtksvr.rtcm[1].sta.pos[0] << "\t" << rtksvr.rtcm[1].sta.pos[1] << "\t" << rtksvr.rtcm[1].sta.pos[2] << "\n"; //
+	//wcout << rtksvr.rtcm[1].sta.pos[0] << "\t" << rtksvr.rtcm[1].sta.pos[1] << "\t" << rtksvr.rtcm[1].sta.pos[2] << "\n"; //
 
 
 
@@ -689,6 +665,7 @@ extern __declspec(dllexport) void __stdcall InitSolBuff(void)
 	Time = new gtime_t[SolBuffSize];
 	SolStat = new int[SolBuffSize];
 	Nvsat = new int[SolBuffSize];
+	
 	SolRov = new double[SolBuffSize * 3];
 	SolRef = new double[SolBuffSize * 3];
 	VelRov = new double[SolBuffSize * 3];
@@ -706,4 +683,3 @@ extern __declspec(dllexport) void __stdcall InitSolBuff(void)
 	//ScbSol->Max = 0; 
 	//ScbSol->Position = 0;
 }
-
