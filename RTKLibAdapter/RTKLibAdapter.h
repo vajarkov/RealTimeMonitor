@@ -49,14 +49,14 @@
 #define MIN(x,y)    ((x)<(y)?(x):(y))
 
 EXPORT __declspec(dllexport) void __stdcall Init(void);
-EXPORT __declspec(dllexport) void __stdcall UpdatePos(void);
+//EXPORT __declspec(dllexport) void __stdcall UpdatePos(void);
 EXPORT __declspec(dllexport) int  __stdcall ConfOverwrite(const char* path);
-EXPORT __declspec(dllexport) void __stdcall UpdatePlot(void);
+//EXPORT __declspec(dllexport) void __stdcall UpdatePlot(void);
 EXPORT __declspec(dllexport) void __stdcall SvrStart(void);
 EXPORT __declspec(dllexport) void __stdcall InitSolBuff(void);
 EXPORT __declspec(dllexport) void __stdcall Timer(void);
-EXPORT __declspec(dllexport) void __stdcall UpdateStr(void);
-
+//EXPORT __declspec(dllexport) void __stdcall UpdateStr(void);
+EXPORT __declspec(dllexport) double __stdcall getpos(int num);
 
 rtksvr_t rtksvr;
 stream_t monistr;

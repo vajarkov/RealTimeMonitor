@@ -27,7 +27,7 @@
 //}
 
 
-extern __declspec(dllexport) int __stdcall Init(void)
+extern __declspec(dllexport) void __stdcall Init(void)
 {
 	/*
 	char* p, * argv[32], buff[1024], file[1024] = "rtknavi.exe";
@@ -62,10 +62,10 @@ extern __declspec(dllexport) int __stdcall Init(void)
 		Az[i][j] = El[i][j] = 0.0;
 		for (int k = 0; k < NFREQ; k++) Snr[i][j][k] = 0;
 	}
-
+	*/
 	PrcOpt = prcopt_default;
 	SolOpt = solopt_default;
-
+	/*
 	TLEData.n = TLEData.nmax = 0;
 	TLEData.data = NULL;
 
@@ -76,7 +76,7 @@ extern __declspec(dllexport) int __stdcall Init(void)
 	if (!(p = strrchr(file, '.'))) p = file + strlen(file);
 	strcpy(p, ".ini");
 	IniFile = file;
-
+	*/
 	InitSolBuff();
 	strinitcom();
 
@@ -116,10 +116,9 @@ extern __declspec(dllexport) int __stdcall Init(void)
 	while (true) {
 		Timer();
 		Sleep(1000);
-		
-	}*/
+	}
 
-	return 0;
+	
 }
 
 
@@ -130,7 +129,7 @@ extern __declspec(dllexport) void __stdcall Timer(void)
 	int i, update = 0;
 	unsigned char buff[8];
 
-	trace(4, "TimerTimer\n");
+	//trace(4, "TimerTimer\n");
 
 	rtksvrlock(&rtksvr);
 
@@ -154,7 +153,7 @@ extern __declspec(dllexport) void __stdcall Timer(void)
 
 
 	if (!(++n % 5)) UpdatePlot();
-	UpdateStr();
+	//UpdateStr();
 
 	if (OpenPort) {
 		buff[0] = '\r';
@@ -262,7 +261,7 @@ extern __declspec(dllexport) void __stdcall SvrStart(void)
 		//memset(buff, 0, sizeof(buff));
 	}
 	if ((RovAntPcvF || RefAntPcvF) && !readpcv(AntPcvFileF.c_str(), &pcvr)) {
-		printf_s("rcv ant file read error %s", AntPcvFileF);
+		//printf_s("rcv ant file read error %s", AntPcvFileF);
 		//Message->Caption = s.sprintf("rcv ant file read error %s", AntPcvFileF);
 		//Message->Parent->Hint = Message->Caption;
 		return;
@@ -287,7 +286,7 @@ extern __declspec(dllexport) void __stdcall SvrStart(void)
 			PrcOpt.pcvr[1] = *pcv;
 		}
 		else {
-			printf_s("no antenna pcv %s", type);
+			//printf_s("no antenna pcv %s", type);
 			//Message->Caption = s.sprintf("no antenna pcv %s", type);
 			//Message->Parent->Hint = Message->Caption;
 		}
@@ -298,7 +297,7 @@ extern __declspec(dllexport) void __stdcall SvrStart(void)
 	}
 	if (PrcOpt.sateph == EPHOPT_PREC || PrcOpt.sateph == EPHOPT_SSRCOM) {
 		if (!readpcv(SatPcvFileF.c_str(), &pcvs)) {
-			printf_s("sat ant file read error %s", SatPcvFileF);
+			//printf_s("sat ant file read error %s", SatPcvFileF);
 			//Message->Caption = s.sprintf("sat ant file read error %s", SatPcvFileF);
 			//Message->Parent->Hint = Message->Caption;
 			return;
@@ -415,14 +414,14 @@ extern __declspec(dllexport) void __stdcall SvrStart(void)
 		traceclose();
 		return;
 	}
-	PSol = PSolS = PSolE = 0;
+	/*PSol = PSolS = PSolE = 0;
 	SolStat[0] = Nvsat[0] = 0;
 	for (i = 0; i < 3; i++) SolRov[i] = SolRef[i] = VelRov[i] = 0.0;
 	for (i = 0; i < 9; i++) Qr[i] = 0.0;
 	Age[0] = Ratio[0] = 0.0;
 	Nsat[0] = Nsat[1] = 0;
 	UpdatePos();
-	UpdatePlot();
+	UpdatePlot();*/
 	/*
 	BtnStart->Visible = false;
 	BtnOpt->Enabled = false;

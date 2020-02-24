@@ -16,6 +16,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9A90132A-C33C-40D6-83CB-3C6363F7D025}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		x64\Debug\RTKFunc.dll = x64\Debug\RTKFunc.dll
 		x64\Debug\RTKLibAdapter.dll = x64\Debug\RTKLibAdapter.dll
 	EndProjectSection
 EndProject

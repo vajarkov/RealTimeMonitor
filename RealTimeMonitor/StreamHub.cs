@@ -325,8 +325,8 @@ namespace RealTimeMonitor
 
             while (true)
             {
-				//Timer();
-                //await writer.WriteAsync(rtksrv.rtcm[1].sta.pos[0]);
+				
+                //await writer.WriteAsync(DataRTK.getpos(0));
                 //await Task.Delay(delay);
             }
 
