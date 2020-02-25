@@ -22,6 +22,7 @@ namespace RealTimeMonitor
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        [Obsolete]
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -33,22 +34,22 @@ namespace RealTimeMonitor
 
             app.UseRouting();
 
-            app.UseSignalR( routes =>
-                {
-                    routes.MapHub<StreamHub>("/streamHub");
-                }
+            _ = app.UseSignalR(routes =>
+                 {
+                     routes.MapHub<StreamHub>("/streamHub");
+                 }
             );
             
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapHub<ChatHub>("/chat", options =>
-                {
-                    options.ApplicationMaxBufferSize = 64;
-                    options.TransportMaxBufferSize = 64;
-                    options.LongPolling.PollTimeout = System.TimeSpan.FromMinutes(1);
-                    options.Transports = HttpTransportType.LongPolling | HttpTransportType.WebSockets;
-                });
-            });
+            //app.UseEndpoints(endpoints =>
+            //{
+            //    endpoints.MapHub<ChatHub>("/chat", options =>
+            //    {
+            //        options.ApplicationMaxBufferSize = 64;
+            //        options.TransportMaxBufferSize = 64;
+            //        options.LongPolling.PollTimeout = System.TimeSpan.FromMinutes(1);
+            //        options.Transports = HttpTransportType.LongPolling | HttpTransportType.WebSockets;
+            //    });
+            //});
             
             
         }

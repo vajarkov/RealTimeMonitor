@@ -14,10 +14,10 @@ namespace RealTimeMonitor
         //static public extern IntPtr rtksvr_t rtksvr;
 
 
-        public async Task Send(string message, string userName)
-        {
-            await this.Clients.All.SendAsync("Send", message, userName);
-        }
+        //public async Task Send(string message, string userName)
+        //{
+        //    await this.Clients.All.SendAsync("Send", message, userName);
+        //}
 
 
         public async Task UploadStream(IAsyncEnumerable<string> stream)

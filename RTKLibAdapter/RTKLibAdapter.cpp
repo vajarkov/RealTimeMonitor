@@ -732,13 +732,11 @@ int ConfOverwrite(const char* path)
 
 extern __declspec(dllexport) void __stdcall getpos(double* pos) {
 	rtksvrlock(&rtksvr);
+	pos = new double[3];
+	if (rtksvr.rtcm[1].sta.pos != NULL) {
+		pos = rtksvr.rtcm[1].sta.pos;
+	}
 	
-	if (&rtksvr.rtcm->sta.pos != NULL) {
-		pos = rtksvr.rtcm->sta.pos;
-	}
-	else {
-		pos = NULL;
-	}
 	rtksvrunlock(&rtksvr);
 	
 }

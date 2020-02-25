@@ -149,7 +149,8 @@ namespace RealTimeMonitor
 		#endregion
 
 		//Mutex mutexRTK = null;
-		object lock_object = new object();
+		//object lock_object = new object();
+		static SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
 
         public ChannelReader<string> DelayCounter(int delay)
         {
@@ -346,6 +347,9 @@ namespace RealTimeMonitor
 				IntPtr pos;
 				double[] positions = new double[3];
 				string strPos = string.Empty;
+
+
+				await semaphoreSlim.WaitAsync();
 				try
 				{
 					//	mutexRTK = Mutex.OpenExisting("RTK_MUTEX");
@@ -360,7 +364,7 @@ namespace RealTimeMonitor
 					//	byte[] data = new byte[shmSize];
 					//	view.Read(data, 0, shmSize);
 					//	//string text = System.Text.Encoding.Default.GetString(data);
-					//lock (lock_object)
+					
 					{
 						
 						//DataRTK.rtksvr_t rtksvr = new DataRTK.rtksvr_t();
@@ -377,6 +381,8 @@ namespace RealTimeMonitor
 
 
 						strPos = positions[0].ToString();
+						await writer.WriteAsync(strPos);
+						await Task.Delay(millisecondsDelay: delay).ConfigureAwait(true);
 					}
 				
 					//mutexRTK.ReleaseMutex();
@@ -388,11 +394,11 @@ namespace RealTimeMonitor
 				}
 				finally
 				{
-					await writer.WriteAsync(strPos);
-					await Task.Delay(millisecondsDelay: delay).ConfigureAwait(true);
+					semaphoreSlim.Release();
 
 				}
 
+				
 
 
 			}
@@ -408,7 +414,7 @@ namespace RealTimeMonitor
                 await Task.Delay(delay);
             }
             */
-            //writer.TryComplete();
+            writer.TryComplete();
         }
 
 /*
