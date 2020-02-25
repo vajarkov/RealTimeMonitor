@@ -783,7 +783,7 @@ static int readfile(file_t *file, unsigned char *buff, int nmax, char *msg)
     if (!file) return 0;
     
     if (file->fp==stdin) {
-#ifndef WIN32
+#ifdef WIN32
         /* input from stdin */
         FD_ZERO(&rs); FD_SET(0,&rs);
         if (!select(1,&rs,NULL,NULL,&tv)) return 0;

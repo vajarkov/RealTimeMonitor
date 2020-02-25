@@ -2,7 +2,7 @@
 #include "RTKLibAdapter.h"
 
 
-
+/*
 
 const char MinCharacter{ 'A' };
 const char MaxCharacter{ 'z' };
@@ -54,7 +54,7 @@ void MemoryWriter::createSharedMemory() {
 		m_shmHandler = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, m_memorySize, m_memoryName.c_str());
 	}
 }
-
+*/
 
 extern __declspec(dllexport) void __stdcall Init(void)
 {

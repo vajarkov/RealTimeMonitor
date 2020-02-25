@@ -109,7 +109,7 @@ tle_t TLEData;
 
 string IniFile;
 
-
+/*
 class MemoryWriter {
 	
 	public:
@@ -126,5 +126,5 @@ class MemoryWriter {
 		size_t m_memorySize = 0;
 		HANDLE m_shmHandler = 0;
 };
-
+*/
 #endif //PCH_H

@@ -41,7 +41,7 @@
 #ifdef WIN32
 #include <winsock2.h>
 #include <windows.h>
-#include <pthread.h>
+//#include <pthread.h>
 #else
 #include <pthread.h>
 #endif
