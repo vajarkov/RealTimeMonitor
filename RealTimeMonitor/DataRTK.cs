@@ -42,7 +42,7 @@ namespace RealTimeMonitor
         }
 
         #region Константы
-        static double timeoffset_ = 0.0;
+        //static double timeoffset_ = 0.0;
         public const int MAXSCALE = 18;
         public const int MAXMAPPNT = 10;
 
@@ -2357,37 +2357,37 @@ namespace RealTimeMonitor
         [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", EntryPoint = "?Init@@YAXXZ", CallingConvention = CallingConvention.StdCall)]
         public static extern void Init();
 
-        //Функция для обновления параметров позиции
-        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?UpdatePos@@YGXXZ")]
-        public static extern void UpdatePos();
+        ////Функция для обновления параметров позиции
+        //[DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?UpdatePos@@YGXXZ")]
+        //public static extern void UpdatePos();
 
-        //Функция для конвертации ???
-        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?ConfOverwrite@@YGHPBD@Z")]
-        public static extern int ConfOverwrite(string path);
+        ////Функция для конвертации ???
+        //[DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?ConfOverwrite@@YGHPBD@Z")]
+        //public static extern int ConfOverwrite(string path);
 
-        //Функция для обновления данных на графике
-        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?UpdatePlot@@YGXXZ")]
-        public static extern void UpdatePlot();
+        ////Функция для обновления данных на графике
+        //[DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?UpdatePlot@@YGXXZ")]
+        //public static extern void UpdatePlot();
 
-        //Функция для запуска потока сервиса обмена данных по каналу связи
-        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?SvrStart@@YGXXZ")]
-        public static extern void SvrStart();
+        ////Функция для запуска потока сервиса обмена данных по каналу связи
+        //[DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?SvrStart@@YGXXZ")]
+        //public static extern void SvrStart();
 
-        //Функция для инициализации буфера решения
-        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?InitSolBuff@@YGXXZ")]
-        public static extern void InitSolBuff();
+        ////Функция для инициализации буфера решения
+        //[DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?InitSolBuff@@YGXXZ")]
+        //public static extern void InitSolBuff();
 
-        //Функция для запроса обновления данных 
-        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?Timer@@YGXXZ")]
-        public static extern void Timer();
+        ////Функция для запроса обновления данных 
+        //[DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?Timer@@YGXXZ")]
+        //public static extern void Timer();
+
+        ////Функция для обновления ???
+        //[DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?UpdateStr@@YGXXZ")]
+        //public static extern void UpdateStr();
 
         //Функция для обновления ???
-        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?UpdateStr@@YGXXZ")]
-        public static extern void UpdateStr();
-
-        //Функция для обновления ???
-        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?getpos@@YANH@Z")]
-        public static extern double getpos(int num);
+        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?getpos@@YAXPEAN@Z")]
+        public static extern void getpos(out IntPtr pos);
 
 
         #endregion

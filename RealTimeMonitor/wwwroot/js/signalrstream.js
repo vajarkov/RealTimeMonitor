@@ -16,7 +16,7 @@ var connection = new signalR.HubConnectionBuilder()
     .build();
 document.getElementById("streamButton").addEventListener("click", (event) => __awaiter(this, void 0, void 0, function* () {
     try {
-        connection.stream("DelayCounter", 500)
+        connection.stream("DelayCounter", 1000)
             .subscribe({
                 next: (item) => {
                     var li = document.createElement("li");

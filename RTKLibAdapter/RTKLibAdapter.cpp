@@ -2,6 +2,60 @@
 #include "RTKLibAdapter.h"
 
 
+
+
+const char MinCharacter{ 'A' };
+const char MaxCharacter{ 'z' };
+
+////Public section
+
+MemoryWriter::MemoryWriter(const wstring& name, size_t size) : m_memoryName(name), m_memorySize(size) {
+	createSharedMemory();
+}
+
+
+string MemoryWriter::createRandomData() const {
+	string data;
+
+	for (size_t i = 0; i < m_memorySize; i++) {
+		data += getRandomCharacter();
+	}
+
+	return data;
+}
+
+
+void MemoryWriter::write(const string& data) {
+	if (!m_shmHandler) {
+		return;
+	}
+	
+	auto buffer = MapViewOfFile(m_shmHandler, FILE_MAP_ALL_ACCESS, 0, 0, m_memorySize);
+
+	if (NULL == buffer) {
+		std::cerr << "Cannot use MapViewOfFile: null buffer." << std::endl;
+		return;
+	}
+
+	CopyMemory(buffer, data.c_str(), data.size());
+}
+
+/////Private section
+
+char MemoryWriter::getRandomCharacter() const {
+	return MinCharacter + rand() % 24;
+}
+
+
+void MemoryWriter::createSharedMemory() {
+	m_shmHandler = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, m_memoryName.c_str());
+
+	if (!m_shmHandler) {
+		m_shmHandler = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, m_memorySize, m_memoryName.c_str());
+	}
+}
+
+
 extern __declspec(dllexport) void __stdcall Init(void)
 {
 	
@@ -86,56 +140,83 @@ extern __declspec(dllexport) void __stdcall Init(void)
 	strinit(&monistr);
 
 	LocalDirectory = "C:\\Temp";
+	
+	
+	
 	SvrStart();
+	//while (true) {};
 	//Option Reciver
-	while (true) {
+	/*while (true) {
 		Timer();
 		Sleep(1000);
 
-	}
+	}*/
+
+	/*wstring memoryName ( L"rtk_shared" );
+	size_t memorySize{ 8 };
+	MemoryWriter writer(memoryName, memorySize);*/
+
+	//while (true) {
+		/*HANDLE hMutex;
+
+		hMutex = CreateMutex(NULL, FALSE, TEXT("RTK_MUTEX"));
+
+		if (hMutex != NULL)
+			if (GetLastError() != ERROR_ALREADY_EXISTS)
+			{
+				rtksvrlock(&rtksvr);
+				string data;
+				data = reinterpret_cast<char*>(rtksvr.rtcm->sta.pos);
+				writer.write(data);
+				rtksvrunlock(&rtksvr);
+			}
+		CloseHandle(hMutex);*/
+		//Sleep(1000);
+		
+	//}
 
 	//return 0;
 }
 
 
-extern __declspec(dllexport) void __stdcall Timer(void)
-{
-	static int n = 0, inactive = 0;
-	sol_t* sol;
-	int i, update = 0;
-	unsigned char buff[8];
-
-	//trace(4, "TimerTimer\n");
-
-	rtksvrlock(&rtksvr);
-
-	for (i = 0; i < rtksvr.nsol; i++) {
-		sol = rtksvr.solbuf + i;
-		//UpdateLog(sol->stat, sol->time, sol->rr, sol->qr, rtksvr.rtk.rb, sol->ns,
-			//sol->age, sol->ratio);
-		update = 1;
-	}
-	rtksvr.nsol = 0;
-	SolCurrentStat = rtksvr.state ? rtksvr.rtk.sol.stat : 0;
-
-	rtksvrunlock(&rtksvr);
-
-	if (update) {
-		//UpdateTime();
-		//UpdatePos();
-		inactive = 0;
-	}
-
-
-
-	//if (!(++n % 5)) UpdatePlot();
-	//UpdateStr();
-
-	/*if (OpenPort) {
-		buff[0] = '\r';
-		strwrite(&monistr, buff, 1);
-	}*/
-}
+//extern __declspec(dllexport) void __stdcall Timer(void)
+//{
+//	static int n = 0, inactive = 0;
+//	//sol_t* sol;
+//	int i, update = 0;
+//	//unsigned char buff[8];
+//
+//	//trace(4, "TimerTimer\n");
+//
+//	rtksvrlock(&rtksvr);
+//
+//	for (i = 0; i < rtksvr.nsol; i++) {
+//		//sol = rtksvr.solbuf + i;
+//		//UpdateLog(sol->stat, sol->time, sol->rr, sol->qr, rtksvr.rtk.rb, sol->ns,
+//			//sol->age, sol->ratio);
+//		update = 1;
+//	}
+//	rtksvr.nsol = 0;
+//	SolCurrentStat = rtksvr.state ? rtksvr.rtk.sol.stat : 0;
+//
+//	rtksvrunlock(&rtksvr);
+//
+//	if (update) {
+//		//UpdateTime();
+//		//UpdatePos();
+//		inactive = 0;
+//	}
+//
+//
+//
+//	//if (!(++n % 5)) UpdatePlot();
+//	//UpdateStr();
+//
+//	/*if (OpenPort) {
+//		buff[0] = '\r';
+//		strwrite(&monistr, buff, 1);
+//	}*/
+//}
 
 // update stream status indicators ------------------------------------------
 //extern __declspec(dllexport) void __stdcall UpdateStr(void)
@@ -158,7 +239,7 @@ extern __declspec(dllexport) void __stdcall Timer(void)
 	//}
 //}
 
-extern __declspec(dllexport) void __stdcall SvrStart(void)
+void  SvrStart(void)
 {
 	// Локальные переменные
 	char* s;
@@ -226,7 +307,7 @@ extern __declspec(dllexport) void __stdcall SvrStart(void)
 		PrcOpt.exsats[i] = 0;
 	}
 
-	if (ExSats != "") { // excluded satellites
+ 	if (ExSats != "") { // excluded satellites
 		strcpy(buff, ExSats.c_str());
 		for (p = strtok(buff, " "); p; p = strtok(NULL, " ")) {
 			if (*p == '+') { ex = 2; p++; }
@@ -417,7 +498,7 @@ extern __declspec(dllexport) void __stdcall SvrStart(void)
 
 
 // confirm overwrite --------------------------------------------------------
-extern __declspec(dllexport) int __stdcall ConfOverwrite(const char* path)
+int ConfOverwrite(const char* path)
 {
 	char* s;
 	FILE* fp;
@@ -479,15 +560,15 @@ extern __declspec(dllexport) int __stdcall ConfOverwrite(const char* path)
 //}
 
 // convert degree to deg-min-sec --------------------------------------------
-static void degtodms(double deg, double* dms)
-{
-	double sgn = 1.0;
-	if (deg < 0.0) { deg = -deg; sgn = -1.0; }
-	dms[0] = floor(deg);
-	dms[1] = floor((deg - dms[0]) * 60.0);
-	dms[2] = (deg - dms[0] - dms[1] / 60.0) * 3600;
-	dms[0] *= sgn;
-}
+//static void degtodms(double deg, double* dms)
+//{
+//	double sgn = 1.0;
+//	if (deg < 0.0) { deg = -deg; sgn = -1.0; }
+//	dms[0] = floor(deg);
+//	dms[1] = floor((deg - dms[0]) * 60.0);
+//	dms[2] = (deg - dms[0] - dms[1] / 60.0) * 3600;
+//	dms[0] *= sgn;
+//}
 
 // update solution display --------------------------------------------------
 //extern __declspec(dllexport) void __stdcall UpdatePos(void)
@@ -649,19 +730,22 @@ static void degtodms(double deg, double* dms)
 //}
 
 
-extern __declspec(dllexport) double __stdcall getpos(int num) {
-	if (rtksvr.rtcm[1].sta.pos[num]) {
-		return rtksvr.rtcm[1].sta.pos[num];
+extern __declspec(dllexport) void __stdcall getpos(double* pos) {
+	rtksvrlock(&rtksvr);
+	
+	if (&rtksvr.rtcm->sta.pos != NULL) {
+		pos = rtksvr.rtcm->sta.pos;
 	}
 	else {
-		return 0.0;
+		pos = NULL;
 	}
+	rtksvrunlock(&rtksvr);
 	
 }
 
 
 // initialize solution buffer -----------------------------------------------
-extern __declspec(dllexport) void __stdcall InitSolBuff(void)
+void InitSolBuff(void)
 {
 	double ep[] = { 2000,1,1,0,0,0 };
 	int i, j;

@@ -3,7 +3,6 @@
 // This also affects IntelliSense performance, including code completion and many code browsing features.
 // However, files listed here are ALL re-compiled if any one of them is updated between builds.
 // Do not add files here that you will be updating frequently as this negates the performance advantage.
-
 #ifndef PCH_H
 #define PCH_H
 
@@ -13,6 +12,11 @@
 #include <string>
 #include <string.h>
 #include <cmath>
+//#ifdef _DEBUG
+//#include <crtdbg.h>
+//#define _CRT_MAP_ALLOC
+//#endif // DEBUG
+
 
 #include "rtklib.h"
 
@@ -49,14 +53,17 @@
 #define MIN(x,y)    ((x)<(y)?(x):(y))
 
 EXPORT __declspec(dllexport) void __stdcall Init(void);
+void SvrStart(void);
+int ConfOverwrite(const char* path);
+void InitSolBuff(void);
 //EXPORT __declspec(dllexport) void __stdcall UpdatePos(void);
-EXPORT __declspec(dllexport) int  __stdcall ConfOverwrite(const char* path);
-//EXPORT __declspec(dllexport) void __stdcall UpdatePlot(void);
-EXPORT __declspec(dllexport) void __stdcall SvrStart(void);
-EXPORT __declspec(dllexport) void __stdcall InitSolBuff(void);
-EXPORT __declspec(dllexport) void __stdcall Timer(void);
+//EXPORT __declspec(dllexport) int  __stdcall ConfOverwrite(const char* path);
+////EXPORT __declspec(dllexport) void __stdcall UpdatePlot(void);
+//EXPORT __declspec(dllexport) void __stdcall SvrStart(void);
+//EXPORT __declspec(dllexport) 
+//EXPORT __declspec(dllexport) void __stdcall Timer(void);
 //EXPORT __declspec(dllexport) void __stdcall UpdateStr(void);
-EXPORT __declspec(dllexport) double __stdcall getpos(int num);
+EXPORT __declspec(dllexport) void __stdcall getpos(double* pos);
 
 rtksvr_t rtksvr;
 stream_t monistr;
@@ -101,5 +108,23 @@ double Az[2][MAXSAT], El[2][MAXSAT];
 tle_t TLEData;
 
 string IniFile;
+
+
+class MemoryWriter {
+	
+	public:
+		MemoryWriter(const wstring& name, size_t size);
+		string createRandomData() const;
+		void write(const string& data);
+
+	private:
+		char getRandomCharacter() const;
+		void createSharedMemory();
+
+	private:
+		wstring m_memoryName;
+		size_t m_memorySize = 0;
+		HANDLE m_shmHandler = 0;
+};
 
 #endif //PCH_H

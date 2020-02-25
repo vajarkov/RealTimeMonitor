@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 //using Rt
@@ -13,8 +14,9 @@ using System.Threading.Tasks;
 
 namespace RealTimeMonitor
 {
-    public class StreamHub : Hub, IDisposable
+    public class StreamHub : Hub///, IDisposable
     {
+		#region Переменные для запуска сбора из C#
 		/*
         private const int MAXSCALE = 18;
         private const int MAXMAPPNT	= 10;
@@ -102,59 +104,64 @@ namespace RealTimeMonitor
 
         string IniFile;
 		*/
-		bool disposed = false;
 
-		public void Dispose()
-		{
-			Dispose(true);
-			GC.SuppressFinalize(this);
-		}
+		#endregion
 
-		protected override void Dispose(bool disposing)
-		{
-			if (disposed)
-				return;
+		#region Dispose для сбора через C#
+		//      bool disposed = false;
 
-			if (disposing)
-			{
+		//public void Dispose()
+		//{
+		//	Dispose(true);
+		//	GC.SuppressFinalize(this);
+		//}
 
-			}
-			/*
-			Marshal.FreeHGlobal(prcopt_ptr);
-			prcopt_ptr = IntPtr.Zero;
+		//protected override void Dispose(bool disposing)
+		//{
+		//	if (disposed)
+		//		return;
 
-			Marshal.FreeHGlobal(solopt_ptr);
-			solopt_ptr = IntPtr.Zero;
+		//	if (disposing)
+		//	{
 
-			Marshal.FreeHGlobal(monistr_ptr);
-			monistr_ptr = IntPtr.Zero;
-
-			Marshal.FreeHGlobal(rtksrv_ptr);
-			rtksrv_ptr = IntPtr.Zero;
-			*/
+		//	}
 
 
-			disposed = true;
-			
+		//	/*
+		//	Marshal.FreeHGlobal(prcopt_ptr);
+		//	prcopt_ptr = IntPtr.Zero;
+
+		//	Marshal.FreeHGlobal(solopt_ptr);
+		//	solopt_ptr = IntPtr.Zero;
+
+		//	Marshal.FreeHGlobal(monistr_ptr);
+		//	monistr_ptr = IntPtr.Zero;
+
+		//	Marshal.FreeHGlobal(rtksrv_ptr);
+		//	rtksrv_ptr = IntPtr.Zero;
+		//	*/
 
 
+		//	disposed = true;
 
-		}
+		//}
 
+		#endregion
 
-		
+		//Mutex mutexRTK = null;
+		object lock_object = new object();
 
-		public ChannelReader<double> DelayCounter(int delay)
+        public ChannelReader<string> DelayCounter(int delay)
         {
-            var channel = Channel.CreateUnbounded<double>();
+            var channel = Channel.CreateUnbounded<string>();
 			_ = WriteItems(channel.Writer, 200, delay);
             return channel.Reader;
         }
 
-        private async Task WriteItems(ChannelWriter<double> writer, int count, int delay)
+        private async Task WriteItems(ChannelWriter<string> writer, int count, int delay)
 		{
-            #region Старый код
-            /*
+			#region Код для ининциализации опроса из C#
+			/*
 			try
 			{
 				//string str = string.Empty;
@@ -311,24 +318,84 @@ namespace RealTimeMonitor
 
 
 			*/
-            #endregion
+			#endregion
 
-
-            try
-            {
+			try
+			{
 				DataRTK.Init();
+				//Thread svr_thread = new Thread(DataRTK.Init);
+				//svr_thread.Name = "RTK_thread";
+				//svr_thread.Start();
+				//svr_thread.Join();
 			}
 			catch (Exception ex)
 			{
 				string str_err = ex.Message;
 			}
 
+
+			//string shmName = "rtk_shared";
+			//int shmSize = 80;
+			//var shm = System.IO.MemoryMappedFiles.MemoryMappedFile.CreateOrOpen(shmName, shmSize);
+
+
+			
+
             while (true)
             {
+				IntPtr pos;
+				double[] positions = new double[3];
+				string strPos = string.Empty;
+				try
+				{
+					//	mutexRTK = Mutex.OpenExisting("RTK_MUTEX");
+
+					//	System.IO.MemoryMappedFiles.MemoryMappedViewStream view = shm.CreateViewStream();
+
+					//	if (view == null)
+					//		continue;
+
+
+
+					//	byte[] data = new byte[shmSize];
+					//	view.Read(data, 0, shmSize);
+					//	//string text = System.Text.Encoding.Default.GetString(data);
+					//lock (lock_object)
+					{
+						
+						//DataRTK.rtksvr_t rtksvr = new DataRTK.rtksvr_t();
+						DataRTK.getpos(out pos);
+						
+						if (pos != (IntPtr)0)
+						{
+
+
+							Marshal.Copy(pos, positions, 0, 3);
+
+
+						}
+
+
+						strPos = positions[0].ToString();
+					}
 				
-                //await writer.WriteAsync(DataRTK.getpos(0));
-                //await Task.Delay(delay);
-            }
+					//mutexRTK.ReleaseMutex();
+					//mutexRTK.Dispose();
+				}
+				catch (Exception ex)
+				{
+					string str_err = ex.Message;
+				}
+				finally
+				{
+					await writer.WriteAsync(strPos);
+					await Task.Delay(millisecondsDelay: delay).ConfigureAwait(true);
+
+				}
+
+
+
+			}
 
             /*
             for(var i = 0; i < count;  i++)

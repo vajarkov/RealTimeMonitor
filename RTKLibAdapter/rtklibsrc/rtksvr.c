@@ -917,8 +917,8 @@ extern int rtksvrstart(rtksvr_t *svr, int cycle, int buffsize, int *strs,
     }
     /* create rtk server thread */
 #ifdef WIN32
-    if (!(svr->thread=CreateThread(NULL,0,rtksvrthread,svr,0,NULL))) {
-#else
+    //if (!(svr->thread=CreateThread(NULL,0,rtksvrthread,svr,0,NULL))) {
+//#else
     if (pthread_create(&svr->thread,NULL,rtksvrthread,svr)) {
 #endif
         for (i=0;i<MAXSTRRTK;i++) strclose(svr->stream+i);
