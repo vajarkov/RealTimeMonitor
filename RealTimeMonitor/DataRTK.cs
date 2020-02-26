@@ -32,14 +32,7 @@ namespace RealTimeMonitor
 
 
 
-        internal static class DefineConstants
-        {
-#if WIN32
-	public const char FILEPATHSEP = '\\';
-#else
-            // public const char FILEPATHSEP = '/';
-#endif
-        }
+    
 
         #region Константы
         //static double timeoffset_ = 0.0;
@@ -2351,12 +2344,15 @@ namespace RealTimeMonitor
 //        }
 
         #endregion
-
+            //?SvrStop@@YAXXZ
         #region Функции из самописной библиотеки-обертки для функционала RTKLib
         //Функция для инициализации основных параметров
         [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", EntryPoint = "?Init@@YAXXZ", CallingConvention = CallingConvention.StdCall)]
         public static extern void Init();
 
+        //Функция для остановки потока сбора данных
+        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", EntryPoint = "?SvrStop@@YAXXZ", CallingConvention = CallingConvention.StdCall)]
+        public static extern void SvrStop();
         ////Функция для обновления параметров позиции
         //[DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?UpdatePos@@YGXXZ")]
         //public static extern void UpdatePos();
@@ -2386,8 +2382,8 @@ namespace RealTimeMonitor
         //public static extern void UpdateStr();
 
         //Функция для обновления ???
-        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?getpos@@YAXPEAN@Z")]
-        public static extern void getpos(out IntPtr pos);
+        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?getpos@@YANXZ")]
+        public static extern double getpos();
 
 
         #endregion

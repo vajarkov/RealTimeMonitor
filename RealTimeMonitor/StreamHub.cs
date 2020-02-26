@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace RealTimeMonitor
 {
-    public class StreamHub : Hub///, IDisposable
+    public class StreamHub : Hub//, IDisposable
     {
 		#region Переменные для запуска сбора из C#
 		/*
@@ -108,7 +108,7 @@ namespace RealTimeMonitor
 		#endregion
 
 		#region Dispose для сбора через C#
-		//      bool disposed = false;
+		//bool disposed = false;
 
 		//public void Dispose()
 		//{
@@ -126,7 +126,7 @@ namespace RealTimeMonitor
 
 		//	}
 
-
+		//	//DataRTK.SvrStop();
 		//	/*
 		//	Marshal.FreeHGlobal(prcopt_ptr);
 		//	prcopt_ptr = IntPtr.Zero;
@@ -344,12 +344,12 @@ namespace RealTimeMonitor
 
             while (true)
             {
-				IntPtr pos;
-				double[] positions = new double[3];
-				string strPos = string.Empty;
-
+				//IntPtr pos;
+				//double[] positions = new double[3];
+				//string strPos = string.Empty;
 
 				await semaphoreSlim.WaitAsync();
+
 				try
 				{
 					//	mutexRTK = Mutex.OpenExisting("RTK_MUTEX");
@@ -359,28 +359,19 @@ namespace RealTimeMonitor
 					//	if (view == null)
 					//		continue;
 
-
+					
 
 					//	byte[] data = new byte[shmSize];
 					//	view.Read(data, 0, shmSize);
 					//	//string text = System.Text.Encoding.Default.GetString(data);
-					
+
 					{
 						
 						//DataRTK.rtksvr_t rtksvr = new DataRTK.rtksvr_t();
-						DataRTK.getpos(out pos);
+						double pos = DataRTK.getpos();
 						
-						if (pos != (IntPtr)0)
-						{
 
-
-							Marshal.Copy(pos, positions, 0, 3);
-
-
-						}
-
-
-						strPos = positions[0].ToString();
+						string strPos = pos.ToString();
 						await writer.WriteAsync(strPos);
 						await Task.Delay(millisecondsDelay: delay).ConfigureAwait(true);
 					}

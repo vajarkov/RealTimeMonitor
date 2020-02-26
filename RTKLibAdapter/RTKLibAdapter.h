@@ -54,6 +54,7 @@
 
 EXPORT __declspec(dllexport) void __stdcall Init(void);
 void SvrStart(void);
+EXPORT __declspec(dllexport) void __stdcall SvrStop(void);
 int ConfOverwrite(const char* path);
 void InitSolBuff(void);
 //EXPORT __declspec(dllexport) void __stdcall UpdatePos(void);

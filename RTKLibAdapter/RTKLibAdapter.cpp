@@ -730,15 +730,18 @@ int ConfOverwrite(const char* path)
 //}
 
 
-extern __declspec(dllexport) void __stdcall getpos(double* pos) {
+extern __declspec(dllexport) double __stdcall getpos() {
 	rtksvrlock(&rtksvr);
-	pos = new double[3];
+	double pos;
 	if (rtksvr.rtcm[1].sta.pos != NULL) {
-		pos = rtksvr.rtcm[1].sta.pos;
+		pos = rtksvr.rtcm[1].sta.pos[0];
+	}
+	else {
+		pos = 0.0;
 	}
 	
 	rtksvrunlock(&rtksvr);
-	
+	return pos;
 }
 
 
@@ -773,6 +776,39 @@ void InitSolBuff(void)
 		for (j = 0; j < 9; j++) Qr[j + i * 9] = 0.0;
 		Age[i] = Ratio[i] = 0.0;
 	}
+
+	// strop rtk server ---------------------------------------------------------
+	
 	//ScbSol->Max = 0; 
 	//ScbSol->Position = 0;
+}
+extern __declspec(dllexport) void __stdcall SvrStop(void)
+{
+	char* cmds[3] = { 0 };
+	int i, n, m, str;
+
+	trace(3, "SvrStop\n");
+
+	/*for (i = 0; i < 3; i++) {
+		str = rtksvr.stream[i].type;
+
+		if (str == STR_SERIAL) {
+			if (CmdEna[i][1]) cmds[i] = Cmds[i][1].c_str();
+		}
+		else if (str == STR_TCPCLI || str == STR_TCPSVR || str == STR_NTRIPCLI) {
+			if (CmdEnaTcp[i][1]) cmds[i] = CmdsTcp[i][1].c_str();
+		}
+	}*/
+	rtksvrstop(&rtksvr, cmds);
+
+	/*n = PSolE - PSolS; if (n < 0) n += SolBuffSize;
+	m = PSol - PSolS;  if (m < 0) m += SolBuffSize;
+	if (n > 0) {
+		ScbSol->Max = n - 1; ScbSol->Position = m;
+	}*/
+	
+
+	if (DebugTraceF > 0) traceclose();
+	if (DebugStatusF > 0) rtkclosestat();
+	if (OutputGeoidF > 0 && GeoidDataFileF != "") closegeoid();
 }

@@ -20,12 +20,12 @@ namespace RealTimeMonitor
         //}
 
 
-        public async Task UploadStream(IAsyncEnumerable<string> stream)
-        {
-            await foreach (var item in stream)
-            {
-                Console.WriteLine(item);
-            }
-        }
+        //public async Task UploadStream(IAsyncEnumerable<string> stream)
+        //{
+        //    await foreach (var item in stream)
+        //    {
+        //        Console.WriteLine(item);
+        //    }
+        //}
     }
 }
