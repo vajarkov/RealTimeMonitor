@@ -12,13 +12,13 @@
 #include <string>
 #include <string.h>
 #include <cmath>
-//#ifdef _DEBUG
-//#include <crtdbg.h>
-//#define _CRT_MAP_ALLOC
-//#endif // DEBUG
+#ifdef _DEBUG
+#include <crtdbg.h>
+#define _CRT_MAP_ALLOC
+#endif // DEBUG
 
 
-#include "rtklib.h"
+#include "rtklibsrc/rtklib.h"
 
 #define MAXSCALE	18
 #define MAXMAPPNT	10
@@ -64,7 +64,9 @@ void InitSolBuff(void);
 //EXPORT __declspec(dllexport) 
 //EXPORT __declspec(dllexport) void __stdcall Timer(void);
 //EXPORT __declspec(dllexport) void __stdcall UpdateStr(void);
-EXPORT __declspec(dllexport) void __stdcall getpos(double* pos);
+EXPORT __declspec(dllexport) double __stdcall getpos(double* pos);
+EXPORT __declspec(dllexport) void __stdcall get_positions(int num_rov, double* pos);
+EXPORT __declspec(dllexport) double __stdcall getpos(int num_rov, int num_pos);
 
 rtksvr_t rtksvr;
 stream_t monistr;

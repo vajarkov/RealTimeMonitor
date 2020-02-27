@@ -15,7 +15,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "nativeDebugging": true,
-      "use64Bit": true
+      "use64Bit": false
     },
     "RealTimeMonitor": {
       "commandName": "Project",

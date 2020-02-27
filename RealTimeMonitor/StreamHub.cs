@@ -348,7 +348,7 @@ namespace RealTimeMonitor
 				//double[] positions = new double[3];
 				//string strPos = string.Empty;
 
-				await semaphoreSlim.WaitAsync();
+				
 
 				try
 				{
@@ -359,21 +359,27 @@ namespace RealTimeMonitor
 					//	if (view == null)
 					//		continue;
 
-					
 
+					//await semaphoreSlim.WaitAsync().ConfigureAwait(true);
 					//	byte[] data = new byte[shmSize];
 					//	view.Read(data, 0, shmSize);
 					//	//string text = System.Text.Encoding.Default.GetString(data);
 
 					{
-						
+
 						//DataRTK.rtksvr_t rtksvr = new DataRTK.rtksvr_t();
 						double pos = DataRTK.getpos();
-						
+						//IntPtr pos_ptr = Marshal.AllocHGlobal(sizeof(double)*3);
+						//DataRTK.get_poitions(1, pos_ptr);
+
+
 
 						string strPos = pos.ToString();
+
+						
 						await writer.WriteAsync(strPos);
 						await Task.Delay(millisecondsDelay: delay).ConfigureAwait(true);
+
 					}
 				
 					//mutexRTK.ReleaseMutex();
@@ -385,7 +391,8 @@ namespace RealTimeMonitor
 				}
 				finally
 				{
-					semaphoreSlim.Release();
+					Thread.Sleep(500);
+					//semaphoreSlim.Release();
 
 				}
 

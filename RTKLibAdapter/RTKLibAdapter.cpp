@@ -144,100 +144,8 @@ extern __declspec(dllexport) void __stdcall Init(void)
 	
 	
 	SvrStart();
-	//while (true) {};
-	//Option Reciver
-	/*while (true) {
-		Timer();
-		Sleep(1000);
-
-	}*/
-
-	/*wstring memoryName ( L"rtk_shared" );
-	size_t memorySize{ 8 };
-	MemoryWriter writer(memoryName, memorySize);*/
-
-	//while (true) {
-		/*HANDLE hMutex;
-
-		hMutex = CreateMutex(NULL, FALSE, TEXT("RTK_MUTEX"));
-
-		if (hMutex != NULL)
-			if (GetLastError() != ERROR_ALREADY_EXISTS)
-			{
-				rtksvrlock(&rtksvr);
-				string data;
-				data = reinterpret_cast<char*>(rtksvr.rtcm->sta.pos);
-				writer.write(data);
-				rtksvrunlock(&rtksvr);
-			}
-		CloseHandle(hMutex);*/
-		//Sleep(1000);
-		
-	//}
-
-	//return 0;
 }
 
-
-//extern __declspec(dllexport) void __stdcall Timer(void)
-//{
-//	static int n = 0, inactive = 0;
-//	//sol_t* sol;
-//	int i, update = 0;
-//	//unsigned char buff[8];
-//
-//	//trace(4, "TimerTimer\n");
-//
-//	rtksvrlock(&rtksvr);
-//
-//	for (i = 0; i < rtksvr.nsol; i++) {
-//		//sol = rtksvr.solbuf + i;
-//		//UpdateLog(sol->stat, sol->time, sol->rr, sol->qr, rtksvr.rtk.rb, sol->ns,
-//			//sol->age, sol->ratio);
-//		update = 1;
-//	}
-//	rtksvr.nsol = 0;
-//	SolCurrentStat = rtksvr.state ? rtksvr.rtk.sol.stat : 0;
-//
-//	rtksvrunlock(&rtksvr);
-//
-//	if (update) {
-//		//UpdateTime();
-//		//UpdatePos();
-//		inactive = 0;
-//	}
-//
-//
-//
-//	//if (!(++n % 5)) UpdatePlot();
-//	//UpdateStr();
-//
-//	/*if (OpenPort) {
-//		buff[0] = '\r';
-//		strwrite(&monistr, buff, 1);
-//	}*/
-//}
-
-// update stream status indicators ------------------------------------------
-//extern __declspec(dllexport) void __stdcall UpdateStr(void)
-//{
-	//TColor color[] = { clRed,clWindow,CLORANGE,clGreen,clLime };
-	//TPanel *ind[MAXSTRRTK] = { Str1,Str2,Str3,Str4,Str5,Str6,Str7,Str8 };
-	//int i, sstat[MAXSTRRTK] = { 0 };
-	//char msg[MAXSTRMSG] = "";
-
-	//trace(4, "UpdateStr\n");
-
-	//rtksvrsstat(&rtksvr, sstat, msg);
-	//for (i = 0; i < MAXSTRRTK; i++) {
-		//ind[i]->Color = color[sstat[i] + 1];
-		//if (sstat[i]) {
-			//printf(msg);
-			//Message->Caption = msg;
-			//Message->Parent->Hint = Message->Caption;
-		//}
-	//}
-//}
 
 void  SvrStart(void)
 {
@@ -246,8 +154,6 @@ void  SvrStart(void)
 	solopt_t solopt[2];
 
 	rtcm_t rtcm;
-
-
 
 	double pos[3], nmeapos[3];
 	int itype[] = {
@@ -266,7 +172,6 @@ void  SvrStart(void)
 	gtime_t time = timeget();
 	pcvs_t pcvr = { 0 }, pcvs = { 0 };
 	pcv_t* pcv;
-	//char buf_cpy[1024];
 	// Локальные переменные
 
 	rtksvrlock(&rtksvr);
@@ -315,12 +220,8 @@ void  SvrStart(void)
 			if (!(sat = satid2no(p))) continue;
 			PrcOpt.exsats[sat - 1] = ex;
 		}
-		//memset(buff, 0, sizeof(buff));
 	}
 	if ((RovAntPcvF || RefAntPcvF) && !readpcv(AntPcvFileF.c_str(), &pcvr)) {
-		//printf_s("rcv ant file read error %s", AntPcvFileF);
-		//Message->Caption = s.sprintf("rcv ant file read error %s", AntPcvFileF);
-		//Message->Parent->Hint = Message->Caption;
 		return;
 	}
 	if (RovAntPcvF) {
@@ -329,23 +230,15 @@ void  SvrStart(void)
 		if ((pcv = searchpcv(0, type, time, &pcvr))) {
 			PrcOpt.pcvr[0] = *pcv;
 		}
-		//else {
-			//printf_s("no antenna pcv %s", type);
-			//Message->Caption = s.sprintf("no antenna pcv %s", type);
-			//Message->Parent->Hint = Message->Caption;
 		}
 		for (i = 0; i < 3; i++) PrcOpt.antdel[0][i] = RovAntDel[i];
 	//}
 	if (RefAntPcvF) {
 		strcpy(type, RefAntF.c_str());
-		//type = RefAntF.c_str();
 		if ((pcv = searchpcv(0, type, time, &pcvr))) {
 			PrcOpt.pcvr[1] = *pcv;
 		}
 		else {
-			//printf_s("no antenna pcv %s", type);
-			//Message->Caption = s.sprintf("no antenna pcv %s", type);
-			//Message->Parent->Hint = Message->Caption;
 		}
 		for (i = 0; i < 3; i++) PrcOpt.antdel[1][i] = RefAntDel[i];
 	}
@@ -438,8 +331,6 @@ void  SvrStart(void)
 		if (strs[i] == STR_FILE && !ConfOverwrite(paths[i])) return;
 	}
 	if (DebugTraceF > 0) {
-		//traceopen(TRACEFILE);
-		//tracelevel(DebugTraceF);
 	}
 	if (DebugStatusF > 0) {
 		rtkopenstat(STATFILE, DebugStatusF);
@@ -471,28 +362,6 @@ void  SvrStart(void)
 		traceclose();
 		return;
 	}
-
-	//PSol = PSolS = PSolE = 0;
-	//SolStat[0] = Nvsat[0] = 0;
-	//for (i = 0; i < 3; i++) SolRov[i] = SolRef[i] = VelRov[i] = 0.0;
-	//for (i = 0; i < 9; i++) Qr[i] = 0.0;
-	//Age[0] = Ratio[0] = 0.0;
-	//Nsat[0] = Nsat[1] = 0;
-	//UpdatePos();
-	//UpdatePlot();
-	/*
-	BtnStart->Visible = false;
-	BtnOpt->Enabled = false;
-	BtnExit->Enabled = false;
-	BtnInputStr->Enabled = false;
-	MenuStart->Enabled = false;
-	MenuExit->Enabled = false;
-	ScbSol->Enabled = false;
-	BtnStop->Visible = true;
-	MenuStop->Enabled = true;
-	Svr->Color = CLORANGE;
-	SetTrayIcon(0);
-	*/
 }
 
 
@@ -525,223 +394,54 @@ int ConfOverwrite(const char* path)
 		if ((p = strstr(buff2, "::"))) *p = '\0';
 
 		if (!strcmp(buff1, buff2)) {
-			printf_s("invalid output %s", buff1);
-			//Message->Caption = s.sprintf("invalid output %s", buff1);
-			//Message->Parent->Hint = Message->Caption;
+			//printf_s("invalid output %s", buff1);
 			return 0;
 		}
 	}
-	//ConfDialog->Label2->Caption = buff1;
 	return 1;
-	//return ConfDialog->ShowModal() == mrOk;
 }
 
-// update solution plot ------------------------------------------------------
-//extern __declspec(dllexport) void __stdcall UpdatePlot(void)
-//{
-	/*
-	if (Panel22->Visible) {
-		DrawPlot(Plot1, PlotType1, FreqType1);
-		Disp1->Canvas->CopyRect(Panel22->ClientRect, Plot1->Canvas, Panel22->ClientRect);
-	}
-	if (Panel23->Visible) {
-		DrawPlot(Plot2, PlotType2, FreqType2);
-		Disp2->Canvas->CopyRect(Panel23->ClientRect, Plot2->Canvas, Panel23->ClientRect);
-	}
-	if (Panel24->Visible) {
-		DrawPlot(Plot3, PlotType3, FreqType3);
-		Disp3->Canvas->CopyRect(Panel24->ClientRect, Plot3->Canvas, Panel24->ClientRect);
-	}
-	if (Panel25->Visible) {
-		DrawPlot(Plot4, PlotType4, FreqType4);
-		Disp4->Canvas->CopyRect(Panel25->ClientRect, Plot4->Canvas, Panel25->ClientRect);
-	}
-	*/
-//}
 
-// convert degree to deg-min-sec --------------------------------------------
-//static void degtodms(double deg, double* dms)
-//{
-//	double sgn = 1.0;
-//	if (deg < 0.0) { deg = -deg; sgn = -1.0; }
-//	dms[0] = floor(deg);
-//	dms[1] = floor((deg - dms[0]) * 60.0);
-//	dms[2] = (deg - dms[0] - dms[1] / 60.0) * 3600;
-//	dms[0] *= sgn;
-//}
-
-// update solution display --------------------------------------------------
-//extern __declspec(dllexport) void __stdcall UpdatePos(void)
-//{
-//	//TLabel *label[] = { Plabel1,Plabel2,Plabel3,Pos1,Pos2,Pos3,LabelStd,LabelNSat };
-//	wstring  sol[] = { L"----",L"FIX",L"FLOAT",L"SBAS",L"DGPS",L"SINGLE",L"PPP" };
-//	//UnicodeString s[9], ext = L"";
-//	wstring s[9], ext = L"";
-//	//TColor color[] = { clSilver,clGreen,CLORANGE,clFuchsia,clBlue,clRed,clTeal };
-//	gtime_t time;
-//	double* rr = SolRov + PSol * 3, * rb = SolRef + PSol * 3, * qr = Qr + PSol * 9, pos[3] = { 0 }, Qe[9] = { 0 };
-//	double dms1[3] = { 0 }, dms2[3] = { 0 }, bl[3] = { 0 }, enu[3] = { 0 }, pitch = 0.0, yaw = 0.0, len;
-//	int i, stat = SolStat[PSol];
-//
-//	trace(4, "UpdatePos\n");
-//
-//	if (rtksvr.rtk.opt.mode == PMODE_STATIC || rtksvr.rtk.opt.mode == PMODE_PPP_STATIC) {
-//		ext = L" (S)";
-//	}
-//	else if (rtksvr.rtk.opt.mode == PMODE_FIXED || rtksvr.rtk.opt.mode == PMODE_PPP_FIXED) {
-//		ext = L" (F)";
-//	}
-//	//PlabelA->Caption = L"Solution" + ext + L":";
-//	//Solution->Caption = sol[stat];
-//	//Solution->Font->Color = rtksvr.state ? color[stat] : clGray;
-//	//IndSol->Color = rtksvr.state&&stat ? color[stat] : clWhite;
-//	if (norm(rr, 3) > 0.0 && norm(rb, 3) > 0.0) {
-//		for (i = 0; i < 3; i++) bl[i] = rr[i] - rb[i];
-//	}
-//
-//	wchar_t* _buf_char = new wchar_t[100];
-//	len = norm(bl, 3);
-//	if (SolType == 0) {
-//		if (norm(rr, 3) > 0.0) {
-//			ecef2pos(rr, pos); covenu(pos, qr, Qe);
-//			degtodms(pos[0] * R2D, dms1);
-//			degtodms(pos[1] * R2D, dms2);
-//			if (SolOpt.height == 1) pos[2] -= geoidh(pos); /* geodetic */
-//		}
-//
-//
-//		s[0] = pos[0] < 0 ? wstring(L"S:") : wstring(L"N:");
-//		s[1] = pos[1] < 0 ? L"W:" : L"E:";
-//		s[2] = SolOpt.height == 1 ? L"H:" : L"He:";
-//		//_swprintf((wchar_t*)s[3].c_str(), L"%.0f%c %02.0f' %07.4f\"", fabs(dms1[0]), CHARDEG, dms1[1], dms1[2]);
-//		//_buf_char = new wchar_t[100];
-//		//_swprintf(_buf_char, L"%.0f%c %02.0f' %07.4f\"", fabs(dms1[0]), CHARDEG, dms1[1], dms1[2]);
-//		s[3] = _buf_char;
-//		//s[3].sprintf(L"%.0f%c %02.0f' %07.4f\"", fabs(dms1[0]), CHARDEG, dms1[1], dms1[2]);
-//		//_swprintf(_buf_char, L"%.0f%c %02.0f' %07.4f\"", fabs(dms2[0]), CHARDEG, dms2[1], dms2[2]);
-//		s[4] = _buf_char;
-//		//s[4].sprintf(L"%.0f%c %02.0f' %07.4f\"", fabs(dms2[0]), CHARDEG, dms2[1], dms2[2]);
-//		//_swprintf(_buf_char, L"%.3f m", pos[2]);
-//		s[5] = _buf_char;
-//		//s[5].sprintf(L"%.3f m", pos[2]);
-//		//_swprintf(_buf_char, L"N:%6.3f E:%6.3f U:%6.3f m", SQRT(Qe[4]), SQRT(Qe[0]), SQRT(Qe[8]));
-//		s[6] = _buf_char;
-//		//s[6].sprintf(L"N:%6.3f E:%6.3f U:%6.3f m", SQRT(Qe[4]), SQRT(Qe[0]), SQRT(Qe[8]));
-//	}
-//	else if (SolType == 1) {
-//		if (norm(rr, 3) > 0.0) {
-//			ecef2pos(rr, pos); covenu(pos, qr, Qe);
-//			if (SolOpt.height == 1) pos[2] -= geoidh(pos); /* geodetic */
-//		}
-//		s[0] = pos[0] < 0 ? L"S:" : L"N:"; s[1] = pos[1] < 0 ? L"W:" : L"E:";
-//		s[2] = SolOpt.height == 1 ? L"H:" : L"He:";
-//		//_swprintf(_buf_char, L"%.8f %c", fabs(pos[0]) * R2D, CHARDEG);
-//		s[3] = _buf_char;
-//		//s[3].sprintf(L"%.8f %c", fabs(pos[0])*R2D, CHARDEG);
-//		//_swprintf(_buf_char, L"%.8f %c", fabs(pos[1]) * R2D, CHARDEG);
-//		s[4] = _buf_char;
-//		//s[4].sprintf(L"%.8f %c", fabs(pos[1])*R2D, CHARDEG);
-//		//_swprintf(_buf_char, L"%.3f m", pos[2]);
-//		s[5] = _buf_char;
-//		//s[5].sprintf(L"%.3f m", pos[2]);
-//		//_swprintf(_buf_char, L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[0]), SQRT(Qe[4]), SQRT(Qe[8]));
-//		s[6] = _buf_char;
-//		//s[6].sprintf(L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[0]), SQRT(Qe[4]), SQRT(Qe[8]));
-//	}
-//	else if (SolType == 2) {
-//		s[0] = L"X:"; s[1] = L"Y:"; s[2] = L"Z:";
-//		//_swprintf(_buf_char, L"%.3f m", rr[0]);
-//		s[3] = _buf_char;
-//		//s[3].sprintf(L"%.3f m", rr[0]);
-//		//_swprintf(_buf_char, L"%.3f m", rr[1]);
-//		s[4] = _buf_char;
-//		//s[4].sprintf(L"%.3f m", rr[1]);
-//		//_swprintf(_buf_char, L"%.3f m", rr[2]);
-//		s[5] = _buf_char;
-//		//s[5].sprintf(L"%.3f m", rr[2]);
-//		//_swprintf(_buf_char, L"X:%6.3f Y:%6.3f Z:%6.3f m", SQRT(qr[0]), SQRT(qr[4]), SQRT(qr[8]));
-//		s[6] = _buf_char;
-//		//s[6].sprintf(L"X:%6.3f Y:%6.3f Z:%6.3f m", SQRT(qr[0]), SQRT(qr[4]), SQRT(qr[8]));
-//	}
-//	else if (SolType == 3) {
-//		if (len > 0.0) {
-//			ecef2pos(rb, pos); ecef2enu(pos, bl, enu); covenu(pos, qr, Qe);
-//		}
-//		s[0] = L"E:"; s[1] = L"N:"; s[2] = L"U:";
-//		//_swprintf(_buf_char, L"%.3f m", enu[0]);
-//		s[3] = _buf_char;
-//		//s[3].sprintf(L"%.3f m", enu[0]);
-//		//_swprintf(_buf_char, L"%.3f m", enu[1]);
-//		s[4] = _buf_char;
-//		//s[4].sprintf(L"%.3f m", enu[1]);
-//		//_swprintf(_buf_char, L"%.3f m", enu[2]);
-//		s[5] = _buf_char;
-//		//s[5].sprintf(L"%.3f m", enu[2]);
-//		//_swprintf(_buf_char, L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[0]), SQRT(Qe[4]), SQRT(Qe[8]));
-//		s[6] = _buf_char;
-//		//s[6].sprintf(L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[0]), SQRT(Qe[4]), SQRT(Qe[8]));
-//	}
-//	else {
-//		if (len > 0.0) {
-//			ecef2pos(rb, pos); ecef2enu(pos, bl, enu); covenu(pos, qr, Qe);
-//			pitch = asin(enu[2] / len);
-//			yaw = atan2(enu[0], enu[1]); if (yaw < 0.0) yaw += 2.0 * PI;
-//		}
-//		s[0] = L"P:"; s[1] = L"Y:"; s[2] = L"L:";
-//		_swprintf(_buf_char, L"%.3f %c", pitch * R2D, CHARDEG);
-//		s[3] = _buf_char;
-//		//s[3].sprintf(L"%.3f %c", pitch*R2D, CHARDEG);
-//		_swprintf(_buf_char, L"%.3f %c", yaw * R2D, CHARDEG);
-//		s[4] = _buf_char;
-//		//s[4].sprintf(L"%.3f %c", yaw*R2D, CHARDEG);
-//		_swprintf(_buf_char, L"%.3f m", len);
-//		s[5] = _buf_char;
-//		//s[5].sprintf(L"%.3f m", len);
-//		_swprintf(_buf_char, L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[0]), SQRT(Qe[4]), SQRT(Qe[8]));
-//		s[6] = _buf_char;
-//		//s[6].sprintf(L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[0]), SQRT(Qe[4]), SQRT(Qe[8]));
-//	}
-//	_swprintf(_buf_char, L"Age:%4.1f s Ratio:%4.1f #Sat:%2d", Age[PSol], Ratio[PSol], Nvsat[PSol]);
-//	//s[7] = _buf_char;
-//	//s[7].sprintf(L"Age:%4.1f s Ratio:%4.1f #Sat:%2d", Age[PSol], Ratio[PSol], Nvsat[PSol]);
-//	//if (Ratio[PSol] > 0.0) s[8] = _swprintf(_buf_char, L" R:%4.1f", Ratio[PSol]);
-//	/*
-//	for (i = 0; i < 8; i++) label[i]->Caption = s[i];
-//	*/
-//	//for (i = 0; i < 8; i++) {
-//		//wcout << s[i] << '\n';
-//	//}
-//	//wcout << rtksvr.rtcm[1].sta.pos[0] << "\t" << rtksvr.rtcm[1].sta.pos[1] << "\t" << rtksvr.rtcm[1].sta.pos[2] << "\n"; //
-//
-//
-//	
-//
-//	/*
-//	for (i = 3; i < 6; i++) {
-//		label[i]->Font->Color = PrcOpt.mode == PMODE_MOVEB && SolType <= 2 ? clGray : clBlack;
-//	}
-//	IndQ->Color = IndSol->Color;
-//	SolS->Caption = Solution->Caption;
-//	SolS->Font->Color = Solution->Font->Color;
-//	SolQ->Caption = ext + L" " + label[0]->Caption + L" " + label[3]->Caption + L" " +
-//		label[1]->Caption + L" " + label[4]->Caption + L" " +
-//		label[2]->Caption + L" " + label[5]->Caption + s[8];
-//		*/
-//}
-
-
+// Get position for base station coordinate
 extern __declspec(dllexport) double __stdcall getpos() {
 	rtksvrlock(&rtksvr);
-	double pos;
-	if (rtksvr.rtcm[1].sta.pos != NULL) {
+	double pos = 0.0;
+	if (&rtksvr.rtcm[1].sta.pos != nullptr) {
 		pos = rtksvr.rtcm[1].sta.pos[0];
 	}
-	else {
-		pos = 0.0;
-	}
+	
 	
 	rtksvrunlock(&rtksvr);
 	return pos;
+}
+
+// Get position for base station coordinate by num station and pos
+extern __declspec(dllexport) double __stdcall getpos(int num_rov, int num_pos) {
+	rtksvrlock(&rtksvr);
+	double pos = 0.0;
+	if (&rtksvr.rtcm[num_rov].sta.pos != nullptr) {
+		pos = rtksvr.rtcm[num_rov].sta.pos[num_pos];
+	}
+	
+
+	rtksvrunlock(&rtksvr);
+	return pos;
+}
+
+
+// Get positions for base station coordinates
+extern __declspec(dllexport) void __stdcall get_positions(int num_rov, double* pos) {
+	rtksvrlock(&rtksvr);
+	//double* pos;
+	if (&rtksvr.rtcm[num_rov].sta.pos != nullptr) {
+		pos = rtksvr.rtcm[num_rov].sta.pos;
+	}
+	else {
+		pos = new double[3] { 0.0, 0.0, 0.0 };
+	}
+
+	rtksvrunlock(&rtksvr);
+	//return pos;
 }
 
 

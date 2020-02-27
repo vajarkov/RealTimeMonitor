@@ -2347,11 +2347,11 @@ namespace RealTimeMonitor
             //?SvrStop@@YAXXZ
         #region Функции из самописной библиотеки-обертки для функционала RTKLib
         //Функция для инициализации основных параметров
-        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", EntryPoint = "?Init@@YAXXZ", CallingConvention = CallingConvention.StdCall)]
+        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\Debug\RTKLibAdapter.dll", EntryPoint = "?Init@@YGXXZ", CallingConvention = CallingConvention.StdCall)]
         public static extern void Init();
 
         //Функция для остановки потока сбора данных
-        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", EntryPoint = "?SvrStop@@YAXXZ", CallingConvention = CallingConvention.StdCall)]
+        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\Debug\RTKLibAdapter.dll", EntryPoint = "?SvrStop@@YGXXZ", CallingConvention = CallingConvention.StdCall)]
         public static extern void SvrStop();
         ////Функция для обновления параметров позиции
         //[DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?UpdatePos@@YGXXZ")]
@@ -2381,10 +2381,17 @@ namespace RealTimeMonitor
         //[DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?UpdateStr@@YGXXZ")]
         //public static extern void UpdateStr();
 
-        //Функция для обновления ???
-        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\x64\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?getpos@@YANXZ")]
+        //Функция для получения одной координаты базовой станции
+        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?getpos@@YGNXZ")]
         public static extern double getpos();
 
+        //Функция для получения одной координаты запрашиываемой станции
+        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?getpos@@YGNHH@Z")]
+        public static extern double getpos(int num_rov, int num_pos);
+
+        //Функция для получения всех координат базовой станции
+        [DllImport(@"C:\Users\zharkov.v\source\repos\RealTimeMonitor\Debug\RTKLibAdapter.dll", CharSet = CharSet.Auto, EntryPoint = "?get_positions@@YGXHPAN@Z")]
+        public static extern void get_poitions(int num_rov, IntPtr pos);
 
         #endregion
 
