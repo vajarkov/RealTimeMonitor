@@ -2254,6 +2254,9 @@ extern "C" static  void strsettimeout(stream_t* stream, int toinact, int tirecon
 [DllImport("C:\Users\zharkov.v\source\repos\RealTimeMonitor\RTKLib\debug\RTKLib.dll", CharSet = CharSet::Ansi, EntryPoint = "strsetdir")]
 extern "C" static  void strsetdir(const char* dir);
 
+[DllImport("C:\Users\zharkov.v\source\repos\RealTimeMonitor\RTKLib\debug\RTKLib.dll", CharSet = CharSet::Ansi, EntryPoint = "strsetproxy")]
+extern "C" static  void strsetproxy(const char* addr);
+
 
 
 /* integer ambiguity resolution ----------------------------------------------*/
@@ -2601,7 +2604,7 @@ namespace RTKLibBridge {
 	public ref class RTKLib
 	{
 	private:
-        void  SvrStart(void);
+        void SvrStart(void);
         // confirm overwrite --------------------------------------------------------
         int ConfOverwrite(const char* path);
         // initialize solution buffer -----------------------------------------------
