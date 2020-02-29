@@ -90,10 +90,11 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_RTLDLL;WIN32;TRACE;ENAGLO;ENAQZS;ENAGAL;ENACMP;NFREQ=3;NEXOBS=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ExceptionHandling>Async</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies />
+      <AdditionalDependencies>C:\Users\zharkov.v\source\repos\RealTimeMonitor\RTKLib\debug\RTKLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

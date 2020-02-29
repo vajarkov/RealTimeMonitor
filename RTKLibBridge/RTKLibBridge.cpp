@@ -5,8 +5,38 @@
 
 using namespace RTKLibBridge;
 
-	RTKLibBridge::RTKLib::RTKLib(void) {
+const prcopt_t prcopt_default = { /* defaults processing options */
+	PMODE_SINGLE,0,2,SYS_GPS,   /* mode,soltype,nf,navsys */
+	15.0 * D2R,{{0,0}},           /* elmin,snrmask */
+	0,1,1,1,                    /* sateph,modear,glomodear,bdsmodear */
+	5,0,10,1,                   /* maxout,minlock,minfix,armaxiter */
+	0,0,0,0,                    /* estion,esttrop,dynamics,tidecorr */
+	1,0,0,0,0,                  /* niter,codesmooth,intpref,sbascorr,sbassatsel */
+	0,0,                        /* rovpos,refpos */
+	{100.0,100.0},              /* eratio[] */
+	{100.0,0.003,0.003,0.0,1.0}, /* err[] */
+	{30.0,0.03,0.3},            /* std[] */
+	{1E-4,1E-3,1E-4,1E-1,1E-2,0.0}, /* prn[] */
+	5E-12,                      /* sclkstab */
+	{3.0,0.9999,0.25,0.1,0.05}, /* thresar */
+	0.0,0.0,0.05,               /* elmaskar,almaskhold,thresslip */
+	30.0,30.0,30.0,             /* maxtdif,maxinno,maxgdop */
+	{0},{0},{0},                /* baseline,ru,rb */
+	{"",""},                    /* anttype */
+	{{0}},{{0}},{0}             /* antdel,pcv,exsats */
+};
+const solopt_t solopt_default = { /* defaults solution output options */
+	SOLF_LLH,TIMES_GPST,1,3,    /* posf,times,timef,timeu */
+	0,1,0,0,0,0,0,              /* degf,outhead,outopt,outvel,datum,height,geoid */
+	0,0,0,                      /* solstatic,sstat,trace */
+	{0.0,0.0},                  /* nmeaintv */
+	" ",""                      /* separator/program name */
+};
 
+
+
+	RTKLibBridge::RTKLib::RTKLib(void) {
+		
 	}
 
 
@@ -19,35 +49,35 @@ using namespace RTKLibBridge;
 		//char* p, * argv[32], buff[1024], file[1024] = "rtknavi.exe";
 
 
-	//Option Reciver
-	/*SvrCycle = SvrBuffSize = 0;
-	SolBuffSize = 1000;
-	for (int i = 0; i < 8; i++) {
-		StreamC[i] = Stream[i] = Format[i] = 0;
-		if (i >= 3) {
-			continue;
-		}
-		else {
-			CmdEna[i][0] = CmdEna[i][1] = CmdEna[i][2] = 0;
-		}
+		//Option Reciver
+		/*SvrCycle = SvrBuffSize = 0;
+		SolBuffSize = 1000;
+		for (int i = 0; i < 8; i++) {
+			StreamC[i] = Stream[i] = Format[i] = 0;
+			if (i >= 3) {
+				continue;
+			}
+			else {
+				CmdEna[i][0] = CmdEna[i][1] = CmdEna[i][2] = 0;
+			}
 
-	}
-	TimeSys = SolType = PlotType1 = PlotType2 = FreqType1 = FreqType2 = 0;
-	TrkType1 = TrkType2 = 0;
-	TrkScale1 = TrkScale2 = 5;
-	BLMode1 = BLMode2 = BLMode3 = BLMode4 = 0;
-	PSol = PSolS = PSolE = Nsat[0] = Nsat[1] = 0;
-	NMapPnt = 0;
-	OpenPort = 0;
-	Time = NULL;
-	SolStat = Nvsat = NULL;
-	SolCurrentStat = 0;*/
-	//SolRov = SolRef = Qr = VelRov = Age = Ratio = NULL;
-	/*for (int i = 0; i < 2; i++) for (int j = 0; j < MAXSAT; j++) {
-		Sat[i][j] = Vsat[i][j] = 0;
-		Az[i][j] = El[i][j] = 0.0;
-		for (int k = 0; k < NFREQ; k++) Snr[i][j][k] = 0;
-	}*/
+		}
+		TimeSys = SolType = PlotType1 = PlotType2 = FreqType1 = FreqType2 = 0;
+		TrkType1 = TrkType2 = 0;
+		TrkScale1 = TrkScale2 = 5;
+		BLMode1 = BLMode2 = BLMode3 = BLMode4 = 0;
+		PSol = PSolS = PSolE = Nsat[0] = Nsat[1] = 0;
+		NMapPnt = 0;
+		OpenPort = 0;
+		Time = NULL;
+		SolStat = Nvsat = NULL;
+		SolCurrentStat = 0;*/
+		//SolRov = SolRef = Qr = VelRov = Age = Ratio = NULL;
+		/*for (int i = 0; i < 2; i++) for (int j = 0; j < MAXSAT; j++) {
+			Sat[i][j] = Vsat[i][j] = 0;
+			Az[i][j] = El[i][j] = 0.0;
+			for (int k = 0; k < NFREQ; k++) Snr[i][j][k] = 0;
+		}*/
 
 		PrcOpt = prcopt_default;
 		SolOpt = solopt_default;
@@ -101,12 +131,13 @@ using namespace RTKLibBridge;
 
 
 		SvrStart();
+		
 	}
 	
 
 	void RTKLib::SvrStart(void) {
 		// Локальные переменные
-		char* s;
+			char* s;
 		solopt_t solopt[2];
 
 		rtcm_t rtcm;
@@ -364,8 +395,9 @@ using namespace RTKLibBridge;
 		}
 
 
-		rtksvrunlock(&rtksvr);
+		//rtksvrunlock(&rtksvr);
 		return pos;
+		
 	}
 
 	// Get position for base station coordinate by num station and pos
@@ -379,13 +411,14 @@ using namespace RTKLibBridge;
 
 		rtksvrunlock(&rtksvr);
 		return pos;
+		
 	}
 
 
 	// Get positions for base station coordinates
 	void RTKLib::get_positions(int num_rov, double* pos) {
 		rtksvrlock(&rtksvr);
-		//double* pos;
+		
 		if (&rtksvr.rtcm[num_rov].sta.pos != nullptr) {
 			pos = rtksvr.rtcm[num_rov].sta.pos;
 		}
@@ -394,7 +427,7 @@ using namespace RTKLibBridge;
 		}
 
 		rtksvrunlock(&rtksvr);
-		//return pos;
+		
 	}
 
 
@@ -429,11 +462,6 @@ using namespace RTKLibBridge;
 			for (j = 0; j < 9; j++) Qr[j + i * 9] = 0.0;
 			Age[i] = Ratio[i] = 0.0;
 		}
-
-		// strop rtk server ---------------------------------------------------------
-
-		//ScbSol->Max = 0; 
-		//ScbSol->Position = 0;
 	}
 	
 	
