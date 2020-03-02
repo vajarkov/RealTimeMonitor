@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+//using RTKLibBridge;
 //using Rt
 //using RealTimeMonitor.
 
@@ -155,7 +156,7 @@ namespace RealTimeMonitor
         public ChannelReader<string> DelayCounter(int delay)
         {
             var channel = Channel.CreateUnbounded<string>();
-			_ = WriteItems(channel.Writer, 200, delay);
+			_ = WriteItems(channel.Writer, 1000, delay);
             return channel.Reader;
         }
 
@@ -321,9 +322,11 @@ namespace RealTimeMonitor
 			*/
 			#endregion
 
+			//RTKLib rtkLib = new RTKLib();
+
 			try
 			{
-				DataRTK.Init();
+				//rtkLib.StartServerThread();
 				//Thread svr_thread = new Thread(DataRTK.Init);
 				//svr_thread.Name = "RTK_thread";
 				//svr_thread.Start();
@@ -368,17 +371,17 @@ namespace RealTimeMonitor
 					{
 
 						//DataRTK.rtksvr_t rtksvr = new DataRTK.rtksvr_t();
-						double pos = DataRTK.getpos();
+						//double pos = rtkLib.getpos();
 						//IntPtr pos_ptr = Marshal.AllocHGlobal(sizeof(double)*3);
 						//DataRTK.get_poitions(1, pos_ptr);
 
 
 
-						string strPos = pos.ToString();
+						//string strPos = pos.ToString();
 
 						
-						await writer.WriteAsync(strPos);
-						await Task.Delay(millisecondsDelay: delay).ConfigureAwait(true);
+						await writer.WriteAsync("1");
+						await Task.Delay(1000);
 
 					}
 				
@@ -391,7 +394,7 @@ namespace RealTimeMonitor
 				}
 				finally
 				{
-					Thread.Sleep(500);
+					//Thread.Sleep(500);
 					//semaphoreSlim.Release();
 
 				}
