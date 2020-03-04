@@ -22,6 +22,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TCPStream\TCPStream.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="DataRTK.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>

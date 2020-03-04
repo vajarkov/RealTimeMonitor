@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using TCPStream;
 //using RTKLibBridge;
 //using Rt
 //using RealTimeMonitor.
@@ -15,8 +16,10 @@ using System.Threading.Tasks;
 
 namespace RealTimeMonitor
 {
+
     public class StreamHub : Hub//, IDisposable
     {
+		TCP streamTCP;
 		#region Переменные для запуска сбора из C#
 		/*
         private const int MAXSCALE = 18;
@@ -326,6 +329,8 @@ namespace RealTimeMonitor
 
 			try
 			{
+				streamTCP = new TCP();
+				streamTCP.Connect("192.168.0.186", 5018);
 				//rtkLib.StartServerThread();
 				//Thread svr_thread = new Thread(DataRTK.Init);
 				//svr_thread.Name = "RTK_thread";
@@ -342,19 +347,23 @@ namespace RealTimeMonitor
 			//int shmSize = 80;
 			//var shm = System.IO.MemoryMappedFiles.MemoryMappedFile.CreateOrOpen(shmName, shmSize);
 
+			string strPos = string.Empty;
 
-			
 
-            while (true)
+			while (true)
             {
 				//IntPtr pos;
 				//double[] positions = new double[3];
-				//string strPos = string.Empty;
+				
 
 				
 
 				try
 				{
+					if (streamTCP.ConnectionState)
+					{
+						strPos = streamTCP.GetData();
+					}
 					//	mutexRTK = Mutex.OpenExisting("RTK_MUTEX");
 
 					//	System.IO.MemoryMappedFiles.MemoryMappedViewStream view = shm.CreateViewStream();
@@ -380,7 +389,7 @@ namespace RealTimeMonitor
 						//string strPos = pos.ToString();
 
 						
-						await writer.WriteAsync("1");
+						await writer.WriteAsync(strPos);
 						await Task.Delay(1000);
 
 					}

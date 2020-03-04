@@ -28,7 +28,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RTKLibAdapter", "RTKLibAdap
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RTKLibBridge", "RTKLibBridge\RTKLibBridge.vcxproj", "{4F2FD77C-E070-462D-9B68-7A15D146D122}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TCPStream", "TCPStream\TCPStream.csproj", "{AC379909-195E-437F-B9BB-6C3247F15AA1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TCPStream", "TCPStream\TCPStream.csproj", "{AC379909-195E-437F-B9BB-6C3247F15AA1}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RTKFunctions", "RTKFunctions\RTKFunctions.vcxproj", "{1A239F87-8928-4B02-A468-3DE998E65763}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -134,6 +136,16 @@ Global
 		{AC379909-195E-437F-B9BB-6C3247F15AA1}.Release|x64.Build.0 = Release|Any CPU
 		{AC379909-195E-437F-B9BB-6C3247F15AA1}.Release|x86.ActiveCfg = Release|Any CPU
 		{AC379909-195E-437F-B9BB-6C3247F15AA1}.Release|x86.Build.0 = Release|Any CPU
+		{1A239F87-8928-4B02-A468-3DE998E65763}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{1A239F87-8928-4B02-A468-3DE998E65763}.Debug|x64.ActiveCfg = Debug|x64
+		{1A239F87-8928-4B02-A468-3DE998E65763}.Debug|x64.Build.0 = Debug|x64
+		{1A239F87-8928-4B02-A468-3DE998E65763}.Debug|x86.ActiveCfg = Debug|Win32
+		{1A239F87-8928-4B02-A468-3DE998E65763}.Debug|x86.Build.0 = Debug|Win32
+		{1A239F87-8928-4B02-A468-3DE998E65763}.Release|Any CPU.ActiveCfg = Release|Win32
+		{1A239F87-8928-4B02-A468-3DE998E65763}.Release|x64.ActiveCfg = Release|x64
+		{1A239F87-8928-4B02-A468-3DE998E65763}.Release|x64.Build.0 = Release|x64
+		{1A239F87-8928-4B02-A468-3DE998E65763}.Release|x86.ActiveCfg = Release|Win32
+		{1A239F87-8928-4B02-A468-3DE998E65763}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

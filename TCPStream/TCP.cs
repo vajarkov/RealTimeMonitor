@@ -11,7 +11,8 @@ namespace TCPStream
         private const string serverTCP = "192.168.0.186";
 
         private TcpClient client = new TcpClient();
-        
+        private byte[] data = new byte[1024];
+
 
         public void Connect(string server, int port)
         {
@@ -24,17 +25,17 @@ namespace TCPStream
             }
             catch (SocketException e)
             {
-                
+                throw e;
             }
             catch (Exception e)
             {
-                
+                throw e;
             }
         }
 
         public byte[] GetBytes()
         {
-            byte[] data = new byte[1024];
+            
             NetworkStream stream = client.GetStream();
             do
             {
@@ -44,18 +45,18 @@ namespace TCPStream
             while (stream.DataAvailable);
             stream.Close();
             return data;
-        }
+        } 
 
 
         public string GetData()
         {
-            byte[] data = new byte[1024];
+            
             StringBuilder response = new StringBuilder();
             NetworkStream stream = client.GetStream();
             do
             {
                 int bytes = stream.Read(data, 0, data.Length);
-                response.Append(data.ToString());
+                response.Append(Encoding.ASCII.GetString(data, 0, bytes));
             }
             while (stream.DataAvailable);
             stream.Close();
@@ -67,6 +68,11 @@ namespace TCPStream
         {
             client.Close();
         }
+
+        public bool ConnectionState { get {
+                bool value = client.Connected;
+                return value;
+            } }
 
     }
 }
