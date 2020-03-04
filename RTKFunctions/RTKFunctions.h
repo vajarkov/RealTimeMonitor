@@ -104,7 +104,7 @@ static const int codes_sbs[] = {
 };
 
 namespace RTKFunctions {
-    public ref class CommonRTK {
+    public  ref class CommonRTK {
     public:
 
         /* adjust gps week number ------------------------------------------------------
@@ -112,7 +112,25 @@ namespace RTKFunctions {
         * args   : int   week       I   not-adjusted gps week number
         * return : adjusted gps week number
         *-----------------------------------------------------------------------------*/
-        int adjgpsweek(int week);
+        static int adjgpsweek(int week);
+
+        /* bdt to gpstime --------------------------------------------------------------
+        * convert bdt (beidou navigation satellite system time) to gpstime
+        * args   : gtime_t t        I   time expressed in bdt
+        * return : time expressed in gpstime
+        * notes  : see gpst2bdt()
+        *-----------------------------------------------------------------------------*/
+        static gtime_t bdt2gpst(gtime_t t);
+
+        /* extract unsigned/signed bits ------------------------------------------------
+        * extract unsigned/signed bits from byte data
+        * args   : unsigned char *buff I byte data
+        *          int    pos    I      bit position from start of data (bits)
+        *          int    len    I      bit length (bits) (len<=32)
+        * return : extracted unsigned/signed bits
+        *-----------------------------------------------------------------------------*/
+        static int getbitu(const unsigned char* buff, int pos, int len);
+        
         
     };
 

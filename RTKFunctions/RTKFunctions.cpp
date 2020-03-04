@@ -4,17 +4,44 @@
 
 namespace RTKFunctions {
 	
+
+    /* bdt to gpstime --------------------------------------------------------------
+    * convert bdt (beidou navigation satellite system time) to gpstime
+    * args   : gtime_t t        I   time expressed in bdt
+    * return : time expressed in gpstime
+    * notes  : see gpst2bdt()
+    *-----------------------------------------------------------------------------*/
+    gtime_t CommonRTK::bdt2gpst(gtime_t t)
+    {
+        return timeadd(t, 14.0);
+    }
+    
     /* adjust gps week number ------------------------------------------------------
-        * adjust gps week number using cpu time
-        * args   : int   week       I   not-adjusted gps week number
-        * return : adjusted gps week number
-        *-----------------------------------------------------------------------------*/
+    * adjust gps week number using cpu time
+    * args   : int   week       I   not-adjusted gps week number
+    * return : adjusted gps week number
+    *-----------------------------------------------------------------------------*/
     int CommonRTK::adjgpsweek(int week)
     {
         int w;
         (void)time2gpst(utc2gpst(timeget()), &w);
         if (w < 1560) w = 1560; /* use 2009/12/1 if time is earlier than 2009/12/1 */
         return week + (w - week + 512) / 1024 * 1024;
+    }
+
+    /* extract unsigned/signed bits ------------------------------------------------
+    * extract unsigned/signed bits from byte data
+    * args   : unsigned char *buff I byte data
+    *          int    pos    I      bit position from start of data (bits)
+    *          int    len    I      bit length (bits) (len<=32)
+    * return : extracted unsigned/signed bits
+    *-----------------------------------------------------------------------------*/
+    int getbitu(const unsigned char* buff, int pos, int len)
+    {
+        unsigned int bits = 0;
+        int i;
+        for (i = pos; i < pos + len; i++) bits = (bits << 1) + ((buff[i / 8] >> (7 - i % 8)) & 1u);
+        return bits;
     }
     
     /* decode receiver raw/rtcm data ---------------------------------------------*/
@@ -855,7 +882,7 @@ namespace RTKFunctions {
             return -1;
         }
         eph.sat = sat;
-        eph.week = adjgpsweek(week);
+        eph.week = CommonRTK::adjgpsweek(week);
         eph.toe = gpst2time(eph.week, eph.toes);
         eph.toc = gpst2time(eph.week, toc);
         eph.ttr = rtcm->time;
@@ -1181,7 +1208,7 @@ namespace RTKFunctions {
             return -1;
         }
         eph.sat = sat;
-        eph.week = adjgpsweek(week);
+        eph.week = CommonRTK::adjgpsweek(week);
         eph.toe = gpst2time(eph.week, eph.toes);
         eph.toc = gpst2time(eph.week, toc);
         eph.ttr = rtcm->time;
@@ -2486,4 +2513,4 @@ namespace RTKFunctions {
 
 }
 
-
+ 
