@@ -145,6 +145,32 @@ namespace RTKFunctions {
         *-----------------------------------------------------------------------------*/
         static gtime_t epoch2time(const double* ep);
 
+        /* gpstime to utc --------------------------------------------------------------
+        * convert gpstime to utc considering leap seconds
+        * args   : gtime_t t        I   time expressed in gpstime
+        * return : time expressed in utc
+        * notes  : ignore slight time offset under 100 ns
+        *-----------------------------------------------------------------------------*/
+        static gtime_t  gpst2utc(gtime_t t);
+
+        /* gpstime to bdt --------------------------------------------------------------
+        * convert gpstime to bdt (beidou navigation satellite system time)
+        * args   : gtime_t t        I   time expressed in gpstime
+        * return : time expressed in bdt
+        * notes  : ref [8] 3.3, 2006/1/1 00:00 BDT = 2006/1/1 00:00 UTC
+        *          no leap seconds in BDT
+        *          ignore slight time offset under 100 ns
+        *-----------------------------------------------------------------------------*/
+        static gtime_t gpst2bdt(gtime_t t);
+
+        /* time to beidouo time (bdt) --------------------------------------------------
+        * convert gtime_t struct to week and tow in beidou time (bdt)
+        * args   : gtime_t t        I   gtime_t struct
+        *          int    *week     IO  week number in bdt (NULL: no output)
+        * return : time of week in bdt (s)
+        *-----------------------------------------------------------------------------*/
+        static double time2bdt(gtime_t t, int* week);
+
         /* utc to gpstime --------------------------------------------------------------
         * convert utc to gpstime considering leap seconds
         * args   : gtime_t t        I   time expressed in utc
@@ -167,7 +193,26 @@ namespace RTKFunctions {
         *          double sec       I   time of week in gps time (s)
         * return : gtime_t struct
         *-----------------------------------------------------------------------------*/
-        static gtime_t  CommonRTK::gpst2time(int week, double sec);
+        static gtime_t  gpst2time(int week, double sec);
+
+        /* time to string --------------------------------------------------------------
+        * convert gtime_t struct to string
+        * args   : gtime_t t        I   gtime_t struct
+        *          char   *s        O   string ("yyyy/mm/dd hh:mm:ss.ssss")
+        *          int    n         I   number of decimals
+        * return : none
+        *-----------------------------------------------------------------------------*/
+        static void time2str(gtime_t t, char* s, int n);
+
+        /* time to calendar day/time ---------------------------------------------------
+        * convert gtime_t struct to calendar day/time
+        * args   : gtime_t t        I   gtime_t struct
+        *          double *ep       O   day/time {year,month,day,hour,min,sec}
+        * return : none
+        * notes  : proper in 1970-2037 or 1970-2099 (64bit time_t)
+        *-----------------------------------------------------------------------------*/
+        static void time2epoch(gtime_t t, double* ep);
+
 
         /* adjust gps week number ------------------------------------------------------
         * adjust gps week number using cpu time
@@ -228,7 +273,16 @@ namespace RTKFunctions {
         * return : none
         * notes  : WGS84, ellipsoidal height
         *-----------------------------------------------------------------------------*/
-        static void CommonRTK::ecef2pos(const double* r, double* pos);
+        static void ecef2pos(const double* r, double* pos);
+
+        /* crc-24q parity --------------------------------------------------------------
+        * compute crc-24q parity for sbas, rtcm3
+        * args   : unsigned char *buff I data
+        *          int    len    I      data length (bytes)
+        * return : crc-24Q parity
+        * notes  : see reference [2] A.4.3.3 Parity
+        *-----------------------------------------------------------------------------*/
+        static unsigned int rtk_crc24q(const unsigned char* buff, int len);
         
         
     };
@@ -368,7 +422,7 @@ namespace RTKFunctions {
         double getbitg(const unsigned char* buff, int pos, int len);
 
         /* adjust weekly rollover of gps time ----------------------------------------*/
-        void adjweek(rtcm_t* rtcm, double tow);
+        static void adjweek(rtcm_t* rtcm, double tow);
 
         /* adjust weekly rollover of bdt time ----------------------------------------*/
         int adjbdtweek(int week);
@@ -396,6 +450,9 @@ namespace RTKFunctions {
 
         /* decode type 1001: L1-only gps rtk observation -----------------------------*/
         int decode_type1001(rtcm_t* rtcm);
+
+        /* decode type 1002: extended L1-only gps rtk observables --------------------*/
+        int decode_type1002(rtcm_t* rtcm);
 
         /* decode type 1003: L1&L2 gps rtk observables -------------------------------*/
         int decode_type1003(rtcm_t* rtcm);
@@ -622,6 +679,12 @@ namespace RTKFunctions {
         /* decode rtcm ver.2 message -------------------------------------------------*/
         int decode_rtcm2(rtcm_t* rtcm);
        
+    };
+
+    public ref class BINEX {
+        /* adjust weekly rollover of gps time ----------------------------------------*/
+        static gtime_t adjweek(gtime_t time, double tow);
+        
     };
 }
 

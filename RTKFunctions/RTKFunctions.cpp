@@ -125,6 +125,96 @@ namespace RTKFunctions {
         return time;
     }
 
+    /* time to string --------------------------------------------------------------
+    * convert gtime_t struct to string
+    * args   : gtime_t t        I   gtime_t struct
+    *          char   *s        O   string ("yyyy/mm/dd hh:mm:ss.ssss")
+    *          int    n         I   number of decimals
+    * return : none
+    *-----------------------------------------------------------------------------*/
+    void time2str(gtime_t t, char* s, int n)
+    {
+        double ep[6];
+
+        if (n < 0) n = 0; else if (n > 12) n = 12;
+        if (1.0 - t.sec < 0.5 / pow(10.0, n)) { t.time++; t.sec = 0.0; };
+        CommonRTK::time2epoch(t, ep);
+        sprintf(s, "%04.0f/%02.0f/%02.0f %02.0f:%02.0f:%0*.*f", ep[0], ep[1], ep[2],
+            ep[3], ep[4], n <= 0 ? 2 : n + 3, n <= 0 ? 0 : n, ep[5]);
+    }
+
+    /* time to calendar day/time ---------------------------------------------------
+    * convert gtime_t struct to calendar day/time
+    * args   : gtime_t t        I   gtime_t struct
+    *          double *ep       O   day/time {year,month,day,hour,min,sec}
+    * return : none
+    * notes  : proper in 1970-2037 or 1970-2099 (64bit time_t)
+    *-----------------------------------------------------------------------------*/
+    void time2epoch(gtime_t t, double* ep)
+    {
+        const int mday[] = { /* # of days in a month */
+            31,28,31,30,31,30,31,31,30,31,30,31,31,28,31,30,31,30,31,31,30,31,30,31,
+            31,29,31,30,31,30,31,31,30,31,30,31,31,28,31,30,31,30,31,31,30,31,30,31
+        };
+        int days, sec, mon, day;
+
+        /* leap year if year%4==0 in 1901-2099 */
+        days = (int)(t.time / 86400);
+        sec = (int)(t.time - (time_t)days * 86400);
+        for (day = days % 1461, mon = 0; mon < 48; mon++) {
+            if (day >= mday[mon]) day -= mday[mon]; else break;
+        }
+        ep[0] = 1970 + days / 1461 * 4 + mon / 12; ep[1] = mon % 12 + 1; ep[2] = day + 1;
+        ep[3] = sec / 3600; ep[4] = sec % 3600 / 60; ep[5] = sec % 60 + t.sec;
+    }
+
+    /* gpstime to utc --------------------------------------------------------------
+    * convert gpstime to utc considering leap seconds
+    * args   : gtime_t t        I   time expressed in gpstime
+    * return : time expressed in utc
+    * notes  : ignore slight time offset under 100 ns
+    *-----------------------------------------------------------------------------*/
+    gtime_t  CommonRTK::gpst2utc(gtime_t t)
+    {
+        gtime_t tu;
+        int i;
+
+        for (i = 0; leaps[i][0] > 0; i++) {
+            tu = CommonRTK::timeadd(t, leaps[i][6]);
+            if (CommonRTK::timediff(tu, CommonRTK::epoch2time(leaps[i])) >= 0.0) return tu;
+        }
+        return t;
+    }
+
+    /* time to beidouo time (bdt) --------------------------------------------------
+    * convert gtime_t struct to week and tow in beidou time (bdt)
+    * args   : gtime_t t        I   gtime_t struct
+    *          int    *week     IO  week number in bdt (NULL: no output)
+    * return : time of week in bdt (s)
+    *-----------------------------------------------------------------------------*/
+    double CommonRTK::time2bdt(gtime_t t, int* week)
+    {
+        gtime_t t0 = CommonRTK::epoch2time(bdt0);
+        time_t sec = t.time - t0.time;
+        int w = (int)(sec / (86400 * 7));
+
+        if (week) *week = w;
+        return (double)(sec - (double)w * 86400 * 7) + t.sec;
+    }
+
+    /* gpstime to bdt --------------------------------------------------------------
+    * convert gpstime to bdt (beidou navigation satellite system time)
+    * args   : gtime_t t        I   time expressed in gpstime
+    * return : time expressed in bdt
+    * notes  : ref [8] 3.3, 2006/1/1 00:00 BDT = 2006/1/1 00:00 UTC
+    *          no leap seconds in BDT
+    *          ignore slight time offset under 100 ns
+    *-----------------------------------------------------------------------------*/
+    gtime_t CommonRTK::gpst2bdt(gtime_t t)
+    {
+        return CommonRTK::timeadd(t, -14.0);
+    }
+
 
     /* time to gps time ------------------------------------------------------------
     * convert gtime_t struct to week and tow in gps time
@@ -361,6 +451,24 @@ namespace RTKFunctions {
         return fobs;
 	}
 
+    /* crc-24q parity --------------------------------------------------------------
+    * compute crc-24q parity for sbas, rtcm3
+    * args   : unsigned char *buff I data
+    *          int    len    I      data length (bytes)
+    * return : crc-24Q parity
+    * notes  : see reference [2] A.4.3.3 Parity
+    *-----------------------------------------------------------------------------*/
+    unsigned int CommonRTK::rtk_crc24q(const unsigned char* buff, int len)
+    {
+        unsigned int crc = 0;
+        int i;
+
+        //trace(4, "rtk_crc24q: len=%d\n", len);
+
+        for (i = 0; i < len; i++) crc = ((crc << 8) & 0xFFFFFF) ^ tbl_CRC24Q[(crc >> 16) ^ buff[i]];
+        return crc;
+    }
+
 
     /* input rtcm 2 message from stream --------------------------------------------
     * fetch next rtcm 2 message and input a message from byte stream
@@ -498,13 +606,13 @@ namespace RTKFunctions {
         rtcm->buff[rtcm->nbyte++] = data;
 
         if (rtcm->nbyte == 3) {
-            rtcm->len = getbitu(rtcm->buff, 14, 10) + 3; /* length without parity */
+            rtcm->len = CommonRTK::getbitu(rtcm->buff, 14, 10) + 3; /* length without parity */
         }
         if (rtcm->nbyte < 3 || rtcm->nbyte < rtcm->len + 3) return 0;
         rtcm->nbyte = 0;
 
         /* check parity */
-        if (rtk_crc24q(rtcm->buff, rtcm->len) != getbitu(rtcm->buff, rtcm->len * 8, 24)) {
+        if (CommonRTK::rtk_crc24q(rtcm->buff, rtcm->len) != CommonRTK::getbitu(rtcm->buff, rtcm->len * 8, 24)) {
             //trace(2, "rtcm3 parity error: len=%d\n", rtcm->len);
             return 0;
         }
@@ -515,45 +623,46 @@ namespace RTKFunctions {
     /* get sign-magnitude bits ---------------------------------------------------*/
     double getbitg(const unsigned char* buff, int pos, int len)
     {
-        double value = getbitu(buff, pos + 1, len - 1);
-        return getbitu(buff, pos, 1) ? -value : value;
+        double value = CommonRTK::getbitu(buff, pos + 1, len - 1);
+        return CommonRTK::getbitu(buff, pos, 1) ? -value : value;
     }
 
-    void adjweek(rtcm_t* rtcm, double tow)
+    /* adjust weekly rollover of gps time ----------------------------------------*/
+    void DecodeRTCM::adjweek(rtcm_t* rtcm, double tow)
     {
         double tow_p;
         int week;
 
         /* if no time, get cpu time */
-        if (rtcm->time.time == 0) rtcm->time = utc2gpst(timeget());
-        tow_p = time2gpst(rtcm->time, &week);
+        if (rtcm->time.time == 0) rtcm->time = CommonRTK::utc2gpst(CommonRTK::timeget());
+        tow_p = CommonRTK::time2gpst(rtcm->time, &week);
         if (tow < tow_p - 302400.0) tow += 604800.0;
         else if (tow > tow_p + 302400.0) tow -= 604800.0;
-        rtcm->time = gpst2time(week, tow);
+        rtcm->time = CommonRTK::gpst2time(week, tow);
     }
 
     int adjbdtweek(int week)
     {
         int w;
-        (void)time2bdt(gpst2bdt(utc2gpst(timeget())), &w);
+        (void)CommonRTK::time2bdt(CommonRTK::gpst2bdt(CommonRTK::utc2gpst(CommonRTK::timeget())), &w);
         if (w < 1) w = 1; /* use 2006/1/1 if time is earlier than 2006/1/1 */
         return week + (w - week + 512) / 1024 * 1024;
     }
 
-    void adjday_glot(rtcm_t* rtcm, double tod)
+    void DecodeRTCM::adjday_glot(rtcm_t* rtcm, double tod)
     {
         gtime_t time;
         double tow, tod_p;
         int week;
 
-        if (rtcm->time.time == 0) rtcm->time = utc2gpst(timeget());
-        time = timeadd(gpst2utc(rtcm->time), 10800.0); /* glonass time */
-        tow = time2gpst(time, &week);
+        if (rtcm->time.time == 0) rtcm->time = CommonRTK::utc2gpst(CommonRTK::timeget());
+        time = CommonRTK::timeadd(CommonRTK::gpst2utc(rtcm->time), 10800.0); /* glonass time */
+        tow = CommonRTK::time2gpst(time, &week);
         tod_p = fmod(tow, 86400.0); tow -= tod_p;
         if (tod < tod_p - 43200.0) tod += 86400.0;
         else if (tod > tod_p + 43200.0) tod -= 86400.0;
-        time = gpst2time(week, tow + tod);
-        rtcm->time = utc2gpst(timeadd(time, -10800.0));
+        time = CommonRTK::gpst2time(week, tow + tod);
+        rtcm->time = CommonRTK::utc2gpst(CommonRTK::timeadd(time, -10800.0));
     }
 
     double adjcp(rtcm_t* rtcm, int sat, int freq, double cp)
@@ -598,7 +707,7 @@ namespace RTKFunctions {
         return i;
     }
 
-    int test_staid(rtcm_t* rtcm, int staid)
+    int DecodeRTCM::test_staid(rtcm_t* rtcm, int staid)
     {
         char* p;
         int type, id;
@@ -612,7 +721,7 @@ namespace RTKFunctions {
             rtcm->staid = staid;
         }
         else if (staid != rtcm->staid) {
-            type = getbitu(rtcm->buff, 24, 12);
+            type = CommonRTK::getbitu(rtcm->buff, 24, 12);
             //trace(2, "rtcm3 %d staid invalid id=%d %d\n", type, staid, rtcm->staid);
 
             /* reset station id if station id error */
@@ -622,30 +731,30 @@ namespace RTKFunctions {
         return 1;
     }
 
-    int decode_head1001(rtcm_t* rtcm, int* sync)
+    int DecodeRTCM::decode_head1001(rtcm_t* rtcm, int* sync)
     {
         double tow;
         char* msg, tstr[64];
         int i = 24, staid, nsat, type;
 
-        type = getbitu(rtcm->buff, i, 12); i += 12;
+        type = CommonRTK::getbitu(rtcm->buff, i, 12); i += 12;
 
         if (i + 52 <= rtcm->len * 8) {
-            staid = getbitu(rtcm->buff, i, 12);       i += 12;
-            tow = getbitu(rtcm->buff, i, 30) * 0.001; i += 30;
-            *sync = getbitu(rtcm->buff, i, 1);       i += 1;
-            nsat = getbitu(rtcm->buff, i, 5);
+            staid = CommonRTK::getbitu(rtcm->buff, i, 12);       i += 12;
+            tow = CommonRTK::getbitu(rtcm->buff, i, 30) * 0.001; i += 30;
+            *sync = CommonRTK::getbitu(rtcm->buff, i, 1);       i += 1;
+            nsat = CommonRTK::getbitu(rtcm->buff, i, 5);
         }
         else {
             //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
             return -1;
         }
         /* test station id */
-        if (!test_staid(rtcm, staid)) return -1;
+        if (!DecodeRTCM::test_staid(rtcm, staid)) return -1;
 
-        adjweek(rtcm, tow);
+        DecodeRTCM::adjweek(rtcm, tow);
 
-        time2str(rtcm->time, tstr, 2);
+        CommonRTK::time2str(rtcm->time, tstr, 2);
         //trace(4, "decode_head1001: time=%s nsat=%d sync=%d\n", tstr, nsat, *sync);
 
         if (rtcm->outtype) {
@@ -655,20 +764,20 @@ namespace RTKFunctions {
         return nsat;
     }
 
-    int decode_type1001(rtcm_t* rtcm)
+    int DecodeRTCM::decode_type1001(rtcm_t* rtcm)
     {
         int sync;
-        if (decode_head1001(rtcm, &sync) < 0) return -1;
+        if (DecodeRTCM::decode_head1001(rtcm, &sync) < 0) return -1;
         rtcm->obsflag = !sync;
         return sync ? 0 : 1;
     }
     /* decode type 1002: extended L1-only gps rtk observables --------------------*/
-    int decode_type1002(rtcm_t* rtcm)
+    int DecodeRTCM::decode_type1002(rtcm_t* rtcm)
     {
         double pr1, cnr1, tt, cp1;
         int i = 24 + 64, j, index, nsat, sync, prn, code, sat, ppr1, lock1, amb, sys;
 
-        if ((nsat = decode_head1001(rtcm, &sync)) < 0) return -1;
+        if ((nsat = DecodeRTCM::decode_head1001(rtcm, &sync)) < 0) return -1;
 
         for (j = 0; j < nsat && rtcm->obs.n < MAXOBS && i + 74 <= rtcm->len * 8; j++) {
             prn = CommonRTK::getbitu(rtcm->buff, i, 6); i += 6;
@@ -706,22 +815,22 @@ namespace RTKFunctions {
         return sync ? 0 : 1;
     }
 
-    int decode_type1003(rtcm_t* rtcm)
+    int DecodeRTCM::decode_type1003(rtcm_t* rtcm)
     {
         int sync;
-        if (decode_head1001(rtcm, &sync) < 0) return -1;
+        if (DecodeRTCM::decode_head1001(rtcm, &sync) < 0) return -1;
         rtcm->obsflag = !sync;
         return sync ? 0 : 1;
     }
 
-    int decode_type1004(rtcm_t* rtcm)
+    int DecodeRTCM::decode_type1004(rtcm_t* rtcm)
     {
         const int L2codes[] = { CODE_L2X,CODE_L2P,CODE_L2D,CODE_L2W };
         double pr1, cnr1, cnr2, tt, cp1, cp2;
         int i = 24 + 64, j, index, nsat, sync, prn, sat, code1, code2, pr21, ppr1, ppr2;
         int lock1, lock2, amb, sys;
 
-        if ((nsat = decode_head1001(rtcm, &sync)) < 0) return -1;
+        if ((nsat = DecodeRTCM::decode_head1001(rtcm, &sync)) < 0) return -1;
 
         for (j = 0; j < nsat && rtcm->obs.n < MAXOBS && i + 125 <= rtcm->len * 8; j++) {
             prn = CommonRTK::getbitu(rtcm->buff, i, 6); i += 6;
@@ -746,7 +855,7 @@ namespace RTKFunctions {
                 //trace(2, "rtcm3 1004 satellite number error: sys=%d prn=%d\n", sys, prn);
                 continue;
             }
-            tt = timediff(rtcm->obs.data[0].time, rtcm->time);
+            tt = CommonRTK::timediff(rtcm->obs.data[0].time, rtcm->time);
             if (rtcm->obsflag || fabs(tt) > 1E-9) {
                 rtcm->obs.n = rtcm->obsflag = 0;
             }
@@ -826,15 +935,15 @@ namespace RTKFunctions {
         int i = 24 + 12, j, staid, itrf;
 
         if (i + 156 <= rtcm->len * 8) {
-            staid = getbitu(rtcm->buff, i, 12); i += 12;
-            itrf = getbitu(rtcm->buff, i, 6); i += 6 + 4;
+            staid = CommonRTK::getbitu(rtcm->buff, i, 12); i += 12;
+            itrf = CommonRTK::getbitu(rtcm->buff, i, 6); i += 6 + 4;
             rr[0] = getbits_38(rtcm->buff, i); i += 38 + 2;
             rr[1] = getbits_38(rtcm->buff, i); i += 38 + 2;
             rr[2] = getbits_38(rtcm->buff, i); i += 38;
-            anth = getbitu(rtcm->buff, i, 16);
+            anth = CommonRTK::getbitu(rtcm->buff, i, 16);
         }
         else {
-            trace(2, "rtcm3 1006 length error: len=%d\n", rtcm->len);
+            //trace(2, "rtcm3 1006 length error: len=%d\n", rtcm->len);
             return -1;
         }
         if (rtcm->outtype) {
@@ -863,14 +972,14 @@ namespace RTKFunctions {
         char* msg;
         int i = 24 + 12, j, staid, n, setup;
 
-        n = getbitu(rtcm->buff, i + 12, 8);
+        n = CommonRTK::getbitu(rtcm->buff, i + 12, 8);
 
         if (i + 28 + 8 * n <= rtcm->len * 8) {
-            staid = getbitu(rtcm->buff, i, 12); i += 12 + 8;
+            staid = CommonRTK::getbitu(rtcm->buff, i, 12); i += 12 + 8;
             for (j = 0; j < n && j < 31; j++) {
-                des[j] = (char)getbitu(rtcm->buff, i, 8); i += 8;
+                des[j] = (char)CommonRTK::getbitu(rtcm->buff, i, 8); i += 8;
             }
-            setup = getbitu(rtcm->buff, i, 8);
+            setup = CommonRTK::getbitu(rtcm->buff, i, 8);
         }
         else {
             //trace(2, "rtcm3 1007 length error: len=%d\n", rtcm->len);
@@ -895,17 +1004,17 @@ namespace RTKFunctions {
         char* msg;
         int i = 24 + 12, j, staid, n, m, setup;
 
-        n = getbitu(rtcm->buff, i + 12, 8);
-        m = getbitu(rtcm->buff, i + 28 + 8 * n, 8);
+        n = CommonRTK::getbitu(rtcm->buff, i + 12, 8);
+        m = CommonRTK::getbitu(rtcm->buff, i + 28 + 8 * n, 8);
 
         if (i + 36 + 8 * (n + m) <= rtcm->len * 8) {
-            staid = getbitu(rtcm->buff, i, 12); i += 12 + 8;
+            staid = CommonRTK::getbitu(rtcm->buff, i, 12); i += 12 + 8;
             for (j = 0; j < n && j < 31; j++) {
-                des[j] = (char)getbitu(rtcm->buff, i, 8); i += 8;
+                des[j] = (char)CommonRTK::getbitu(rtcm->buff, i, 8); i += 8;
             }
-            setup = getbitu(rtcm->buff, i, 8); i += 8 + 8;
+            setup = CommonRTK::getbitu(rtcm->buff, i, 8); i += 8 + 8;
             for (j = 0; j < m && j < 31; j++) {
-                sno[j] = (char)getbitu(rtcm->buff, i, 8); i += 8;
+                sno[j] = (char)CommonRTK::getbitu(rtcm->buff, i, 8); i += 8;
             }
         }
         else {
@@ -926,28 +1035,28 @@ namespace RTKFunctions {
     }
 
     /* decode type 1009-1012 message header --------------------------------------*/
-    int decode_head1009(rtcm_t* rtcm, int* sync)
+    int DecodeRTCM::decode_head1009(rtcm_t* rtcm, int* sync)
     {
         double tod;
         char* msg, tstr[64];
         int i = 24, staid, nsat, type;
 
-        type = getbitu(rtcm->buff, i, 12); i += 12;
+        type = CommonRTK::getbitu(rtcm->buff, i, 12); i += 12;
 
         if (i + 49 <= rtcm->len * 8) {
-            staid = getbitu(rtcm->buff, i, 12);       i += 12;
-            tod = getbitu(rtcm->buff, i, 27) * 0.001; i += 27; /* sec in a day */
-            *sync = getbitu(rtcm->buff, i, 1);       i += 1;
-            nsat = getbitu(rtcm->buff, i, 5);
+            staid = CommonRTK::getbitu(rtcm->buff, i, 12);       i += 12;
+            tod = CommonRTK::getbitu(rtcm->buff, i, 27) * 0.001; i += 27; /* sec in a day */
+            *sync = CommonRTK::getbitu(rtcm->buff, i, 1);       i += 1;
+            nsat = CommonRTK::getbitu(rtcm->buff, i, 5);
         }
         else {
             //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
             return -1;
         }
         /* test station id */
-        if (!test_staid(rtcm, staid)) return -1;
+        if (!DecodeRTCM::test_staid(rtcm, staid)) return -1;
 
-        adjday_glot(rtcm, tod);
+        DecodeRTCM::adjday_glot(rtcm, tod);
 
         time2str(rtcm->time, tstr, 2);
         //trace(4, "decode_head1009: time=%s nsat=%d sync=%d\n", tstr, nsat, *sync);
@@ -960,21 +1069,21 @@ namespace RTKFunctions {
     }
 
     /* decode type 1009: L1-only glonass rtk observables -------------------------*/
-    int decode_type1009(rtcm_t* rtcm)
+    int DecodeRTCM::decode_type1009(rtcm_t* rtcm)
     {
         int sync;
-        if (decode_head1009(rtcm, &sync) < 0) return -1;
+        if (DecodeRTCM::decode_head1009(rtcm, &sync) < 0) return -1;
         rtcm->obsflag = !sync;
         return sync ? 0 : 1;
     }
 
     /* decode type 1010: extended L1-only glonass rtk observables ----------------*/
-    int decode_type1010(rtcm_t* rtcm)
+    int DecodeRTCM::decode_type1010(rtcm_t* rtcm)
     {
         double pr1, cnr1, tt, cp1, lam1;
         int i = 24 + 61, j, index, nsat, sync, prn, sat, code, freq, ppr1, lock1, amb, sys = SYS_GLO;
 
-        if ((nsat = decode_head1009(rtcm, &sync)) < 0) return -1;
+        if ((nsat = DecodeRTCM::decode_head1009(rtcm, &sync)) < 0) return -1;
 
         for (j = 0; j < nsat && rtcm->obs.n < MAXOBS && i + 79 <= rtcm->len * 8; j++) {
             prn = CommonRTK::getbitu(rtcm->buff, i, 6); i += 6;
@@ -1009,22 +1118,22 @@ namespace RTKFunctions {
     }
 
     /* decode type 1011: L1&L2 glonass rtk observables ---------------------------*/
-    int decode_type1011(rtcm_t* rtcm)
+    int DecodeRTCM::decode_type1011(rtcm_t* rtcm)
     {
         int sync;
-        if (decode_head1009(rtcm, &sync) < 0) return -1;
+        if (DecodeRTCM::decode_head1009(rtcm, &sync) < 0) return -1;
         rtcm->obsflag = !sync;
         return sync ? 0 : 1;
     }
 
     /* decode type 1012: extended L1&L2 glonass rtk observables ------------------*/
-    int decode_type1012(rtcm_t* rtcm)
+    int DecodeRTCM::decode_type1012(rtcm_t* rtcm)
     {
         double pr1, cnr1, cnr2, tt, cp1, cp2, lam1, lam2;
         int i = 24 + 61, j, index, nsat, sync, prn, sat, freq, code1, code2, pr21, ppr1, ppr2;
         int lock1, lock2, amb, sys = SYS_GLO;
 
-        if ((nsat = decode_head1009(rtcm, &sync)) < 0) return -1;
+        if ((nsat = DecodeRTCM::decode_head1009(rtcm, &sync)) < 0) return -1;
 
         for (j = 0; j < nsat && rtcm->obs.n < MAXOBS && i + 130 <= rtcm->len * 8; j++) {
             prn = CommonRTK::getbitu(rtcm->buff, i, 6); i += 6;
@@ -1136,14 +1245,14 @@ namespace RTKFunctions {
             sprintf(msg, " prn=%2d iode=%3d iodc=%3d week=%d toe=%6.0f toc=%6.0f svh=%02X",
                 prn, eph.iode, eph.iodc, week, eph.toes, toc, eph.svh);
         }
-        if (!(sat = satno(sys, prn))) {
+        if (!(sat = CommonRTK::satno(sys, prn))) {
             //trace(2, "rtcm3 1019 satellite number error: prn=%d\n", prn);
             return -1;
         }
         eph.sat = sat;
         eph.week = CommonRTK::adjgpsweek(week);
-        eph.toe = gpst2time(eph.week, eph.toes);
-        eph.toc = gpst2time(eph.week, toc);
+        eph.toe = CommonRTK::gpst2time(eph.week, eph.toes);
+        eph.toc = CommonRTK::gpst2time(eph.week, toc);
         eph.ttr = rtcm->time;
         eph.A = sqrtA * sqrtA;
         if (!strstr(rtcm->opt, "-EPHALL")) {
@@ -1163,13 +1272,13 @@ namespace RTKFunctions {
         int i = 24 + 12, prn, sat, week, tb, bn, sys = SYS_GLO;
 
         if (i + 348 <= rtcm->len * 8) {
-            prn = getbitu(rtcm->buff, i, 6);           i += 6;
-            geph.frq = getbitu(rtcm->buff, i, 5) - 7;         i += 5 + 2 + 2;
-            tk_h = getbitu(rtcm->buff, i, 5);           i += 5;
-            tk_m = getbitu(rtcm->buff, i, 6);           i += 6;
-            tk_s = getbitu(rtcm->buff, i, 1) * 30.0;      i += 1;
-            bn = getbitu(rtcm->buff, i, 1);           i += 1 + 1;
-            tb = getbitu(rtcm->buff, i, 7);           i += 7;
+            prn = CommonRTK::getbitu(rtcm->buff, i, 6);           i += 6;
+            geph.frq = CommonRTK::getbitu(rtcm->buff, i, 5) - 7;         i += 5 + 2 + 2;
+            tk_h = CommonRTK::getbitu(rtcm->buff, i, 5);           i += 5;
+            tk_m = CommonRTK::getbitu(rtcm->buff, i, 6);           i += 6;
+            tk_s = CommonRTK::getbitu(rtcm->buff, i, 1) * 30.0;      i += 1;
+            bn = CommonRTK::getbitu(rtcm->buff, i, 1);           i += 1 + 1;
+            tb = CommonRTK::getbitu(rtcm->buff, i, 7);           i += 7;
             geph.vel[0] = getbitg(rtcm->buff, i, 24) * P2_20 * 1E3; i += 24;
             geph.pos[0] = getbitg(rtcm->buff, i, 27) * P2_11 * 1E3; i += 27;
             geph.acc[0] = getbitg(rtcm->buff, i, 5) * P2_30 * 1E3; i += 5;
@@ -1186,7 +1295,7 @@ namespace RTKFunctions {
             //trace(2, "rtcm3 1020 length error: len=%d\n", rtcm->len);
             return -1;
         }
-        if (!(sat = satno(sys, prn))) {
+        if (!(sat = CommonRTK::satno(sys, prn))) {
             //trace(2, "rtcm3 1020 satellite number error: prn=%d\n", prn);
             return -1;
         }
@@ -1200,20 +1309,20 @@ namespace RTKFunctions {
         geph.sat = sat;
         geph.svh = bn;
         geph.iode = tb & 0x7F;
-        if (rtcm->time.time == 0) rtcm->time = utc2gpst(timeget());
-        tow = time2gpst(gpst2utc(rtcm->time), &week);
+        if (rtcm->time.time == 0) rtcm->time = CommonRTK::utc2gpst(CommonRTK::timeget());
+        tow = CommonRTK::time2gpst(CommonRTK::gpst2utc(rtcm->time), &week);
         tod = fmod(tow, 86400.0); tow -= tod;
         tof = tk_h * 3600.0 + tk_m * 60.0 + tk_s - 10800.0; /* lt->utc */
         if (tof < tod - 43200.0) tof += 86400.0;
         else if (tof > tod + 43200.0) tof -= 86400.0;
-        geph.tof = utc2gpst(gpst2time(week, tow + tof));
+        geph.tof = CommonRTK::utc2gpst(CommonRTK::gpst2time(week, tow + tof));
         toe = tb * 900.0 - 10800.0; /* lt->utc */
         if (toe < tod - 43200.0) toe += 86400.0;
         else if (toe > tod + 43200.0) toe -= 86400.0;
-        geph.toe = utc2gpst(gpst2time(week, tow + toe)); /* utc->gpst */
+        geph.toe = CommonRTK::utc2gpst(CommonRTK::gpst2time(week, tow + toe)); /* utc->gpst */
 
         if (!strstr(rtcm->opt, "-EPHALL")) {
-            if (fabs(timediff(geph.toe, rtcm->nav.geph[prn - 1].toe)) < 1.0 &&
+            if (fabs(CommonRTK::timediff(geph.toe, rtcm->nav.geph[prn - 1].toe)) < 1.0 &&
                 geph.svh == rtcm->nav.geph[prn - 1].svh) return 0; /* unchanged */
         }
         rtcm->nav.geph[prn - 1] = geph;
@@ -1277,11 +1386,11 @@ namespace RTKFunctions {
         int i = 24 + 12, j, staid, mjd, tod, nchar, cunit;
 
         if (i + 60 <= rtcm->len * 8) {
-            staid = getbitu(rtcm->buff, i, 12); i += 12;
-            mjd = getbitu(rtcm->buff, i, 16); i += 16;
-            tod = getbitu(rtcm->buff, i, 17); i += 17;
-            nchar = getbitu(rtcm->buff, i, 7); i += 7;
-            cunit = getbitu(rtcm->buff, i, 8); i += 8;
+            staid = CommonRTK::getbitu(rtcm->buff, i, 12); i += 12;
+            mjd = CommonRTK::getbitu(rtcm->buff, i, 16); i += 16;
+            tod = CommonRTK::getbitu(rtcm->buff, i, 17); i += 17;
+            nchar = CommonRTK::getbitu(rtcm->buff, i, 7); i += 7;
+            cunit = CommonRTK::getbitu(rtcm->buff, i, 8); i += 8;
         }
         else {
             //trace(2, "rtcm3 1029 length error: len=%d\n", rtcm->len);
@@ -1292,7 +1401,7 @@ namespace RTKFunctions {
             return -1;
         }
         for (j = 0; j < nchar && j < 126; j++) {
-            rtcm->msg[j] = getbitu(rtcm->buff, i, 8); i += 8;
+            rtcm->msg[j] = CommonRTK::getbitu(rtcm->buff, i, 8); i += 8;
         }
         rtcm->msg[j] = '\0';
 
@@ -1331,32 +1440,32 @@ namespace RTKFunctions {
         char* msg;
         int i = 24 + 12, j, staid, n, m, n1, n2, n3, setup;
 
-        n = getbitu(rtcm->buff, i + 12, 8);
-        m = getbitu(rtcm->buff, i + 28 + 8 * n, 8);
-        n1 = getbitu(rtcm->buff, i + 36 + 8 * (n + m), 8);
-        n2 = getbitu(rtcm->buff, i + 44 + 8 * (n + m + n1), 8);
-        n3 = getbitu(rtcm->buff, i + 52 + 8 * (n + m + n1 + n2), 8);
+        n = CommonRTK::getbitu(rtcm->buff, i + 12, 8);
+        m = CommonRTK::getbitu(rtcm->buff, i + 28 + 8 * n, 8);
+        n1 = CommonRTK::getbitu(rtcm->buff, i + 36 + 8 * (n + m), 8);
+        n2 = CommonRTK::getbitu(rtcm->buff, i + 44 + 8 * (n + m + n1), 8);
+        n3 = CommonRTK::getbitu(rtcm->buff, i + 52 + 8 * (n + m + n1 + n2), 8);
 
         if (i + 60 + 8 * (n + m + n1 + n2 + n3) <= rtcm->len * 8) {
-            staid = getbitu(rtcm->buff, i, 12); i += 12 + 8;
+            staid = CommonRTK::getbitu(rtcm->buff, i, 12); i += 12 + 8;
             for (j = 0; j < n && j < 31; j++) {
-                des[j] = (char)getbitu(rtcm->buff, i, 8); i += 8;
+                des[j] = (char)CommonRTK::getbitu(rtcm->buff, i, 8); i += 8;
             }
-            setup = getbitu(rtcm->buff, i, 8); i += 8 + 8;
+            setup = CommonRTK::getbitu(rtcm->buff, i, 8); i += 8 + 8;
             for (j = 0; j < m && j < 31; j++) {
-                sno[j] = (char)getbitu(rtcm->buff, i, 8); i += 8;
+                sno[j] = (char)CommonRTK::getbitu(rtcm->buff, i, 8); i += 8;
             }
             i += 8;
             for (j = 0; j < n1 && j < 31; j++) {
-                rec[j] = (char)getbitu(rtcm->buff, i, 8); i += 8;
+                rec[j] = (char)CommonRTK::getbitu(rtcm->buff, i, 8); i += 8;
             }
             i += 8;
             for (j = 0; j < n2 && j < 31; j++) {
-                ver[j] = (char)getbitu(rtcm->buff, i, 8); i += 8;
+                ver[j] = (char)CommonRTK::getbitu(rtcm->buff, i, 8); i += 8;
             }
             i += 8;
             for (j = 0; j < n3 && j < 31; j++) {
-                rsn[j] = (char)getbitu(rtcm->buff, i, 8); i += 8;
+                rsn[j] = (char)CommonRTK::getbitu(rtcm->buff, i, 8); i += 8;
             }
         }
         else {
@@ -1421,35 +1530,35 @@ namespace RTKFunctions {
         int i = 24 + 12, prn, sat, week, sys = SYS_QZS;
 
         if (i + 473 <= rtcm->len * 8) {
-            prn = getbitu(rtcm->buff, i, 4) + 192;          i += 4;
-            toc = getbitu(rtcm->buff, i, 16) * 16.0;         i += 16;
-            eph.f2 = getbits(rtcm->buff, i, 8) * P2_55;        i += 8;
-            eph.f1 = getbits(rtcm->buff, i, 16) * P2_43;        i += 16;
-            eph.f0 = getbits(rtcm->buff, i, 22) * P2_31;        i += 22;
-            eph.iode = getbitu(rtcm->buff, i, 8);              i += 8;
-            eph.crs = getbits(rtcm->buff, i, 16) * P2_5;         i += 16;
-            eph.deln = getbits(rtcm->buff, i, 16) * P2_43 * SC2RAD; i += 16;
-            eph.M0 = getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
-            eph.cuc = getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
-            eph.e = getbitu(rtcm->buff, i, 32) * P2_33;        i += 32;
-            eph.cus = getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
-            sqrtA = getbitu(rtcm->buff, i, 32) * P2_19;        i += 32;
-            eph.toes = getbitu(rtcm->buff, i, 16) * 16.0;         i += 16;
-            eph.cic = getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
-            eph.OMG0 = getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
-            eph.cis = getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
-            eph.i0 = getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
-            eph.crc = getbits(rtcm->buff, i, 16) * P2_5;         i += 16;
-            eph.omg = getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
-            eph.OMGd = getbits(rtcm->buff, i, 24) * P2_43 * SC2RAD; i += 24;
-            eph.idot = getbits(rtcm->buff, i, 14) * P2_43 * SC2RAD; i += 14;
-            eph.code = getbitu(rtcm->buff, i, 2);              i += 2;
-            week = getbitu(rtcm->buff, i, 10);              i += 10;
-            eph.sva = getbitu(rtcm->buff, i, 4);              i += 4;
-            eph.svh = getbitu(rtcm->buff, i, 6);              i += 6;
-            eph.tgd[0] = getbits(rtcm->buff, i, 8) * P2_31;        i += 8;
-            eph.iodc = getbitu(rtcm->buff, i, 10);              i += 10;
-            eph.fit = getbitu(rtcm->buff, i, 1) ? 0.0 : 2.0; /* 0:2hr,1:>2hr */
+            prn = CommonRTK::getbitu(rtcm->buff, i, 4) + 192;          i += 4;
+            toc = CommonRTK::getbitu(rtcm->buff, i, 16) * 16.0;         i += 16;
+            eph.f2 = CommonRTK::getbits(rtcm->buff, i, 8) * P2_55;        i += 8;
+            eph.f1 = CommonRTK::getbits(rtcm->buff, i, 16) * P2_43;        i += 16;
+            eph.f0 = CommonRTK::getbits(rtcm->buff, i, 22) * P2_31;        i += 22;
+            eph.iode = CommonRTK::getbitu(rtcm->buff, i, 8);              i += 8;
+            eph.crs = CommonRTK::getbits(rtcm->buff, i, 16) * P2_5;         i += 16;
+            eph.deln = CommonRTK::getbits(rtcm->buff, i, 16) * P2_43 * SC2RAD; i += 16;
+            eph.M0 = CommonRTK::getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
+            eph.cuc = CommonRTK::getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
+            eph.e = CommonRTK::getbitu(rtcm->buff, i, 32) * P2_33;        i += 32;
+            eph.cus = CommonRTK::getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
+            sqrtA = CommonRTK::getbitu(rtcm->buff, i, 32) * P2_19;        i += 32;
+            eph.toes = CommonRTK::getbitu(rtcm->buff, i, 16) * 16.0;         i += 16;
+            eph.cic = CommonRTK::getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
+            eph.OMG0 = CommonRTK::getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
+            eph.cis = CommonRTK::getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
+            eph.i0 = CommonRTK::getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
+            eph.crc = CommonRTK::getbits(rtcm->buff, i, 16) * P2_5;         i += 16;
+            eph.omg = CommonRTK::getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
+            eph.OMGd = CommonRTK::getbits(rtcm->buff, i, 24) * P2_43 * SC2RAD; i += 24;
+            eph.idot = CommonRTK::getbits(rtcm->buff, i, 14) * P2_43 * SC2RAD; i += 14;
+            eph.code = CommonRTK::getbitu(rtcm->buff, i, 2);              i += 2;
+            week = CommonRTK::getbitu(rtcm->buff, i, 10);              i += 10;
+            eph.sva = CommonRTK::getbitu(rtcm->buff, i, 4);              i += 4;
+            eph.svh = CommonRTK::getbitu(rtcm->buff, i, 6);              i += 6;
+            eph.tgd[0] = CommonRTK::getbits(rtcm->buff, i, 8) * P2_31;        i += 8;
+            eph.iodc = CommonRTK::getbitu(rtcm->buff, i, 10);              i += 10;
+            eph.fit = CommonRTK::getbitu(rtcm->buff, i, 1) ? 0.0 : 2.0; /* 0:2hr,1:>2hr */
         }
         else {
             //trace(2, "rtcm3 1044 length error: len=%d\n", rtcm->len);
@@ -1462,14 +1571,14 @@ namespace RTKFunctions {
             sprintf(msg, " prn=%3d iode=%3d iodc=%3d week=%d toe=%6.0f toc=%6.0f svh=%02X",
                 prn, eph.iode, eph.iodc, week, eph.toes, toc, eph.svh);
         }
-        if (!(sat = satno(sys, prn))) {
+        if (!(sat = CommonRTK::satno(sys, prn))) {
             //trace(2, "rtcm3 1044 satellite number error: prn=%d\n", prn);
             return -1;
         }
         eph.sat = sat;
         eph.week = CommonRTK::adjgpsweek(week);
-        eph.toe = gpst2time(eph.week, eph.toes);
-        eph.toc = gpst2time(eph.week, toc);
+        eph.toe = CommonRTK::gpst2time(eph.week, eph.toes);
+        eph.toc = CommonRTK::gpst2time(eph.week, toc);
         eph.ttr = rtcm->time;
         eph.A = sqrtA * sqrtA;
         if (!strstr(rtcm->opt, "-EPHALL")) {
@@ -1490,34 +1599,34 @@ namespace RTKFunctions {
         int i = 24 + 12, prn, sat, week, e5a_hs, e5a_dvs, rsv, sys = SYS_GAL;
 
         if (i + 484 <= rtcm->len * 8) {
-            prn = getbitu(rtcm->buff, i, 6);              i += 6;
-            week = getbitu(rtcm->buff, i, 12);              i += 12; /* gst-week */
-            eph.iode = getbitu(rtcm->buff, i, 10);              i += 10;
-            eph.sva = getbitu(rtcm->buff, i, 8);              i += 8;
-            eph.idot = getbits(rtcm->buff, i, 14) * P2_43 * SC2RAD; i += 14;
-            toc = getbitu(rtcm->buff, i, 14) * 60.0;         i += 14;
-            eph.f2 = getbits(rtcm->buff, i, 6) * P2_59;        i += 6;
-            eph.f1 = getbits(rtcm->buff, i, 21) * P2_46;        i += 21;
-            eph.f0 = getbits(rtcm->buff, i, 31) * P2_34;        i += 31;
-            eph.crs = getbits(rtcm->buff, i, 16) * P2_5;         i += 16;
-            eph.deln = getbits(rtcm->buff, i, 16) * P2_43 * SC2RAD; i += 16;
-            eph.M0 = getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
-            eph.cuc = getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
-            eph.e = getbitu(rtcm->buff, i, 32) * P2_33;        i += 32;
-            eph.cus = getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
-            sqrtA = getbitu(rtcm->buff, i, 32) * P2_19;        i += 32;
-            eph.toes = getbitu(rtcm->buff, i, 14) * 60.0;         i += 14;
-            eph.cic = getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
-            eph.OMG0 = getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
-            eph.cis = getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
-            eph.i0 = getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
-            eph.crc = getbits(rtcm->buff, i, 16) * P2_5;         i += 16;
-            eph.omg = getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
-            eph.OMGd = getbits(rtcm->buff, i, 24) * P2_43 * SC2RAD; i += 24;
-            eph.tgd[0] = getbits(rtcm->buff, i, 10) * P2_32;        i += 10; /* E5a/E1 */
-            e5a_hs = getbitu(rtcm->buff, i, 2);              i += 2; /* OSHS */
-            e5a_dvs = getbitu(rtcm->buff, i, 1);              i += 1; /* OSDVS */
-            rsv = getbitu(rtcm->buff, i, 7);
+            prn = CommonRTK::getbitu(rtcm->buff, i, 6);              i += 6;
+            week = CommonRTK::getbitu(rtcm->buff, i, 12);              i += 12; /* gst-week */
+            eph.iode = CommonRTK::getbitu(rtcm->buff, i, 10);              i += 10;
+            eph.sva = CommonRTK::getbitu(rtcm->buff, i, 8);              i += 8;
+            eph.idot = CommonRTK::getbits(rtcm->buff, i, 14) * P2_43 * SC2RAD; i += 14;
+            toc = CommonRTK::getbitu(rtcm->buff, i, 14) * 60.0;         i += 14;
+            eph.f2 = CommonRTK::getbits(rtcm->buff, i, 6) * P2_59;        i += 6;
+            eph.f1 = CommonRTK::getbits(rtcm->buff, i, 21) * P2_46;        i += 21;
+            eph.f0 = CommonRTK::getbits(rtcm->buff, i, 31) * P2_34;        i += 31;
+            eph.crs = CommonRTK::getbits(rtcm->buff, i, 16) * P2_5;         i += 16;
+            eph.deln = CommonRTK::getbits(rtcm->buff, i, 16) * P2_43 * SC2RAD; i += 16;
+            eph.M0 = CommonRTK::getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
+            eph.cuc = CommonRTK::getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
+            eph.e = CommonRTK::getbitu(rtcm->buff, i, 32) * P2_33;        i += 32;
+            eph.cus = CommonRTK::getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
+            sqrtA = CommonRTK::getbitu(rtcm->buff, i, 32) * P2_19;        i += 32;
+            eph.toes = CommonRTK::getbitu(rtcm->buff, i, 14) * 60.0;         i += 14;
+            eph.cic = CommonRTK::getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
+            eph.OMG0 = CommonRTK::getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
+            eph.cis = CommonRTK::getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
+            eph.i0 = CommonRTK::getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
+            eph.crc = CommonRTK::getbits(rtcm->buff, i, 16) * P2_5;         i += 16;
+            eph.omg = CommonRTK::getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
+            eph.OMGd = CommonRTK::getbits(rtcm->buff, i, 24) * P2_43 * SC2RAD; i += 24;
+            eph.tgd[0] = CommonRTK::getbits(rtcm->buff, i, 10) * P2_32;        i += 10; /* E5a/E1 */
+            e5a_hs = CommonRTK::getbitu(rtcm->buff, i, 2);              i += 2; /* OSHS */
+            e5a_dvs = CommonRTK::getbitu(rtcm->buff, i, 1);              i += 1; /* OSDVS */
+            rsv = CommonRTK::getbitu(rtcm->buff, i, 7);
         }
         else {
             //trace(2, "rtcm3 1045 length error: len=%d\n", rtcm->len);
@@ -1530,7 +1639,7 @@ namespace RTKFunctions {
             sprintf(msg, " prn=%2d iode=%3d week=%d toe=%6.0f toc=%6.0f hs=%d dvs=%d",
                 prn, eph.iode, week, eph.toes, toc, e5a_hs, e5a_dvs);
         }
-        if (!(sat = satno(sys, prn))) {
+        if (!(sat = CommonRTK::satno(sys, prn))) {
             //trace(2, "rtcm3 1045 satellite number error: prn=%d\n", prn);
             return -1;
         }
@@ -1539,8 +1648,8 @@ namespace RTKFunctions {
         }
         eph.sat = sat;
         eph.week = week + 1024; /* gal-week = gst-week + 1024 */
-        eph.toe = gpst2time(eph.week, eph.toes);
-        eph.toc = gpst2time(eph.week, toc);
+        eph.toe = CommonRTK::gpst2time(eph.week, eph.toes);
+        eph.toc = CommonRTK::gpst2time(eph.week, toc);
         eph.ttr = rtcm->time;
         eph.A = sqrtA * sqrtA;
         eph.svh = (e5a_hs << 4) + (e5a_dvs << 3);
@@ -1561,36 +1670,36 @@ namespace RTKFunctions {
         int i = 24 + 12, prn, sat, week, e5b_hs, e5b_dvs, e1_hs, e1_dvs, sys = SYS_GAL;
 
         if (i + 492 <= rtcm->len * 8) {
-            prn = getbitu(rtcm->buff, i, 6);              i += 6;
-            week = getbitu(rtcm->buff, i, 12);              i += 12;
-            eph.iode = getbitu(rtcm->buff, i, 10);              i += 10;
-            eph.sva = getbitu(rtcm->buff, i, 8);              i += 8;
-            eph.idot = getbits(rtcm->buff, i, 14) * P2_43 * SC2RAD; i += 14;
-            toc = getbitu(rtcm->buff, i, 14) * 60.0;         i += 14;
-            eph.f2 = getbits(rtcm->buff, i, 6) * P2_59;        i += 6;
-            eph.f1 = getbits(rtcm->buff, i, 21) * P2_46;        i += 21;
-            eph.f0 = getbits(rtcm->buff, i, 31) * P2_34;        i += 31;
-            eph.crs = getbits(rtcm->buff, i, 16) * P2_5;         i += 16;
-            eph.deln = getbits(rtcm->buff, i, 16) * P2_43 * SC2RAD; i += 16;
-            eph.M0 = getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
-            eph.cuc = getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
-            eph.e = getbitu(rtcm->buff, i, 32) * P2_33;        i += 32;
-            eph.cus = getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
-            sqrtA = getbitu(rtcm->buff, i, 32) * P2_19;        i += 32;
-            eph.toes = getbitu(rtcm->buff, i, 14) * 60.0;         i += 14;
-            eph.cic = getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
-            eph.OMG0 = getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
-            eph.cis = getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
-            eph.i0 = getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
-            eph.crc = getbits(rtcm->buff, i, 16) * P2_5;         i += 16;
-            eph.omg = getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
-            eph.OMGd = getbits(rtcm->buff, i, 24) * P2_43 * SC2RAD; i += 24;
-            eph.tgd[0] = getbits(rtcm->buff, i, 10) * P2_32;        i += 10; /* E5a/E1 */
-            eph.tgd[1] = getbits(rtcm->buff, i, 10) * P2_32;        i += 10; /* E5b/E1 */
-            e5b_hs = getbitu(rtcm->buff, i, 2);              i += 2; /* E5b OSHS */
-            e5b_dvs = getbitu(rtcm->buff, i, 1);              i += 1; /* E5b OSDVS */
-            e1_hs = getbitu(rtcm->buff, i, 2);              i += 2; /* E1 OSHS */
-            e1_dvs = getbitu(rtcm->buff, i, 1);              i += 1; /* E1 OSDVS */
+            prn = CommonRTK::getbitu(rtcm->buff, i, 6);              i += 6;
+            week = CommonRTK::getbitu(rtcm->buff, i, 12);              i += 12;
+            eph.iode = CommonRTK::getbitu(rtcm->buff, i, 10);              i += 10;
+            eph.sva = CommonRTK::getbitu(rtcm->buff, i, 8);              i += 8;
+            eph.idot = CommonRTK::getbits(rtcm->buff, i, 14) * P2_43 * SC2RAD; i += 14;
+            toc = CommonRTK::getbitu(rtcm->buff, i, 14) * 60.0;         i += 14;
+            eph.f2 = CommonRTK::getbits(rtcm->buff, i, 6) * P2_59;        i += 6;
+            eph.f1 = CommonRTK::getbits(rtcm->buff, i, 21) * P2_46;        i += 21;
+            eph.f0 = CommonRTK::getbits(rtcm->buff, i, 31) * P2_34;        i += 31;
+            eph.crs = CommonRTK::getbits(rtcm->buff, i, 16) * P2_5;         i += 16;
+            eph.deln = CommonRTK::getbits(rtcm->buff, i, 16) * P2_43 * SC2RAD; i += 16;
+            eph.M0 = CommonRTK::getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
+            eph.cuc = CommonRTK::getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
+            eph.e = CommonRTK::getbitu(rtcm->buff, i, 32) * P2_33;        i += 32;
+            eph.cus = CommonRTK::getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
+            sqrtA = CommonRTK::getbitu(rtcm->buff, i, 32) * P2_19;        i += 32;
+            eph.toes = CommonRTK::getbitu(rtcm->buff, i, 14) * 60.0;         i += 14;
+            eph.cic = CommonRTK::getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
+            eph.OMG0 = CommonRTK::getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
+            eph.cis = CommonRTK::getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
+            eph.i0 = CommonRTK::getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
+            eph.crc = CommonRTK::getbits(rtcm->buff, i, 16) * P2_5;         i += 16;
+            eph.omg = CommonRTK::getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
+            eph.OMGd = CommonRTK::getbits(rtcm->buff, i, 24) * P2_43 * SC2RAD; i += 24;
+            eph.tgd[0] = CommonRTK::getbits(rtcm->buff, i, 10) * P2_32;        i += 10; /* E5a/E1 */
+            eph.tgd[1] = CommonRTK::getbits(rtcm->buff, i, 10) * P2_32;        i += 10; /* E5b/E1 */
+            e5b_hs = CommonRTK::getbitu(rtcm->buff, i, 2);              i += 2; /* E5b OSHS */
+            e5b_dvs = CommonRTK::getbitu(rtcm->buff, i, 1);              i += 1; /* E5b OSDVS */
+            e1_hs = CommonRTK::getbitu(rtcm->buff, i, 2);              i += 2; /* E1 OSHS */
+            e1_dvs = CommonRTK::getbitu(rtcm->buff, i, 1);              i += 1; /* E1 OSDVS */
         }
         else {
             //trace(2, "rtcm3 1046 length error: len=%d\n", rtcm->len);
@@ -1603,7 +1712,7 @@ namespace RTKFunctions {
             sprintf(msg, " prn=%2d iode=%3d week=%d toe=%6.0f toc=%6.0f hs=%d %d dvs=%d %d",
                 prn, eph.iode, week, eph.toes, toc, e5b_hs, e1_hs, e5b_dvs, e1_dvs);
         }
-        if (!(sat = satno(sys, prn))) {
+        if (!(sat = CommonRTK::satno(sys, prn))) {
             //trace(2, "rtcm3 1046 satellite number error: prn=%d\n", prn);
             return -1;
         }
@@ -1612,8 +1721,8 @@ namespace RTKFunctions {
         }
         eph.sat = sat;
         eph.week = week + 1024; /* gal-week = gst-week + 1024 */
-        eph.toe = gpst2time(eph.week, eph.toes);
-        eph.toc = gpst2time(eph.week, toc);
+        eph.toe = CommonRTK::gpst2time(eph.week, eph.toes);
+        eph.toc = CommonRTK::gpst2time(eph.week, toc);
         eph.ttr = rtcm->time;
         eph.A = sqrtA * sqrtA;
         eph.svh = (e5b_hs << 7) + (e5b_dvs << 6) + (e1_hs << 1) + (e1_dvs << 0);
@@ -1634,34 +1743,34 @@ namespace RTKFunctions {
         int i = 24 + 12, prn, sat, week, sys = SYS_CMP;
 
         if (i + 499 <= rtcm->len * 8) {
-            prn = getbitu(rtcm->buff, i, 6);              i += 6;
-            week = getbitu(rtcm->buff, i, 13);              i += 13;
-            eph.sva = getbitu(rtcm->buff, i, 4);              i += 4;
-            eph.idot = getbits(rtcm->buff, i, 14) * P2_43 * SC2RAD; i += 14;
-            eph.iode = getbitu(rtcm->buff, i, 5);              i += 5; /* AODE */
-            toc = getbitu(rtcm->buff, i, 17) * 8.0;          i += 17;
-            eph.f2 = getbits(rtcm->buff, i, 11) * P2_66;        i += 11;
-            eph.f1 = getbits(rtcm->buff, i, 22) * P2_50;        i += 22;
-            eph.f0 = getbits(rtcm->buff, i, 24) * P2_33;        i += 24;
-            eph.iodc = getbitu(rtcm->buff, i, 5);              i += 5; /* AODC */
-            eph.crs = getbits(rtcm->buff, i, 18) * P2_6;         i += 18;
-            eph.deln = getbits(rtcm->buff, i, 16) * P2_43 * SC2RAD; i += 16;
-            eph.M0 = getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
-            eph.cuc = getbits(rtcm->buff, i, 18) * P2_31;        i += 18;
-            eph.e = getbitu(rtcm->buff, i, 32) * P2_33;        i += 32;
-            eph.cus = getbits(rtcm->buff, i, 18) * P2_31;        i += 18;
-            sqrtA = getbitu(rtcm->buff, i, 32) * P2_19;        i += 32;
-            eph.toes = getbitu(rtcm->buff, i, 17) * 8.0;          i += 17;
-            eph.cic = getbits(rtcm->buff, i, 18) * P2_31;        i += 18;
-            eph.OMG0 = getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
-            eph.cis = getbits(rtcm->buff, i, 18) * P2_31;        i += 18;
-            eph.i0 = getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
-            eph.crc = getbits(rtcm->buff, i, 18) * P2_6;         i += 18;
-            eph.omg = getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
-            eph.OMGd = getbits(rtcm->buff, i, 24) * P2_43 * SC2RAD; i += 24;
-            eph.tgd[0] = getbits(rtcm->buff, i, 10) * 1E-10;        i += 10;
-            eph.tgd[1] = getbits(rtcm->buff, i, 10) * 1E-10;        i += 10;
-            eph.svh = getbitu(rtcm->buff, i, 1);              i += 1;
+            prn = CommonRTK::getbitu(rtcm->buff, i, 6);              i += 6;
+            week = CommonRTK::getbitu(rtcm->buff, i, 13);              i += 13;
+            eph.sva = CommonRTK::getbitu(rtcm->buff, i, 4);              i += 4;
+            eph.idot = CommonRTK::getbits(rtcm->buff, i, 14) * P2_43 * SC2RAD; i += 14;
+            eph.iode = CommonRTK::getbitu(rtcm->buff, i, 5);              i += 5; /* AODE */
+            toc = CommonRTK::getbitu(rtcm->buff, i, 17) * 8.0;          i += 17;
+            eph.f2 = CommonRTK::getbits(rtcm->buff, i, 11) * P2_66;        i += 11;
+            eph.f1 = CommonRTK::getbits(rtcm->buff, i, 22) * P2_50;        i += 22;
+            eph.f0 = CommonRTK::getbits(rtcm->buff, i, 24) * P2_33;        i += 24;
+            eph.iodc = CommonRTK::getbitu(rtcm->buff, i, 5);              i += 5; /* AODC */
+            eph.crs = CommonRTK::getbits(rtcm->buff, i, 18) * P2_6;         i += 18;
+            eph.deln = CommonRTK::getbits(rtcm->buff, i, 16) * P2_43 * SC2RAD; i += 16;
+            eph.M0 = CommonRTK::getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
+            eph.cuc = CommonRTK::getbits(rtcm->buff, i, 18) * P2_31;        i += 18;
+            eph.e = CommonRTK::getbitu(rtcm->buff, i, 32) * P2_33;        i += 32;
+            eph.cus = CommonRTK::getbits(rtcm->buff, i, 18) * P2_31;        i += 18;
+            sqrtA = CommonRTK::getbitu(rtcm->buff, i, 32) * P2_19;        i += 32;
+            eph.toes = CommonRTK::getbitu(rtcm->buff, i, 17) * 8.0;          i += 17;
+            eph.cic = CommonRTK::getbits(rtcm->buff, i, 18) * P2_31;        i += 18;
+            eph.OMG0 = CommonRTK::getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
+            eph.cis = CommonRTK::getbits(rtcm->buff, i, 18) * P2_31;        i += 18;
+            eph.i0 = CommonRTK::getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
+            eph.crc = CommonRTK::getbits(rtcm->buff, i, 18) * P2_6;         i += 18;
+            eph.omg = CommonRTK::getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
+            eph.OMGd = CommonRTK::getbits(rtcm->buff, i, 24) * P2_43 * SC2RAD; i += 24;
+            eph.tgd[0] = CommonRTK::getbits(rtcm->buff, i, 10) * 1E-10;        i += 10;
+            eph.tgd[1] = CommonRTK::getbits(rtcm->buff, i, 10) * 1E-10;        i += 10;
+            eph.svh = CommonRTK::getbitu(rtcm->buff, i, 1);              i += 1;
         }
         else {
             //trace(2, "rtcm3 1042 length error: len=%d\n", rtcm->len);
@@ -1694,7 +1803,7 @@ namespace RTKFunctions {
         return 2;
     }
     /* decode ssr 1,4 message header ---------------------------------------------*/
-    int decode_ssr1_head(rtcm_t* rtcm, int sys, int* sync, int* iod,
+    int DecodeRTCM::decode_ssr1_head(rtcm_t* rtcm, int sys, int* sync, int* iod,
         double* udint, int* refd, int* hsize)
     {
         double tod, tow;
@@ -1706,23 +1815,23 @@ namespace RTKFunctions {
         if (i + (sys == SYS_GLO ? 53 : 50 + ns) > rtcm->len * 8) return -1;
 
         if (sys == SYS_GLO) {
-            tod = getbitu(rtcm->buff, i, 17); i += 17;
-            adjday_glot(rtcm, tod);
+            tod = CommonRTK::getbitu(rtcm->buff, i, 17); i += 17;
+            DecodeRTCM::adjday_glot(rtcm, tod);
         }
         else {
-            tow = getbitu(rtcm->buff, i, 20); i += 20;
-            adjweek(rtcm, tow);
+            tow = CommonRTK::getbitu(rtcm->buff, i, 20); i += 20;
+            DecodeRTCM::adjweek(rtcm, tow);
         }
-        udi = getbitu(rtcm->buff, i, 4); i += 4;
-        *sync = getbitu(rtcm->buff, i, 1); i += 1;
-        *refd = getbitu(rtcm->buff, i, 1); i += 1; /* satellite ref datum */
-        *iod = getbitu(rtcm->buff, i, 4); i += 4; /* iod */
-        provid = getbitu(rtcm->buff, i, 16); i += 16; /* provider id */
-        solid = getbitu(rtcm->buff, i, 4); i += 4; /* solution id */
-        nsat = getbitu(rtcm->buff, i, ns); i += ns;
+        udi = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4;
+        *sync = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
+        *refd = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1; /* satellite ref datum */
+        *iod = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4; /* iod */
+        provid = CommonRTK::getbitu(rtcm->buff, i, 16); i += 16; /* provider id */
+        solid = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4; /* solution id */
+        nsat = CommonRTK::getbitu(rtcm->buff, i, ns); i += ns;
         *udint = ssrudint[udi];
 
-        time2str(rtcm->time, tstr, 2);
+        CommonRTK::time2str(rtcm->time, tstr, 2);
         //trace(4, "decode_ssr1_head: time=%s sys=%d nsat=%d sync=%d iod=%d provid=%d solid=%d\n",tstr, sys, nsat, *sync, *iod, provid, solid);
 
         if (rtcm->outtype) {
@@ -1734,7 +1843,7 @@ namespace RTKFunctions {
         return nsat;
     }
     /* decode ssr 2,3,5,6 message header -----------------------------------------*/
-    int decode_ssr2_head(rtcm_t* rtcm, int sys, int* sync, int* iod,
+    int DecodeRTCM::decode_ssr2_head(rtcm_t* rtcm, int sys, int* sync, int* iod,
         double* udint, int* hsize)
     {
         double tod, tow;
@@ -1746,19 +1855,19 @@ namespace RTKFunctions {
         if (i + (sys == SYS_GLO ? 52 : 49 + ns) > rtcm->len * 8) return -1;
 
         if (sys == SYS_GLO) {
-            tod = getbitu(rtcm->buff, i, 17); i += 17;
+            tod = CommonRTK::getbitu(rtcm->buff, i, 17); i += 17;
             adjday_glot(rtcm, tod);
         }
         else {
-            tow = getbitu(rtcm->buff, i, 20); i += 20;
-            adjweek(rtcm, tow);
+            tow = CommonRTK::getbitu(rtcm->buff, i, 20); i += 20;
+            DecodeRTCM::adjweek(rtcm, tow);
         }
-        udi = getbitu(rtcm->buff, i, 4); i += 4;
-        *sync = getbitu(rtcm->buff, i, 1); i += 1;
-        *iod = getbitu(rtcm->buff, i, 4); i += 4;
-        provid = getbitu(rtcm->buff, i, 16); i += 16; /* provider id */
-        solid = getbitu(rtcm->buff, i, 4); i += 4; /* solution id */
-        nsat = getbitu(rtcm->buff, i, ns); i += ns;
+        udi = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4;
+        *sync = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
+        *iod = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4;
+        provid = CommonRTK::getbitu(rtcm->buff, i, 16); i += 16; /* provider id */
+        solid = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4; /* solution id */
+        nsat = CommonRTK::getbitu(rtcm->buff, i, ns); i += ns;
         *udint = ssrudint[udi];
 
         time2str(rtcm->time, tstr, 2);
@@ -1779,7 +1888,7 @@ namespace RTKFunctions {
         double udint, deph[3], ddeph[3];
         int i, j, k, type, sync, iod, nsat, prn, sat, iode, iodcrc, refd = 0, np, ni, nj, offp;
 
-        type = getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(rtcm->buff, 24, 12);
 
         if ((nsat = decode_ssr1_head(rtcm, sys, &sync, &iod, &udint, &refd, &i)) < 0) {
             //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
@@ -1795,17 +1904,17 @@ namespace RTKFunctions {
         default: return sync ? 0 : 10;
         }
         for (j = 0; j < nsat && i + 121 + np + ni + nj <= rtcm->len * 8; j++) {
-            prn = getbitu(rtcm->buff, i, np) + offp; i += np;
-            iode = getbitu(rtcm->buff, i, ni);      i += ni;
-            iodcrc = getbitu(rtcm->buff, i, nj);      i += nj;
-            deph[0] = getbits(rtcm->buff, i, 22) * 1E-4; i += 22;
-            deph[1] = getbits(rtcm->buff, i, 20) * 4E-4; i += 20;
-            deph[2] = getbits(rtcm->buff, i, 20) * 4E-4; i += 20;
-            ddeph[0] = getbits(rtcm->buff, i, 21) * 1E-6; i += 21;
-            ddeph[1] = getbits(rtcm->buff, i, 19) * 4E-6; i += 19;
-            ddeph[2] = getbits(rtcm->buff, i, 19) * 4E-6; i += 19;
+            prn = CommonRTK::getbitu(rtcm->buff, i, np) + offp; i += np;
+            iode = CommonRTK::getbitu(rtcm->buff, i, ni);      i += ni;
+            iodcrc = CommonRTK::getbitu(rtcm->buff, i, nj);      i += nj;
+            deph[0] = CommonRTK::getbits(rtcm->buff, i, 22) * 1E-4; i += 22;
+            deph[1] = CommonRTK::getbits(rtcm->buff, i, 20) * 4E-4; i += 20;
+            deph[2] = CommonRTK::getbits(rtcm->buff, i, 20) * 4E-4; i += 20;
+            ddeph[0] = CommonRTK::getbits(rtcm->buff, i, 21) * 1E-6; i += 21;
+            ddeph[1] = CommonRTK::getbits(rtcm->buff, i, 19) * 4E-6; i += 19;
+            ddeph[2] = CommonRTK::getbits(rtcm->buff, i, 19) * 4E-6; i += 19;
 
-            if (!(sat = satno(sys, prn))) {
+            if (!(sat = CommonRTK::satno(sys, prn))) {
                 //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
                 continue;
             }
@@ -1830,7 +1939,7 @@ namespace RTKFunctions {
         double udint, dclk[3];
         int i, j, k, type, sync, iod, nsat, prn, sat, np, offp;
 
-        type = getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(rtcm->buff, 24, 12);
 
         if ((nsat = decode_ssr2_head(rtcm, sys, &sync, &iod, &udint, &i)) < 0) {
             //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
@@ -1846,12 +1955,12 @@ namespace RTKFunctions {
         default: return sync ? 0 : 10;
         }
         for (j = 0; j < nsat && i + 70 + np <= rtcm->len * 8; j++) {
-            prn = getbitu(rtcm->buff, i, np) + offp; i += np;
-            dclk[0] = getbits(rtcm->buff, i, 22) * 1E-4; i += 22;
-            dclk[1] = getbits(rtcm->buff, i, 21) * 1E-6; i += 21;
-            dclk[2] = getbits(rtcm->buff, i, 27) * 2E-8; i += 27;
+            prn = CommonRTK::getbitu(rtcm->buff, i, np) + offp; i += np;
+            dclk[0] = CommonRTK::getbits(rtcm->buff, i, 22) * 1E-4; i += 22;
+            dclk[1] = CommonRTK::getbits(rtcm->buff, i, 21) * 1E-6; i += 21;
+            dclk[2] = CommonRTK::getbits(rtcm->buff, i, 27) * 2E-8; i += 27;
 
-            if (!(sat = satno(sys, prn))) {
+            if (!(sat = CommonRTK::satno(sys, prn))) {
                 //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
                 continue;
             }
@@ -1873,7 +1982,7 @@ namespace RTKFunctions {
         double udint, bias, cbias[MAXCODE];
         int i, j, k, type, mode, sync, iod, nsat, prn, sat, nbias, np, offp, ncode;
 
-        type = getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(rtcm->buff, 24, 12);
 
         if ((nsat = decode_ssr2_head(rtcm, sys, &sync, &iod, &udint, &i)) < 0) {
             //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
@@ -1889,13 +1998,13 @@ namespace RTKFunctions {
         default: return sync ? 0 : 10;
         }
         for (j = 0; j < nsat && i + 5 + np <= rtcm->len * 8; j++) {
-            prn = getbitu(rtcm->buff, i, np) + offp; i += np;
-            nbias = getbitu(rtcm->buff, i, 5);      i += 5;
+            prn = CommonRTK::getbitu(rtcm->buff, i, np) + offp; i += np;
+            nbias = CommonRTK::getbitu(rtcm->buff, i, 5);      i += 5;
 
             for (k = 0; k < MAXCODE; k++) cbias[k] = 0.0;
             for (k = 0; k < nbias && i + 19 <= rtcm->len * 8; k++) {
-                mode = getbitu(rtcm->buff, i, 5);      i += 5;
-                bias = getbits(rtcm->buff, i, 14) * 0.01; i += 14;
+                mode = CommonRTK::getbitu(rtcm->buff, i, 5);      i += 5;
+                bias = CommonRTK::getbits(rtcm->buff, i, 14) * 0.01; i += 14;
                 if (mode <= ncode) {
                     cbias[codes[mode] - 1] = (float)bias;
                 }
@@ -1903,7 +2012,7 @@ namespace RTKFunctions {
                     //trace(2, "rtcm3 %d not supported mode: mode=%d\n", type, mode);
                 }
             }
-            if (!(sat = satno(sys, prn))) {
+            if (!(sat = CommonRTK::satno(sys, prn))) {
                 //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
                 continue;
             }
@@ -1924,7 +2033,7 @@ namespace RTKFunctions {
         double udint, deph[3], ddeph[3], dclk[3];
         int i, j, k, type, nsat, sync, iod, prn, sat, iode, iodcrc, refd = 0, np, ni, nj, offp;
 
-        type = getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(rtcm->buff, 24, 12);
 
         if ((nsat = decode_ssr1_head(rtcm, sys, &sync, &iod, &udint, &refd, &i)) < 0) {
             //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
@@ -1940,21 +2049,21 @@ namespace RTKFunctions {
         default: return sync ? 0 : 10;
         }
         for (j = 0; j < nsat && i + 191 + np + ni + nj <= rtcm->len * 8; j++) {
-            prn = getbitu(rtcm->buff, i, np) + offp; i += np;
-            iode = getbitu(rtcm->buff, i, ni);      i += ni;
-            iodcrc = getbitu(rtcm->buff, i, nj);      i += nj;
-            deph[0] = getbits(rtcm->buff, i, 22) * 1E-4; i += 22;
-            deph[1] = getbits(rtcm->buff, i, 20) * 4E-4; i += 20;
-            deph[2] = getbits(rtcm->buff, i, 20) * 4E-4; i += 20;
-            ddeph[0] = getbits(rtcm->buff, i, 21) * 1E-6; i += 21;
-            ddeph[1] = getbits(rtcm->buff, i, 19) * 4E-6; i += 19;
-            ddeph[2] = getbits(rtcm->buff, i, 19) * 4E-6; i += 19;
+            prn = CommonRTK::getbitu(rtcm->buff, i, np) + offp; i += np;
+            iode = CommonRTK::getbitu(rtcm->buff, i, ni);      i += ni;
+            iodcrc = CommonRTK::getbitu(rtcm->buff, i, nj);      i += nj;
+            deph[0] = CommonRTK::getbits(rtcm->buff, i, 22) * 1E-4; i += 22;
+            deph[1] = CommonRTK::getbits(rtcm->buff, i, 20) * 4E-4; i += 20;
+            deph[2] = CommonRTK::getbits(rtcm->buff, i, 20) * 4E-4; i += 20;
+            ddeph[0] = CommonRTK::getbits(rtcm->buff, i, 21) * 1E-6; i += 21;
+            ddeph[1] = CommonRTK::getbits(rtcm->buff, i, 19) * 4E-6; i += 19;
+            ddeph[2] = CommonRTK::getbits(rtcm->buff, i, 19) * 4E-6; i += 19;
 
-            dclk[0] = getbits(rtcm->buff, i, 22) * 1E-4; i += 22;
-            dclk[1] = getbits(rtcm->buff, i, 21) * 1E-6; i += 21;
-            dclk[2] = getbits(rtcm->buff, i, 27) * 2E-8; i += 27;
+            dclk[0] = CommonRTK::getbits(rtcm->buff, i, 22) * 1E-4; i += 22;
+            dclk[1] = CommonRTK::getbits(rtcm->buff, i, 21) * 1E-6; i += 21;
+            dclk[2] = CommonRTK::getbits(rtcm->buff, i, 27) * 2E-8; i += 27;
 
-            if (!(sat = satno(sys, prn))) {
+            if (!(sat = CommonRTK::satno(sys, prn))) {
                 //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
                 continue;
             }
@@ -1980,7 +2089,7 @@ namespace RTKFunctions {
         double udint;
         int i, j, type, nsat, sync, iod, prn, sat, ura, np, offp;
 
-        type = getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(rtcm->buff, 24, 12);
 
         if ((nsat = decode_ssr2_head(rtcm, sys, &sync, &iod, &udint, &i)) < 0) {
             //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
@@ -1996,10 +2105,10 @@ namespace RTKFunctions {
         default: return sync ? 0 : 10;
         }
         for (j = 0; j < nsat && i + 6 + np <= rtcm->len * 8; j++) {
-            prn = getbitu(rtcm->buff, i, np) + offp; i += np;
-            ura = getbitu(rtcm->buff, i, 6);      i += 6;
+            prn = CommonRTK::getbitu(rtcm->buff, i, np) + offp; i += np;
+            ura = CommonRTK::getbitu(rtcm->buff, i, 6);      i += 6;
 
-            if (!(sat = satno(sys, prn))) {
+            if (!(sat = CommonRTK::satno(sys, prn))) {
                 //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
                 continue;
             }
@@ -2017,7 +2126,7 @@ namespace RTKFunctions {
         double udint, hrclk;
         int i, j, type, nsat, sync, iod, prn, sat, np, offp;
 
-        type = getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(rtcm->buff, 24, 12);
 
         if ((nsat = decode_ssr2_head(rtcm, sys, &sync, &iod, &udint, &i)) < 0) {
             //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
@@ -2033,10 +2142,10 @@ namespace RTKFunctions {
         default: return sync ? 0 : 10;
         }
         for (j = 0; j < nsat && i + 22 + np <= rtcm->len * 8; j++) {
-            prn = getbitu(rtcm->buff, i, np) + offp; i += np;
-            hrclk = getbits(rtcm->buff, i, 22) * 1E-4; i += 22;
+            prn = CommonRTK::getbitu(rtcm->buff, i, np) + offp; i += np;
+            hrclk = CommonRTK::getbits(rtcm->buff, i, 22) * 1E-4; i += 22;
 
-            if (!(sat = satno(sys, prn))) {
+            if (!(sat = CommonRTK::satno(sys, prn))) {
                 //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
                 continue;
             }
@@ -2049,7 +2158,7 @@ namespace RTKFunctions {
         return sync ? 0 : 10;
     }
     /* decode ssr 7 message header -----------------------------------------------*/
-    int decode_ssr7_head(rtcm_t* rtcm, int sys, int* sync, int* iod, double* udint, int* dispe, int* mw, int* hsize)
+    int DecodeRTCM::decode_ssr7_head(rtcm_t* rtcm, int sys, int* sync, int* iod, double* udint, int* dispe, int* mw, int* hsize)
     {
         double tod, tow;
         char* msg, tstr[64];
@@ -2060,21 +2169,21 @@ namespace RTKFunctions {
         if (i + (sys == SYS_GLO ? 54 : 51 + ns) > rtcm->len * 8) return -1;
 
         if (sys == SYS_GLO) {
-            tod = getbitu(rtcm->buff, i, 17); i += 17;
+            tod = CommonRTK::getbitu(rtcm->buff, i, 17); i += 17;
             adjday_glot(rtcm, tod);
         }
         else {
-            tow = getbitu(rtcm->buff, i, 20); i += 20;
-            adjweek(rtcm, tow);
+            tow = CommonRTK::getbitu(rtcm->buff, i, 20); i += 20;
+            DecodeRTCM::adjweek(rtcm, tow);
         }
-        udi = getbitu(rtcm->buff, i, 4); i += 4;
-        *sync = getbitu(rtcm->buff, i, 1); i += 1;
-        *iod = getbitu(rtcm->buff, i, 4); i += 4;
-        provid = getbitu(rtcm->buff, i, 16); i += 16; /* provider id */
-        solid = getbitu(rtcm->buff, i, 4); i += 4; /* solution id */
-        *dispe = getbitu(rtcm->buff, i, 1); i += 1; /* dispersive bias consistency ind */
-        *mw = getbitu(rtcm->buff, i, 1); i += 1; /* MW consistency indicator */
-        nsat = getbitu(rtcm->buff, i, ns); i += ns;
+        udi = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4;
+        *sync = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
+        *iod = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4;
+        provid = CommonRTK::getbitu(rtcm->buff, i, 16); i += 16; /* provider id */
+        solid = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4; /* solution id */
+        *dispe = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1; /* dispersive bias consistency ind */
+        *mw = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1; /* MW consistency indicator */
+        nsat = CommonRTK::getbitu(rtcm->buff, i, ns); i += ns;
         *udint = ssrudint[udi];
 
         time2str(rtcm->time, tstr, 2);
@@ -2096,7 +2205,7 @@ namespace RTKFunctions {
         int i, j, k, type, mode, sync, iod, nsat, prn, sat, nbias, ncode, np, mw, offp, sii, swl;
         int dispe, sdc, yaw_ang, yaw_rate;
 
-        type = getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(rtcm->buff, 24, 12);
 
         if ((nsat = decode_ssr7_head(rtcm, sys, &sync, &iod, &udint, &dispe, &mw, &i)) < 0) {
             //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
@@ -2111,19 +2220,19 @@ namespace RTKFunctions {
         default: return sync ? 0 : 10;
         }
         for (j = 0; j < nsat && i + 5 + 17 + np <= rtcm->len * 8; j++) {
-            prn = getbitu(rtcm->buff, i, np) + offp; i += np;
-            nbias = getbitu(rtcm->buff, i, 5);      i += 5;
-            yaw_ang = getbitu(rtcm->buff, i, 9);      i += 9;
-            yaw_rate = getbits(rtcm->buff, i, 8);      i += 8;
+            prn = CommonRTK::getbitu(rtcm->buff, i, np) + offp; i += np;
+            nbias = CommonRTK::getbitu(rtcm->buff, i, 5);      i += 5;
+            yaw_ang = CommonRTK::getbitu(rtcm->buff, i, 9);      i += 9;
+            yaw_rate = CommonRTK::getbits(rtcm->buff, i, 8);      i += 8;
 
             for (k = 0; k < MAXCODE; k++) pbias[k] = stdpb[k] = 0.0;
             for (k = 0; k < nbias && i + 49 <= rtcm->len * 8; k++) {
-                mode = getbitu(rtcm->buff, i, 5); i += 5;
-                sii = getbitu(rtcm->buff, i, 1); i += 1; /* integer-indicator */
-                swl = getbitu(rtcm->buff, i, 2); i += 2; /* WL integer-indicator */
-                sdc = getbitu(rtcm->buff, i, 4); i += 4; /* discontinuity counter */
-                bias = getbits(rtcm->buff, i, 20); i += 20; /* phase bias (m) */
-                std = getbitu(rtcm->buff, i, 17); i += 17; /* phase bias std-dev (m) */
+                mode = CommonRTK::getbitu(rtcm->buff, i, 5); i += 5;
+                sii = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1; /* integer-indicator */
+                swl = CommonRTK::getbitu(rtcm->buff, i, 2); i += 2; /* WL integer-indicator */
+                sdc = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4; /* discontinuity counter */
+                bias = CommonRTK::getbits(rtcm->buff, i, 20); i += 20; /* phase bias (m) */
+                std = CommonRTK::getbitu(rtcm->buff, i, 17); i += 17; /* phase bias std-dev (m) */
                 if (mode <= ncode) {
                     pbias[codes[mode] - 1] = bias * 0.0001; /* (m) */
                     stdpb[codes[mode] - 1] = std * 0.0001; /* (m) */
@@ -2132,7 +2241,7 @@ namespace RTKFunctions {
                     //trace(2, "rtcm3 %d not supported mode: mode=%d\n", type, mode);
                 }
             }
-            if (!(sat = satno(sys, prn))) {
+            if (!(sat = CommonRTK::satno(sys, prn))) {
                 //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
                 continue;
             }
@@ -2198,7 +2307,7 @@ namespace RTKFunctions {
         char* msm_type = "", * q = NULL;
         int i, j, k, type, prn, sat, fn, index = 0, freq[32], ind[32];
 
-        type = getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(rtcm->buff, 24, 12);
 
         switch (sys) {
         case SYS_GPS: msm_type = q = rtcm->msmtype[0]; break;
@@ -2250,8 +2359,8 @@ namespace RTKFunctions {
             if (sys == SYS_QZS) prn += MINPRNQZS - 1;
             else if (sys == SYS_SBS) prn += MINPRNSBS - 1;
 
-            if ((sat = satno(sys, prn))) {
-                tt = timediff(rtcm->obs.data[0].time, rtcm->time);
+            if ((sat = CommonRTK::satno(sys, prn))) {
+                tt = CommonRTK::timediff(rtcm->obs.data[0].time, rtcm->time);
                 if (rtcm->obsflag || fabs(tt) > 1E-9) {
                     rtcm->obs.n = rtcm->obsflag = 0;
                 }
@@ -2296,46 +2405,46 @@ namespace RTKFunctions {
         }
     }
     /* decode type msm message header --------------------------------------------*/
-    int decode_msm_head(rtcm_t* rtcm, int sys, int* sync, int* iod, msm_h_t* h, int* hsize)
+    int DecodeRTCM::decode_msm_head(rtcm_t* rtcm, int sys, int* sync, int* iod, msm_h_t* h, int* hsize)
     {
         msm_h_t h0 = { 0 };
         double tow, tod;
         char* msg, tstr[64];
         int i = 24, j, dow, mask, staid, type, ncell = 0;
 
-        type = getbitu(rtcm->buff, i, 12); i += 12;
+        type = CommonRTK::getbitu(rtcm->buff, i, 12); i += 12;
 
         *h = h0;
         if (i + 157 <= rtcm->len * 8) {
-            staid = getbitu(rtcm->buff, i, 12);       i += 12;
+            staid = CommonRTK::getbitu(rtcm->buff, i, 12);       i += 12;
 
             if (sys == SYS_GLO) {
-                dow = getbitu(rtcm->buff, i, 3);       i += 3;
-                tod = getbitu(rtcm->buff, i, 27) * 0.001; i += 27;
+                dow = CommonRTK::getbitu(rtcm->buff, i, 3);       i += 3;
+                tod = CommonRTK::getbitu(rtcm->buff, i, 27) * 0.001; i += 27;
                 adjday_glot(rtcm, tod);
             }
             else if (sys == SYS_CMP) {
-                tow = getbitu(rtcm->buff, i, 30) * 0.001; i += 30;
+                tow = CommonRTK::getbitu(rtcm->buff, i, 30) * 0.001; i += 30;
                 tow += 14.0; /* BDT -> GPST */
-                adjweek(rtcm, tow);
+                DecodeRTCM::adjweek(rtcm, tow);
             }
             else {
-                tow = getbitu(rtcm->buff, i, 30) * 0.001; i += 30;
-                adjweek(rtcm, tow);
+                tow = CommonRTK::getbitu(rtcm->buff, i, 30) * 0.001; i += 30;
+                DecodeRTCM::adjweek(rtcm, tow);
             }
-            *sync = getbitu(rtcm->buff, i, 1);       i += 1;
-            *iod = getbitu(rtcm->buff, i, 3);       i += 3;
-            h->time_s = getbitu(rtcm->buff, i, 7);       i += 7;
-            h->clk_str = getbitu(rtcm->buff, i, 2);       i += 2;
-            h->clk_ext = getbitu(rtcm->buff, i, 2);       i += 2;
-            h->smooth = getbitu(rtcm->buff, i, 1);       i += 1;
-            h->tint_s = getbitu(rtcm->buff, i, 3);       i += 3;
+            *sync = CommonRTK::getbitu(rtcm->buff, i, 1);       i += 1;
+            *iod = CommonRTK::getbitu(rtcm->buff, i, 3);       i += 3;
+            h->time_s = CommonRTK::getbitu(rtcm->buff, i, 7);       i += 7;
+            h->clk_str = CommonRTK::getbitu(rtcm->buff, i, 2);       i += 2;
+            h->clk_ext = CommonRTK::getbitu(rtcm->buff, i, 2);       i += 2;
+            h->smooth = CommonRTK::getbitu(rtcm->buff, i, 1);       i += 1;
+            h->tint_s = CommonRTK::getbitu(rtcm->buff, i, 3);       i += 3;
             for (j = 1; j <= 64; j++) {
-                mask = getbitu(rtcm->buff, i, 1); i += 1;
+                mask = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
                 if (mask) h->sats[h->nsat++] = j;
             }
             for (j = 1; j <= 32; j++) {
-                mask = getbitu(rtcm->buff, i, 1); i += 1;
+                mask = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
                 if (mask) h->sigs[h->nsig++] = j;
             }
         }
@@ -2344,7 +2453,7 @@ namespace RTKFunctions {
             return -1;
         }
         /* test station id */
-        if (!test_staid(rtcm, staid)) return -1;
+        if (!DecodeRTCM::test_staid(rtcm, staid)) return -1;
 
         if (h->nsat * h->nsig > 64) {
             //trace(2, "rtcm3 %d number of sats and sigs error: nsat=%d nsig=%d\n",                type, h->nsat, h->nsig);
@@ -2355,7 +2464,7 @@ namespace RTKFunctions {
             return -1;
         }
         for (j = 0; j < h->nsat * h->nsig; j++) {
-            h->cellmask[j] = getbitu(rtcm->buff, i, 1); i += 1;
+            h->cellmask[j] = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
             if (h->cellmask[j]) ncell++;
         }
         *hsize = i;
@@ -2371,25 +2480,25 @@ namespace RTKFunctions {
         return ncell;
     }
     /* decode unsupported msm message --------------------------------------------*/
-    int decode_msm0(rtcm_t* rtcm, int sys)
+    int DecodeRTCM::decode_msm0(rtcm_t* rtcm, int sys)
     {
         msm_h_t h = { 0 };
         int i, sync, iod;
-        if (decode_msm_head(rtcm, sys, &sync, &iod, &h, &i) < 0) return -1;
+        if (DecodeRTCM::decode_msm_head(rtcm, sys, &sync, &iod, &h, &i) < 0) return -1;
         rtcm->obsflag = !sync;
         return sync ? 0 : 1;
     }
     /* decode msm 4: full pseudorange and phaserange plus cnr --------------------*/
-    int decode_msm4(rtcm_t* rtcm, int sys)
+    int DecodeRTCM::decode_msm4(rtcm_t* rtcm, int sys)
     {
         msm_h_t h = { 0 };
         double r[64], pr[64], cp[64], cnr[64];
         int i, j, type, sync, iod, ncell, rng, rng_m, prv, cpv, lock[64], half[64];
 
-        type = getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(rtcm->buff, 24, 12);
 
         /* decode msm header */
-        if ((ncell = decode_msm_head(rtcm, sys, &sync, &iod, &h, &i)) < 0) return -1;
+        if ((ncell = DecodeRTCM::decode_msm_head(rtcm, sys, &sync, &iod, &h, &i)) < 0) return -1;
 
         if (i + h.nsat * 18 + ncell * 48 > rtcm->len * 8) {
             //trace(2, "rtcm3 %d length error: nsat=%d ncell=%d len=%d\n", type, h.nsat,                ncell, rtcm->len);
@@ -2400,30 +2509,30 @@ namespace RTKFunctions {
 
         /* decode satellite data */
         for (j = 0; j < h.nsat; j++) { /* range */
-            rng = getbitu(rtcm->buff, i, 8); i += 8;
+            rng = CommonRTK::getbitu(rtcm->buff, i, 8); i += 8;
             if (rng != 255) r[j] = rng * RANGE_MS;
         }
         for (j = 0; j < h.nsat; j++) {
-            rng_m = getbitu(rtcm->buff, i, 10); i += 10;
+            rng_m = CommonRTK::getbitu(rtcm->buff, i, 10); i += 10;
             if (r[j] != 0.0) r[j] += rng_m * P2_10 * RANGE_MS;
         }
         /* decode signal data */
         for (j = 0; j < ncell; j++) { /* pseudorange */
-            prv = getbits(rtcm->buff, i, 15); i += 15;
+            prv = CommonRTK::getbits(rtcm->buff, i, 15); i += 15;
             if (prv != -16384) pr[j] = prv * P2_24 * RANGE_MS;
         }
         for (j = 0; j < ncell; j++) { /* phaserange */
-            cpv = getbits(rtcm->buff, i, 22); i += 22;
+            cpv = CommonRTK::getbits(rtcm->buff, i, 22); i += 22;
             if (cpv != -2097152) cp[j] = cpv * P2_29 * RANGE_MS;
         }
         for (j = 0; j < ncell; j++) { /* lock time */
-            lock[j] = getbitu(rtcm->buff, i, 4); i += 4;
+            lock[j] = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4;
         }
         for (j = 0; j < ncell; j++) { /* half-cycle ambiguity */
-            half[j] = getbitu(rtcm->buff, i, 1); i += 1;
+            half[j] = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
         }
         for (j = 0; j < ncell; j++) { /* cnr */
-            cnr[j] = getbitu(rtcm->buff, i, 6) * 1.0; i += 6;
+            cnr[j] = CommonRTK::getbitu(rtcm->buff, i, 6) * 1.0; i += 6;
         }
         /* save obs data in msm message */
         save_msm_obs(rtcm, sys, &h, r, pr, cp, NULL, NULL, cnr, lock, NULL, half);
@@ -2440,7 +2549,7 @@ namespace RTKFunctions {
         int i, j, type, sync, iod, ncell, rng, rng_m, rate, prv, cpv, rrv, lock[64];
         int ex[64], half[64];
 
-        type = getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(rtcm->buff, 24, 12);
 
         /* decode msm header */
         if ((ncell = decode_msm_head(rtcm, sys, &sync, &iod, &h, &i)) < 0) return -1;
@@ -2456,40 +2565,40 @@ namespace RTKFunctions {
 
         /* decode satellite data */
         for (j = 0; j < h.nsat; j++) { /* range */
-            rng = getbitu(rtcm->buff, i, 8); i += 8;
+            rng = CommonRTK::getbitu(rtcm->buff, i, 8); i += 8;
             if (rng != 255) r[j] = rng * RANGE_MS;
         }
         for (j = 0; j < h.nsat; j++) { /* extended info */
-            ex[j] = getbitu(rtcm->buff, i, 4); i += 4;
+            ex[j] = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4;
         }
         for (j = 0; j < h.nsat; j++) {
-            rng_m = getbitu(rtcm->buff, i, 10); i += 10;
+            rng_m = CommonRTK::getbitu(rtcm->buff, i, 10); i += 10;
             if (r[j] != 0.0) r[j] += rng_m * P2_10 * RANGE_MS;
         }
         for (j = 0; j < h.nsat; j++) { /* phaserangerate */
-            rate = getbits(rtcm->buff, i, 14); i += 14;
+            rate = CommonRTK::getbits(rtcm->buff, i, 14); i += 14;
             if (rate != -8192) rr[j] = rate * 1.0;
         }
         /* decode signal data */
         for (j = 0; j < ncell; j++) { /* pseudorange */
-            prv = getbits(rtcm->buff, i, 15); i += 15;
+            prv = CommonRTK::getbits(rtcm->buff, i, 15); i += 15;
             if (prv != -16384) pr[j] = prv * P2_24 * RANGE_MS;
         }
         for (j = 0; j < ncell; j++) { /* phaserange */
-            cpv = getbits(rtcm->buff, i, 22); i += 22;
+            cpv = CommonRTK::getbits(rtcm->buff, i, 22); i += 22;
             if (cpv != -2097152) cp[j] = cpv * P2_29 * RANGE_MS;
         }
         for (j = 0; j < ncell; j++) { /* lock time */
-            lock[j] = getbitu(rtcm->buff, i, 4); i += 4;
+            lock[j] = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4;
         }
         for (j = 0; j < ncell; j++) { /* half-cycle ambiguity */
-            half[j] = getbitu(rtcm->buff, i, 1); i += 1;
+            half[j] = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
         }
         for (j = 0; j < ncell; j++) { /* cnr */
-            cnr[j] = getbitu(rtcm->buff, i, 6) * 1.0; i += 6;
+            cnr[j] = CommonRTK::getbitu(rtcm->buff, i, 6) * 1.0; i += 6;
         }
         for (j = 0; j < ncell; j++) { /* phaserangerate */
-            rrv = getbits(rtcm->buff, i, 15); i += 15;
+            rrv = CommonRTK::getbits(rtcm->buff, i, 15); i += 15;
             if (rrv != -16384) rrf[j] = rrv * 0.0001;
         }
         /* save obs data in msm message */
@@ -2505,7 +2614,7 @@ namespace RTKFunctions {
         double r[64], pr[64], cp[64], cnr[64];
         int i, j, type, sync, iod, ncell, rng, rng_m, prv, cpv, lock[64], half[64];
 
-        type = getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(rtcm->buff, 24, 12);
 
         /* decode msm header */
         if ((ncell = decode_msm_head(rtcm, sys, &sync, &iod, &h, &i)) < 0) return -1;
@@ -2519,30 +2628,30 @@ namespace RTKFunctions {
 
         /* decode satellite data */
         for (j = 0; j < h.nsat; j++) { /* range */
-            rng = getbitu(rtcm->buff, i, 8); i += 8;
+            rng = CommonRTK::getbitu(rtcm->buff, i, 8); i += 8;
             if (rng != 255) r[j] = rng * RANGE_MS;
         }
         for (j = 0; j < h.nsat; j++) {
-            rng_m = getbitu(rtcm->buff, i, 10); i += 10;
+            rng_m = CommonRTK::getbitu(rtcm->buff, i, 10); i += 10;
             if (r[j] != 0.0) r[j] += rng_m * P2_10 * RANGE_MS;
         }
         /* decode signal data */
         for (j = 0; j < ncell; j++) { /* pseudorange */
-            prv = getbits(rtcm->buff, i, 20); i += 20;
+            prv = CommonRTK::getbits(rtcm->buff, i, 20); i += 20;
             if (prv != -524288) pr[j] = prv * P2_29 * RANGE_MS;
         }
         for (j = 0; j < ncell; j++) { /* phaserange */
-            cpv = getbits(rtcm->buff, i, 24); i += 24;
+            cpv = CommonRTK::getbits(rtcm->buff, i, 24); i += 24;
             if (cpv != -8388608) cp[j] = cpv * P2_31 * RANGE_MS;
         }
         for (j = 0; j < ncell; j++) { /* lock time */
-            lock[j] = getbitu(rtcm->buff, i, 10); i += 10;
+            lock[j] = CommonRTK::getbitu(rtcm->buff, i, 10); i += 10;
         }
         for (j = 0; j < ncell; j++) { /* half-cycle ambiguity */
-            half[j] = getbitu(rtcm->buff, i, 1); i += 1;
+            half[j] = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
         }
         for (j = 0; j < ncell; j++) { /* cnr */
-            cnr[j] = getbitu(rtcm->buff, i, 10) * 0.0625; i += 10;
+            cnr[j] = CommonRTK::getbitu(rtcm->buff, i, 10) * 0.0625; i += 10;
         }
         /* save obs data in msm message */
         save_msm_obs(rtcm, sys, &h, r, pr, cp, NULL, NULL, cnr, lock, NULL, half);
@@ -2559,7 +2668,7 @@ namespace RTKFunctions {
         int i, j, type, sync, iod, ncell, rng, rng_m, rate, prv, cpv, rrv, lock[64];
         int ex[64], half[64];
 
-        type = getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(rtcm->buff, 24, 12);
 
         /* decode msm header */
         if ((ncell = decode_msm_head(rtcm, sys, &sync, &iod, &h, &i)) < 0) return -1;
@@ -2575,40 +2684,40 @@ namespace RTKFunctions {
 
         /* decode satellite data */
         for (j = 0; j < h.nsat; j++) { /* range */
-            rng = getbitu(rtcm->buff, i, 8); i += 8;
+            rng = CommonRTK::getbitu(rtcm->buff, i, 8); i += 8;
             if (rng != 255) r[j] = rng * RANGE_MS;
         }
         for (j = 0; j < h.nsat; j++) { /* extended info */
-            ex[j] = getbitu(rtcm->buff, i, 4); i += 4;
+            ex[j] = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4;
         }
         for (j = 0; j < h.nsat; j++) {
-            rng_m = getbitu(rtcm->buff, i, 10); i += 10;
+            rng_m = CommonRTK::getbitu(rtcm->buff, i, 10); i += 10;
             if (r[j] != 0.0) r[j] += rng_m * P2_10 * RANGE_MS;
         }
         for (j = 0; j < h.nsat; j++) { /* phaserangerate */
-            rate = getbits(rtcm->buff, i, 14); i += 14;
+            rate = CommonRTK::getbits(rtcm->buff, i, 14); i += 14;
             if (rate != -8192) rr[j] = rate * 1.0;
         }
         /* decode signal data */
         for (j = 0; j < ncell; j++) { /* pseudorange */
-            prv = getbits(rtcm->buff, i, 20); i += 20;
+            prv = CommonRTK::getbits(rtcm->buff, i, 20); i += 20;
             if (prv != -524288) pr[j] = prv * P2_29 * RANGE_MS;
         }
         for (j = 0; j < ncell; j++) { /* phaserange */
-            cpv = getbits(rtcm->buff, i, 24); i += 24;
+            cpv = CommonRTK::getbits(rtcm->buff, i, 24); i += 24;
             if (cpv != -8388608) cp[j] = cpv * P2_31 * RANGE_MS;
         }
         for (j = 0; j < ncell; j++) { /* lock time */
-            lock[j] = getbitu(rtcm->buff, i, 10); i += 10;
+            lock[j] = CommonRTK::getbitu(rtcm->buff, i, 10); i += 10;
         }
         for (j = 0; j < ncell; j++) { /* half-cycle amiguity */
-            half[j] = getbitu(rtcm->buff, i, 1); i += 1;
+            half[j] = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
         }
         for (j = 0; j < ncell; j++) { /* cnr */
-            cnr[j] = getbitu(rtcm->buff, i, 10) * 0.0625; i += 10;
+            cnr[j] = CommonRTK::getbitu(rtcm->buff, i, 10) * 0.0625; i += 10;
         }
         for (j = 0; j < ncell; j++) { /* phaserangerate */
-            rrv = getbits(rtcm->buff, i, 15); i += 15;
+            rrv = CommonRTK::getbits(rtcm->buff, i, 15); i += 15;
             if (rrv != -16384) rrf[j] = rrv * 0.0001;
         }
         /* save obs data in msm message */
@@ -2627,7 +2736,7 @@ namespace RTKFunctions {
     int decode_rtcm3(rtcm_t* rtcm)
     {
         double tow;
-        int ret = 0, type = getbitu(rtcm->buff, 24, 12), week;
+        int ret = 0, type = CommonRTK::getbitu(rtcm->buff, 24, 12), week;
 
         //trace(3, "decode_rtcm3: len=%3d type=%d\n", rtcm->len, type);
 
@@ -2636,130 +2745,130 @@ namespace RTKFunctions {
         }
         /* real-time input option */
         if (strstr(rtcm->opt, "-RT_INP")) {
-            tow = time2gpst(utc2gpst(timeget()), &week);
-            rtcm->time = gpst2time(week, floor(tow));
+            tow = CommonRTK::time2gpst(CommonRTK::utc2gpst(CommonRTK::timeget()), &week);
+            rtcm->time = CommonRTK::gpst2time(week, floor(tow));
         }
         switch (type) {
-        case 1001: ret = decode_type1001(rtcm); break; /* not supported */
-        case 1002: ret = decode_type1002(rtcm); break;
-        case 1003: ret = decode_type1003(rtcm); break; /* not supported */
-        case 1004: ret = decode_type1004(rtcm); break;
-        case 1005: ret = decode_type1005(rtcm); break;
-        case 1006: ret = decode_type1006(rtcm); break;
-        case 1007: ret = decode_type1007(rtcm); break;
-        case 1008: ret = decode_type1008(rtcm); break;
-        case 1009: ret = decode_type1009(rtcm); break; /* not supported */
-        case 1010: ret = decode_type1010(rtcm); break;
-        case 1011: ret = decode_type1011(rtcm); break; /* not supported */
-        case 1012: ret = decode_type1012(rtcm); break;
-        case 1013: ret = decode_type1013(rtcm); break; /* not supported */
-        case 1019: ret = decode_type1019(rtcm); break;
-        case 1020: ret = decode_type1020(rtcm); break;
-        case 1021: ret = decode_type1021(rtcm); break; /* not supported */
-        case 1022: ret = decode_type1022(rtcm); break; /* not supported */
-        case 1023: ret = decode_type1023(rtcm); break; /* not supported */
-        case 1024: ret = decode_type1024(rtcm); break; /* not supported */
-        case 1025: ret = decode_type1025(rtcm); break; /* not supported */
-        case 1026: ret = decode_type1026(rtcm); break; /* not supported */
-        case 1027: ret = decode_type1027(rtcm); break; /* not supported */
-        case 1029: ret = decode_type1029(rtcm); break;
-        case 1030: ret = decode_type1030(rtcm); break; /* not supported */
-        case 1031: ret = decode_type1031(rtcm); break; /* not supported */
-        case 1032: ret = decode_type1032(rtcm); break; /* not supported */
-        case 1033: ret = decode_type1033(rtcm); break;
-        case 1034: ret = decode_type1034(rtcm); break; /* not supported */
-        case 1035: ret = decode_type1035(rtcm); break; /* not supported */
-        case 1037: ret = decode_type1037(rtcm); break; /* not supported */
-        case 1038: ret = decode_type1038(rtcm); break; /* not supported */
-        case 1039: ret = decode_type1039(rtcm); break; /* not supported */
-        case 1044: ret = decode_type1044(rtcm); break;
-        case 1045: ret = decode_type1045(rtcm); break;
-        case 1046: ret = decode_type1046(rtcm); break;
-        case   63: ret = decode_type1042(rtcm); break; /* RTCM draft */
-        case 1042: ret = decode_type1042(rtcm); break;
-        case 1057: ret = decode_ssr1(rtcm, SYS_GPS); break;
-        case 1058: ret = decode_ssr2(rtcm, SYS_GPS); break;
-        case 1059: ret = decode_ssr3(rtcm, SYS_GPS); break;
-        case 1060: ret = decode_ssr4(rtcm, SYS_GPS); break;
-        case 1061: ret = decode_ssr5(rtcm, SYS_GPS); break;
-        case 1062: ret = decode_ssr6(rtcm, SYS_GPS); break;
-        case 1063: ret = decode_ssr1(rtcm, SYS_GLO); break;
-        case 1064: ret = decode_ssr2(rtcm, SYS_GLO); break;
-        case 1065: ret = decode_ssr3(rtcm, SYS_GLO); break;
-        case 1066: ret = decode_ssr4(rtcm, SYS_GLO); break;
-        case 1067: ret = decode_ssr5(rtcm, SYS_GLO); break;
-        case 1068: ret = decode_ssr6(rtcm, SYS_GLO); break;
-        case 1071: ret = decode_msm0(rtcm, SYS_GPS); break; /* not supported */
-        case 1072: ret = decode_msm0(rtcm, SYS_GPS); break; /* not supported */
-        case 1073: ret = decode_msm0(rtcm, SYS_GPS); break; /* not supported */
-        case 1074: ret = decode_msm4(rtcm, SYS_GPS); break;
-        case 1075: ret = decode_msm5(rtcm, SYS_GPS); break;
-        case 1076: ret = decode_msm6(rtcm, SYS_GPS); break;
-        case 1077: ret = decode_msm7(rtcm, SYS_GPS); break;
-        case 1081: ret = decode_msm0(rtcm, SYS_GLO); break; /* not supported */
-        case 1082: ret = decode_msm0(rtcm, SYS_GLO); break; /* not supported */
-        case 1083: ret = decode_msm0(rtcm, SYS_GLO); break; /* not supported */
-        case 1084: ret = decode_msm4(rtcm, SYS_GLO); break;
-        case 1085: ret = decode_msm5(rtcm, SYS_GLO); break;
-        case 1086: ret = decode_msm6(rtcm, SYS_GLO); break;
-        case 1087: ret = decode_msm7(rtcm, SYS_GLO); break;
-        case 1091: ret = decode_msm0(rtcm, SYS_GAL); break; /* not supported */
-        case 1092: ret = decode_msm0(rtcm, SYS_GAL); break; /* not supported */
-        case 1093: ret = decode_msm0(rtcm, SYS_GAL); break; /* not supported */
-        case 1094: ret = decode_msm4(rtcm, SYS_GAL); break;
-        case 1095: ret = decode_msm5(rtcm, SYS_GAL); break;
-        case 1096: ret = decode_msm6(rtcm, SYS_GAL); break;
-        case 1097: ret = decode_msm7(rtcm, SYS_GAL); break;
-        case 1101: ret = decode_msm0(rtcm, SYS_SBS); break; /* not supported */
-        case 1102: ret = decode_msm0(rtcm, SYS_SBS); break; /* not supported */
-        case 1103: ret = decode_msm0(rtcm, SYS_SBS); break; /* not supported */
-        case 1104: ret = decode_msm4(rtcm, SYS_SBS); break;
-        case 1105: ret = decode_msm5(rtcm, SYS_SBS); break;
-        case 1106: ret = decode_msm6(rtcm, SYS_SBS); break;
-        case 1107: ret = decode_msm7(rtcm, SYS_SBS); break;
-        case 1111: ret = decode_msm0(rtcm, SYS_QZS); break; /* not supported */
-        case 1112: ret = decode_msm0(rtcm, SYS_QZS); break; /* not supported */
-        case 1113: ret = decode_msm0(rtcm, SYS_QZS); break; /* not supported */
-        case 1114: ret = decode_msm4(rtcm, SYS_QZS); break;
-        case 1115: ret = decode_msm5(rtcm, SYS_QZS); break;
-        case 1116: ret = decode_msm6(rtcm, SYS_QZS); break;
-        case 1117: ret = decode_msm7(rtcm, SYS_QZS); break;
-        case 1121: ret = decode_msm0(rtcm, SYS_CMP); break; /* not supported */
-        case 1122: ret = decode_msm0(rtcm, SYS_CMP); break; /* not supported */
-        case 1123: ret = decode_msm0(rtcm, SYS_CMP); break; /* not supported */
-        case 1124: ret = decode_msm4(rtcm, SYS_CMP); break;
-        case 1125: ret = decode_msm5(rtcm, SYS_CMP); break;
-        case 1126: ret = decode_msm6(rtcm, SYS_CMP); break;
-        case 1127: ret = decode_msm7(rtcm, SYS_CMP); break;
-        case 1230: ret = decode_type1230(rtcm);     break; /* not supported */
-        case 1240: ret = decode_ssr1(rtcm, SYS_GAL); break;
-        case 1241: ret = decode_ssr2(rtcm, SYS_GAL); break;
-        case 1242: ret = decode_ssr3(rtcm, SYS_GAL); break;
-        case 1243: ret = decode_ssr4(rtcm, SYS_GAL); break;
-        case 1244: ret = decode_ssr5(rtcm, SYS_GAL); break;
-        case 1245: ret = decode_ssr6(rtcm, SYS_GAL); break;
-        case 1246: ret = decode_ssr1(rtcm, SYS_QZS); break;
-        case 1247: ret = decode_ssr2(rtcm, SYS_QZS); break;
-        case 1248: ret = decode_ssr3(rtcm, SYS_QZS); break;
-        case 1249: ret = decode_ssr4(rtcm, SYS_QZS); break;
-        case 1250: ret = decode_ssr5(rtcm, SYS_QZS); break;
-        case 1251: ret = decode_ssr6(rtcm, SYS_QZS); break;
-        case 1252: ret = decode_ssr1(rtcm, SYS_SBS); break;
-        case 1253: ret = decode_ssr2(rtcm, SYS_SBS); break;
-        case 1254: ret = decode_ssr3(rtcm, SYS_SBS); break;
-        case 1255: ret = decode_ssr4(rtcm, SYS_SBS); break;
-        case 1256: ret = decode_ssr5(rtcm, SYS_SBS); break;
-        case 1257: ret = decode_ssr6(rtcm, SYS_SBS); break;
-        case 1258: ret = decode_ssr1(rtcm, SYS_CMP); break;
-        case 1259: ret = decode_ssr2(rtcm, SYS_CMP); break;
-        case 1260: ret = decode_ssr3(rtcm, SYS_CMP); break;
-        case 1261: ret = decode_ssr4(rtcm, SYS_CMP); break;
-        case 1262: ret = decode_ssr5(rtcm, SYS_CMP); break;
-        case 1263: ret = decode_ssr6(rtcm, SYS_CMP); break;
-        case   11: ret = decode_ssr7(rtcm, SYS_GLO); break; /* tentative */
-        case   12: ret = decode_ssr7(rtcm, SYS_GAL); break; /* tentative */
-        case   13: ret = decode_ssr7(rtcm, SYS_QZS); break; /* tentative */
-        case   14: ret = decode_ssr7(rtcm, SYS_CMP); break; /* tentative */
+        case 1001: ret = DecodeRTCM::decode_type1001(rtcm); break; /* not supported */
+        case 1002: ret = DecodeRTCM::decode_type1002(rtcm); break;
+        case 1003: ret = DecodeRTCM::decode_type1003(rtcm); break; /* not supported */
+        case 1004: ret = DecodeRTCM::decode_type1004(rtcm); break;
+        case 1005: ret = DecodeRTCM::decode_type1005(rtcm); break;
+        case 1006: ret = DecodeRTCM::decode_type1006(rtcm); break;
+        case 1007: ret = DecodeRTCM::decode_type1007(rtcm); break;
+        case 1008: ret = DecodeRTCM::decode_type1008(rtcm); break;
+        case 1009: ret = DecodeRTCM::decode_type1009(rtcm); break; /* not supported */
+        case 1010: ret = DecodeRTCM::decode_type1010(rtcm); break;
+        case 1011: ret = DecodeRTCM::decode_type1011(rtcm); break; /* not supported */
+        case 1012: ret = DecodeRTCM::decode_type1012(rtcm); break;
+        case 1013: ret = DecodeRTCM::decode_type1013(rtcm); break; /* not supported */
+        case 1019: ret = DecodeRTCM::decode_type1019(rtcm); break;
+        case 1020: ret = DecodeRTCM::decode_type1020(rtcm); break;
+        case 1021: ret = DecodeRTCM::decode_type1021(rtcm); break; /* not supported */
+        case 1022: ret = DecodeRTCM::decode_type1022(rtcm); break; /* not supported */
+        case 1023: ret = DecodeRTCM::decode_type1023(rtcm); break; /* not supported */
+        case 1024: ret = DecodeRTCM::decode_type1024(rtcm); break; /* not supported */
+        case 1025: ret = DecodeRTCM::decode_type1025(rtcm); break; /* not supported */
+        case 1026: ret = DecodeRTCM::decode_type1026(rtcm); break; /* not supported */
+        case 1027: ret = DecodeRTCM::decode_type1027(rtcm); break; /* not supported */
+        case 1029: ret = DecodeRTCM::decode_type1029(rtcm); break;
+        case 1030: ret = DecodeRTCM::decode_type1030(rtcm); break; /* not supported */
+        case 1031: ret = DecodeRTCM::decode_type1031(rtcm); break; /* not supported */
+        case 1032: ret = DecodeRTCM::decode_type1032(rtcm); break; /* not supported */
+        case 1033: ret = DecodeRTCM::decode_type1033(rtcm); break;
+        case 1034: ret = DecodeRTCM::decode_type1034(rtcm); break; /* not supported */
+        case 1035: ret = DecodeRTCM::decode_type1035(rtcm); break; /* not supported */
+        case 1037: ret = DecodeRTCM::decode_type1037(rtcm); break; /* not supported */
+        case 1038: ret = DecodeRTCM::decode_type1038(rtcm); break; /* not supported */
+        case 1039: ret = DecodeRTCM::decode_type1039(rtcm); break; /* not supported */
+        case 1044: ret = DecodeRTCM::decode_type1044(rtcm); break;
+        case 1045: ret = DecodeRTCM::decode_type1045(rtcm); break;
+        case 1046: ret = DecodeRTCM::decode_type1046(rtcm); break;
+        case   63: ret = DecodeRTCM::decode_type1042(rtcm); break; /* RTCM draft */
+        case 1042: ret = DecodeRTCM::decode_type1042(rtcm); break;
+        case 1057: ret = DecodeRTCM::decode_ssr1(rtcm, SYS_GPS); break;
+        case 1058: ret = DecodeRTCM::decode_ssr2(rtcm, SYS_GPS); break;
+        case 1059: ret = DecodeRTCM::decode_ssr3(rtcm, SYS_GPS); break;
+        case 1060: ret = DecodeRTCM::decode_ssr4(rtcm, SYS_GPS); break;
+        case 1061: ret = DecodeRTCM::decode_ssr5(rtcm, SYS_GPS); break;
+        case 1062: ret = DecodeRTCM::decode_ssr6(rtcm, SYS_GPS); break;
+        case 1063: ret = DecodeRTCM::decode_ssr1(rtcm, SYS_GLO); break;
+        case 1064: ret = DecodeRTCM::decode_ssr2(rtcm, SYS_GLO); break;
+        case 1065: ret = DecodeRTCM::decode_ssr3(rtcm, SYS_GLO); break;
+        case 1066: ret = DecodeRTCM::decode_ssr4(rtcm, SYS_GLO); break;
+        case 1067: ret = DecodeRTCM::decode_ssr5(rtcm, SYS_GLO); break;
+        case 1068: ret = DecodeRTCM::decode_ssr6(rtcm, SYS_GLO); break;
+        case 1071: ret = DecodeRTCM::decode_msm0(rtcm, SYS_GPS); break; /* not supported */
+        case 1072: ret = DecodeRTCM::decode_msm0(rtcm, SYS_GPS); break; /* not supported */
+        case 1073: ret = DecodeRTCM::decode_msm0(rtcm, SYS_GPS); break; /* not supported */
+        case 1074: ret = DecodeRTCM::decode_msm4(rtcm, SYS_GPS); break;
+        case 1075: ret = DecodeRTCM::decode_msm5(rtcm, SYS_GPS); break;
+        case 1076: ret = DecodeRTCM::decode_msm6(rtcm, SYS_GPS); break;
+        case 1077: ret = DecodeRTCM::decode_msm7(rtcm, SYS_GPS); break;
+        case 1081: ret = DecodeRTCM::decode_msm0(rtcm, SYS_GLO); break; /* not supported */
+        case 1082: ret = DecodeRTCM::decode_msm0(rtcm, SYS_GLO); break; /* not supported */
+        case 1083: ret = DecodeRTCM::decode_msm0(rtcm, SYS_GLO); break; /* not supported */
+        case 1084: ret = DecodeRTCM::decode_msm4(rtcm, SYS_GLO); break;
+        case 1085: ret = DecodeRTCM::decode_msm5(rtcm, SYS_GLO); break;
+        case 1086: ret = DecodeRTCM::decode_msm6(rtcm, SYS_GLO); break;
+        case 1087: ret = DecodeRTCM::decode_msm7(rtcm, SYS_GLO); break;
+        case 1091: ret = DecodeRTCM::decode_msm0(rtcm, SYS_GAL); break; /* not supported */
+        case 1092: ret = DecodeRTCM::decode_msm0(rtcm, SYS_GAL); break; /* not supported */
+        case 1093: ret = DecodeRTCM::decode_msm0(rtcm, SYS_GAL); break; /* not supported */
+        case 1094: ret = DecodeRTCM::decode_msm4(rtcm, SYS_GAL); break;
+        case 1095: ret = DecodeRTCM::decode_msm5(rtcm, SYS_GAL); break;
+        case 1096: ret = DecodeRTCM::decode_msm6(rtcm, SYS_GAL); break;
+        case 1097: ret = DecodeRTCM::decode_msm7(rtcm, SYS_GAL); break;
+        case 1101: ret = DecodeRTCM::decode_msm0(rtcm, SYS_SBS); break; /* not supported */
+        case 1102: ret = DecodeRTCM::decode_msm0(rtcm, SYS_SBS); break; /* not supported */
+        case 1103: ret = DecodeRTCM::decode_msm0(rtcm, SYS_SBS); break; /* not supported */
+        case 1104: ret = DecodeRTCM::decode_msm4(rtcm, SYS_SBS); break;
+        case 1105: ret = DecodeRTCM::decode_msm5(rtcm, SYS_SBS); break;
+        case 1106: ret = DecodeRTCM::decode_msm6(rtcm, SYS_SBS); break;
+        case 1107: ret = DecodeRTCM::decode_msm7(rtcm, SYS_SBS); break;
+        case 1111: ret = DecodeRTCM::decode_msm0(rtcm, SYS_QZS); break; /* not supported */
+        case 1112: ret = DecodeRTCM::decode_msm0(rtcm, SYS_QZS); break; /* not supported */
+        case 1113: ret = DecodeRTCM::decode_msm0(rtcm, SYS_QZS); break; /* not supported */
+        case 1114: ret = DecodeRTCM::decode_msm4(rtcm, SYS_QZS); break;
+        case 1115: ret = DecodeRTCM::decode_msm5(rtcm, SYS_QZS); break;
+        case 1116: ret = DecodeRTCM::decode_msm6(rtcm, SYS_QZS); break;
+        case 1117: ret = DecodeRTCM::decode_msm7(rtcm, SYS_QZS); break;
+        case 1121: ret = DecodeRTCM::decode_msm0(rtcm, SYS_CMP); break; /* not supported */
+        case 1122: ret = DecodeRTCM::decode_msm0(rtcm, SYS_CMP); break; /* not supported */
+        case 1123: ret = DecodeRTCM::decode_msm0(rtcm, SYS_CMP); break; /* not supported */
+        case 1124: ret = DecodeRTCM::decode_msm4(rtcm, SYS_CMP); break;
+        case 1125: ret = DecodeRTCM::decode_msm5(rtcm, SYS_CMP); break;
+        case 1126: ret = DecodeRTCM::decode_msm6(rtcm, SYS_CMP); break;
+        case 1127: ret = DecodeRTCM::decode_msm7(rtcm, SYS_CMP); break;
+        case 1230: ret = DecodeRTCM::decode_type1230(rtcm);     break; /* not supported */
+        case 1240: ret = DecodeRTCM::decode_ssr1(rtcm, SYS_GAL); break;
+        case 1241: ret = DecodeRTCM::decode_ssr2(rtcm, SYS_GAL); break;
+        case 1242: ret = DecodeRTCM::decode_ssr3(rtcm, SYS_GAL); break;
+        case 1243: ret = DecodeRTCM::decode_ssr4(rtcm, SYS_GAL); break;
+        case 1244: ret = DecodeRTCM::decode_ssr5(rtcm, SYS_GAL); break;
+        case 1245: ret = DecodeRTCM::decode_ssr6(rtcm, SYS_GAL); break;
+        case 1246: ret = DecodeRTCM::decode_ssr1(rtcm, SYS_QZS); break;
+        case 1247: ret = DecodeRTCM::decode_ssr2(rtcm, SYS_QZS); break;
+        case 1248: ret = DecodeRTCM::decode_ssr3(rtcm, SYS_QZS); break;
+        case 1249: ret = DecodeRTCM::decode_ssr4(rtcm, SYS_QZS); break;
+        case 1250: ret = DecodeRTCM::decode_ssr5(rtcm, SYS_QZS); break;
+        case 1251: ret = DecodeRTCM::decode_ssr6(rtcm, SYS_QZS); break;
+        case 1252: ret = DecodeRTCM::decode_ssr1(rtcm, SYS_SBS); break;
+        case 1253: ret = DecodeRTCM::decode_ssr2(rtcm, SYS_SBS); break;
+        case 1254: ret = DecodeRTCM::decode_ssr3(rtcm, SYS_SBS); break;
+        case 1255: ret = DecodeRTCM::decode_ssr4(rtcm, SYS_SBS); break;
+        case 1256: ret = DecodeRTCM::decode_ssr5(rtcm, SYS_SBS); break;
+        case 1257: ret = DecodeRTCM::decode_ssr6(rtcm, SYS_SBS); break;
+        case 1258: ret = DecodeRTCM::decode_ssr1(rtcm, SYS_CMP); break;
+        case 1259: ret = DecodeRTCM::decode_ssr2(rtcm, SYS_CMP); break;
+        case 1260: ret = DecodeRTCM::decode_ssr3(rtcm, SYS_CMP); break;
+        case 1261: ret = DecodeRTCM::decode_ssr4(rtcm, SYS_CMP); break;
+        case 1262: ret = DecodeRTCM::decode_ssr5(rtcm, SYS_CMP); break;
+        case 1263: ret = DecodeRTCM::decode_ssr6(rtcm, SYS_CMP); break;
+        case   11: ret = DecodeRTCM::decode_ssr7(rtcm, SYS_GLO); break; /* tentative */
+        case   12: ret = DecodeRTCM::decode_ssr7(rtcm, SYS_GAL); break; /* tentative */
+        case   13: ret = DecodeRTCM::decode_ssr7(rtcm, SYS_QZS); break; /* tentative */
+        case   14: ret = DecodeRTCM::decode_ssr7(rtcm, SYS_CMP); break; /* tentative */
         }
         if (ret >= 0) {
             type -= 1000;
@@ -2777,13 +2886,13 @@ namespace RTKFunctions {
         int week;
 
         /* if no time, get cpu time */
-        if (rtcm->time.time == 0) rtcm->time = utc2gpst(timeget());
-        tow = time2gpst(rtcm->time, &week);
+        if (rtcm->time.time == 0) rtcm->time = CommonRTK::utc2gpst(CommonRTK::timeget());
+        tow = CommonRTK::time2gpst(rtcm->time, &week);
         hour = floor(tow / 3600.0);
         sec = tow - hour * 3600.0;
         if (zcnt < sec - 1800.0) zcnt += 3600.0;
         else if (zcnt > sec + 1800.0) zcnt -= 3600.0;
-        rtcm->time = gpst2time(week, hour * 3600 + zcnt);
+        rtcm->time = CommonRTK::gpst2time(week, hour * 3600 + zcnt);
     }
     /* get observation data index ------------------------------------------------*/
     int DecodeRTCM::obsindex(obs_t* obs, gtime_t time, int sat)
@@ -2812,22 +2921,22 @@ namespace RTKFunctions {
         int i = 48, fact, udre, prn, sat, iod;
         double prc, rrc;
 
-        trace(4, "decode_type1: len=%d\n", rtcm->len);
+        //trace(4, "decode_type1: len=%d\n", rtcm->len);
 
         while (i + 40 <= rtcm->len * 8) {
-            fact = getbitu(rtcm->buff, i, 1); i += 1;
-            udre = getbitu(rtcm->buff, i, 2); i += 2;
-            prn = getbitu(rtcm->buff, i, 5); i += 5;
-            prc = getbits(rtcm->buff, i, 16); i += 16;
-            rrc = getbits(rtcm->buff, i, 8); i += 8;
-            iod = getbits(rtcm->buff, i, 8); i += 8;
+            fact = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
+            udre = CommonRTK::getbitu(rtcm->buff, i, 2); i += 2;
+            prn = CommonRTK::getbitu(rtcm->buff, i, 5); i += 5;
+            prc = CommonRTK::getbits(rtcm->buff, i, 16); i += 16;
+            rrc = CommonRTK::getbits(rtcm->buff, i, 8); i += 8;
+            iod = CommonRTK::getbits(rtcm->buff, i, 8); i += 8;
             if (prn == 0) prn = 32;
             if (prc == 0x80000000 || rrc == 0xFFFF8000) {
-                trace(2, "rtcm2 1 prc/rrc indicates satellite problem: prn=%d\n", prn);
+                //trace(2, "rtcm2 1 prc/rrc indicates satellite problem: prn=%d\n", prn);
                 continue;
             }
             if (rtcm->dgps) {
-                sat = satno(SYS_GPS, prn);
+                sat = CommonRTK::satno(SYS_GPS, prn);
                 rtcm->dgps[sat - 1].t0 = rtcm->time;
                 rtcm->dgps[sat - 1].prc = prc * (fact ? 0.32 : 0.02);
                 rtcm->dgps[sat - 1].rrc = rrc * (fact ? 0.032 : 0.002);
@@ -2842,15 +2951,15 @@ namespace RTKFunctions {
     {
         int i = 48;
 
-        trace(4, "decode_type3: len=%d\n", rtcm->len);
+        //trace(4, "decode_type3: len=%d\n", rtcm->len);
 
         if (i + 96 <= rtcm->len * 8) {
-            rtcm->sta.pos[0] = getbits(rtcm->buff, i, 32) * 0.01; i += 32;
-            rtcm->sta.pos[1] = getbits(rtcm->buff, i, 32) * 0.01; i += 32;
-            rtcm->sta.pos[2] = getbits(rtcm->buff, i, 32) * 0.01;
+            rtcm->sta.pos[0] = CommonRTK::getbits(rtcm->buff, i, 32) * 0.01; i += 32;
+            rtcm->sta.pos[1] = CommonRTK::getbits(rtcm->buff, i, 32) * 0.01; i += 32;
+            rtcm->sta.pos[2] = CommonRTK::getbits(rtcm->buff, i, 32) * 0.01;
         }
         else {
-            trace(2, "rtcm2 3 length error: len=%d\n", rtcm->len);
+            //trace(2, "rtcm2 3 length error: len=%d\n", rtcm->len);
             return -1;
         }
         return 5;
@@ -2883,14 +2992,14 @@ namespace RTKFunctions {
     {
         int i = 48, n = 0;
 
-        trace(4, "decode_type16: len=%d\n", rtcm->len);
+        //trace(4, "decode_type16: len=%d\n", rtcm->len);
 
         while (i + 8 <= rtcm->len * 8 && n < 90) {
-            rtcm->msg[n++] = getbitu(rtcm->buff, i, 8); i += 8;
+            rtcm->msg[n++] = CommonRTK::getbitu(rtcm->buff, i, 8); i += 8;
         }
         rtcm->msg[n] = '\0';
 
-        trace(3, "rtcm2 16 message: %s\n", rtcm->msg);
+        //trace(3, "rtcm2 16 message: %s\n", rtcm->msg);
         return 9;
     }
     /* decode type 17: gps ephemerides -------------------------------------------*/
@@ -2903,38 +3012,38 @@ namespace RTKFunctions {
         //trace(4, "decode_type17: len=%d\n", rtcm->len);
 
         if (i + 480 <= rtcm->len * 8) {
-            week = getbitu(rtcm->buff, i, 10);              i += 10;
-            eph.idot = getbits(rtcm->buff, i, 14) * P2_43 * SC2RAD; i += 14;
-            eph.iode = getbitu(rtcm->buff, i, 8);              i += 8;
-            toc = getbitu(rtcm->buff, i, 16) * 16.0;         i += 16;
-            eph.f1 = getbits(rtcm->buff, i, 16) * P2_43;        i += 16;
-            eph.f2 = getbits(rtcm->buff, i, 8) * P2_55;        i += 8;
-            eph.crs = getbits(rtcm->buff, i, 16) * P2_5;         i += 16;
-            eph.deln = getbits(rtcm->buff, i, 16) * P2_43 * SC2RAD; i += 16;
-            eph.cuc = getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
-            eph.e = getbitu(rtcm->buff, i, 32) * P2_33;        i += 32;
-            eph.cus = getbits(rtcm->buff, i, 16);              i += 16;
-            sqrtA = getbitu(rtcm->buff, i, 32) * P2_19;        i += 32;
-            eph.toes = getbitu(rtcm->buff, i, 16);              i += 16;
-            eph.OMG0 = getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
-            eph.cic = getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
-            eph.i0 = getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
-            eph.cis = getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
-            eph.omg = getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
-            eph.crc = getbits(rtcm->buff, i, 16) * P2_5;         i += 16;
-            eph.OMGd = getbits(rtcm->buff, i, 24) * P2_43 * SC2RAD; i += 24;
-            eph.M0 = getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
-            eph.iodc = getbitu(rtcm->buff, i, 10);              i += 10;
-            eph.f0 = getbits(rtcm->buff, i, 22) * P2_31;        i += 22;
-            prn = getbitu(rtcm->buff, i, 5);              i += 5 + 3;
-            eph.tgd[0] = getbits(rtcm->buff, i, 8) * P2_31;        i += 8;
-            eph.code = getbitu(rtcm->buff, i, 2);              i += 2;
-            eph.sva = getbitu(rtcm->buff, i, 4);              i += 4;
-            eph.svh = getbitu(rtcm->buff, i, 6);              i += 6;
-            eph.flag = getbitu(rtcm->buff, i, 1);
+            week = CommonRTK::getbitu(rtcm->buff, i, 10);              i += 10;
+            eph.idot = CommonRTK::getbits(rtcm->buff, i, 14) * P2_43 * SC2RAD; i += 14;
+            eph.iode = CommonRTK::getbitu(rtcm->buff, i, 8);              i += 8;
+            toc = CommonRTK::getbitu(rtcm->buff, i, 16) * 16.0;         i += 16;
+            eph.f1 = CommonRTK::getbits(rtcm->buff, i, 16) * P2_43;        i += 16;
+            eph.f2 = CommonRTK::getbits(rtcm->buff, i, 8) * P2_55;        i += 8;
+            eph.crs = CommonRTK::getbits(rtcm->buff, i, 16) * P2_5;         i += 16;
+            eph.deln = CommonRTK::getbits(rtcm->buff, i, 16) * P2_43 * SC2RAD; i += 16;
+            eph.cuc = CommonRTK::getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
+            eph.e = CommonRTK::getbitu(rtcm->buff, i, 32) * P2_33;        i += 32;
+            eph.cus = CommonRTK::getbits(rtcm->buff, i, 16);              i += 16;
+            sqrtA = CommonRTK::getbitu(rtcm->buff, i, 32) * P2_19;        i += 32;
+            eph.toes = CommonRTK::getbitu(rtcm->buff, i, 16);              i += 16;
+            eph.OMG0 = CommonRTK::getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
+            eph.cic = CommonRTK::getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
+            eph.i0 = CommonRTK::getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
+            eph.cis = CommonRTK::getbits(rtcm->buff, i, 16) * P2_29;        i += 16;
+            eph.omg = CommonRTK::getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
+            eph.crc = CommonRTK::getbits(rtcm->buff, i, 16) * P2_5;         i += 16;
+            eph.OMGd = CommonRTK::getbits(rtcm->buff, i, 24) * P2_43 * SC2RAD; i += 24;
+            eph.M0 = CommonRTK::getbits(rtcm->buff, i, 32) * P2_31 * SC2RAD; i += 32;
+            eph.iodc = CommonRTK::getbitu(rtcm->buff, i, 10);              i += 10;
+            eph.f0 = CommonRTK::getbits(rtcm->buff, i, 22) * P2_31;        i += 22;
+            prn = CommonRTK::getbitu(rtcm->buff, i, 5);              i += 5 + 3;
+            eph.tgd[0] = CommonRTK::getbits(rtcm->buff, i, 8) * P2_31;        i += 8;
+            eph.code = CommonRTK::getbitu(rtcm->buff, i, 2);              i += 2;
+            eph.sva = CommonRTK::getbitu(rtcm->buff, i, 4);              i += 4;
+            eph.svh = CommonRTK::getbitu(rtcm->buff, i, 6);              i += 6;
+            eph.flag = CommonRTK::getbitu(rtcm->buff, i, 1);
         }
         else {
-            trace(2, "rtcm2 17 length error: len=%d\n", rtcm->len);
+            //trace(2, "rtcm2 17 length error: len=%d\n", rtcm->len);
             return -1;
         }
         if (prn == 0) prn = 32;
@@ -2959,35 +3068,35 @@ namespace RTKFunctions {
         //trace(4, "decode_type18: len=%d\n", rtcm->len);
 
         if (i + 24 <= rtcm->len * 8) {
-            freq = getbitu(rtcm->buff, i, 2); i += 2 + 2;
-            usec = getbitu(rtcm->buff, i, 20); i += 20;
+            freq = CommonRTK::getbitu(rtcm->buff, i, 2); i += 2 + 2;
+            usec = CommonRTK::getbitu(rtcm->buff, i, 20); i += 20;
         }
         else {
-            trace(2, "rtcm2 18 length error: len=%d\n", rtcm->len);
+            //trace(2, "rtcm2 18 length error: len=%d\n", rtcm->len);
             return -1;
         }
         if (freq & 0x1) {
-            trace(2, "rtcm2 18 not supported frequency: freq=%d\n", freq);
+            //trace(2, "rtcm2 18 not supported frequency: freq=%d\n", freq);
             return -1;
         }
         freq >>= 1;
 
         while (i + 48 <= rtcm->len * 8 && rtcm->obs.n < MAXOBS) {
-            sync = getbitu(rtcm->buff, i, 1); i += 1;
-            code = getbitu(rtcm->buff, i, 1); i += 1;
-            sys = getbitu(rtcm->buff, i, 1); i += 1;
-            prn = getbitu(rtcm->buff, i, 5); i += 5 + 3;
-            loss = getbitu(rtcm->buff, i, 5); i += 5;
-            cp = getbits(rtcm->buff, i, 32); i += 32;
+            sync = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
+            code = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
+            sys = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
+            prn = CommonRTK::getbitu(rtcm->buff, i, 5); i += 5 + 3;
+            loss = CommonRTK::getbitu(rtcm->buff, i, 5); i += 5;
+            cp = CommonRTK::getbits(rtcm->buff, i, 32); i += 32;
             if (prn == 0) prn = 32;
-            if (!(sat = satno(sys ? SYS_GLO : SYS_GPS, prn))) {
-                trace(2, "rtcm2 18 satellite number error: sys=%d prn=%d\n", sys, prn);
+            if (!(sat = CommonRTK::satno(sys ? SYS_GLO : SYS_GPS, prn))) {
+                //trace(2, "rtcm2 18 satellite number error: sys=%d prn=%d\n", sys, prn);
                 continue;
             }
-            time = timeadd(rtcm->time, usec * 1E-6);
-            if (sys) time = utc2gpst(time); /* convert glonass time to gpst */
+            time = CommonRTK::timeadd(rtcm->time, usec * 1E-6);
+            if (sys) time = CommonRTK::utc2gpst(time); /* convert glonass time to gpst */
 
-            tt = timediff(rtcm->obs.data[0].time, time);
+            tt = CommonRTK::timediff(rtcm->obs.data[0].time, time);
             if (rtcm->obsflag || fabs(tt) > 1E-9) {
                 rtcm->obs.n = rtcm->obsflag = 0;
             }
@@ -3026,20 +3135,20 @@ namespace RTKFunctions {
         freq >>= 1;
 
         while (i + 48 <= rtcm->len * 8 && rtcm->obs.n < MAXOBS) {
-            sync = getbitu(rtcm->buff, i, 1); i += 1;
-            code = getbitu(rtcm->buff, i, 1); i += 1;
-            sys = getbitu(rtcm->buff, i, 1); i += 1;
-            prn = getbitu(rtcm->buff, i, 5); i += 5 + 8;
-            pr = getbitu(rtcm->buff, i, 32); i += 32;
+            sync = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
+            code = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
+            sys = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
+            prn = CommonRTK::getbitu(rtcm->buff, i, 5); i += 5 + 8;
+            pr = CommonRTK::getbitu(rtcm->buff, i, 32); i += 32;
             if (prn == 0) prn = 32;
-            if (!(sat = satno(sys ? SYS_GLO : SYS_GPS, prn))) {
-                trace(2, "rtcm2 19 satellite number error: sys=%d prn=%d\n", sys, prn);
+            if (!(sat = CommonRTK::satno(sys ? SYS_GLO : SYS_GPS, prn))) {
+                //trace(2, "rtcm2 19 satellite number error: sys=%d prn=%d\n", sys, prn);
                 continue;
             }
-            time = timeadd(rtcm->time, usec * 1E-6);
-            if (sys) time = utc2gpst(time); /* convert glonass time to gpst */
+            time = CommonRTK::timeadd(rtcm->time, usec * 1E-6);
+            if (sys) time = CommonRTK::utc2gpst(time); /* convert glonass time to gpst */
 
-            tt = timediff(rtcm->obs.data[0].time, time);
+            tt = CommonRTK::timediff(rtcm->obs.data[0].time, time);
             if (rtcm->obsflag || fabs(tt) > 1E-9) {
                 rtcm->obs.n = rtcm->obsflag = 0;
             }
@@ -3061,23 +3170,23 @@ namespace RTKFunctions {
         //trace(4, "decode_type22: len=%d\n", rtcm->len);
 
         if (i + 24 <= rtcm->len * 8) {
-            del[0][0] = getbits(rtcm->buff, i, 8) / 25600.0; i += 8;
-            del[0][1] = getbits(rtcm->buff, i, 8) / 25600.0; i += 8;
-            del[0][2] = getbits(rtcm->buff, i, 8) / 25600.0; i += 8;
+            del[0][0] = CommonRTK::getbits(rtcm->buff, i, 8) / 25600.0; i += 8;
+            del[0][1] = CommonRTK::getbits(rtcm->buff, i, 8) / 25600.0; i += 8;
+            del[0][2] = CommonRTK::getbits(rtcm->buff, i, 8) / 25600.0; i += 8;
         }
         else {
-            trace(2, "rtcm2 22 length error: len=%d\n", rtcm->len);
+            //trace(2, "rtcm2 22 length error: len=%d\n", rtcm->len);
             return -1;
         }
         if (i + 24 <= rtcm->len * 8) {
-            i += 5; noh = getbits(rtcm->buff, i, 1); i += 1;
-            hgt = noh ? 0.0 : getbitu(rtcm->buff, i, 18) / 25600.0;
+            i += 5; noh = CommonRTK::getbits(rtcm->buff, i, 1); i += 1;
+            hgt = noh ? 0.0 : CommonRTK::getbitu(rtcm->buff, i, 18) / 25600.0;
             i += 18;
         }
         if (i + 24 <= rtcm->len * 8) {
-            del[1][0] = getbits(rtcm->buff, i, 8) / 1600.0; i += 8;
-            del[1][1] = getbits(rtcm->buff, i, 8) / 1600.0; i += 8;
-            del[1][2] = getbits(rtcm->buff, i, 8) / 1600.0;
+            del[1][0] = CommonRTK::getbits(rtcm->buff, i, 8) / 1600.0; i += 8;
+            del[1][1] = CommonRTK::getbits(rtcm->buff, i, 8) / 1600.0; i += 8;
+            del[1][2] = CommonRTK::getbits(rtcm->buff, i, 8) / 1600.0;
         }
         rtcm->sta.deltype = 1; /* xyz */
         for (j = 0; j < 3; j++) rtcm->sta.del[j] = del[0][j];
@@ -3185,6 +3294,17 @@ namespace RTKFunctions {
         return ret;
     }
 
+
+    /* adjust weekly rollover of gps time ----------------------------------------*/
+   /* gtime_t BINEX::adjweek(gtime_t time, double tow)
+    {
+        double tow_p;
+        int week;
+        tow_p = CommonRTK::time2gpst(time, &week);
+        if (tow < tow_p - 302400.0) tow += 604800.0;
+        else if (tow > tow_p + 302400.0) tow -= 604800.0;
+        return CommonRTK::gpst2time(week, tow);
+    }*/
 }
 
- 
+  
