@@ -107,6 +107,68 @@ namespace RTKFunctions {
     public  ref class CommonRTK {
     public:
 
+        /* satellite system+prn/slot number to satellite number ------------------------
+        * convert satellite system+prn/slot number to satellite number
+        * args   : int    sys       I   satellite system (SYS_GPS,SYS_GLO,...)
+        *          int    prn       I   satellite prn/slot number
+        * return : satellite number (0:error)
+        *-----------------------------------------------------------------------------*/
+        static int CommonRTK::satno(int sys, int prn);
+
+        /* add time --------------------------------------------------------------------
+        * add time to gtime_t struct
+        * args   : gtime_t t        I   gtime_t struct
+        *          double sec       I   time to add (s)
+        * return : gtime_t struct (t+sec)
+        *-----------------------------------------------------------------------------*/
+        static gtime_t timeadd(gtime_t t, double sec);
+
+        /* time difference -------------------------------------------------------------
+        * difference between gtime_t structs
+        * args   : gtime_t t1,t2    I   gtime_t structs
+        * return : time difference (t1-t2) (s)
+        *-----------------------------------------------------------------------------*/
+        static double timediff(gtime_t t1, gtime_t t2);
+
+        /* get current time in utc -----------------------------------------------------
+        * get current time in utc
+        * args   : none
+        * return : current time in utc
+        *-----------------------------------------------------------------------------*/
+        static gtime_t timeget(void);
+
+        /* convert calendar day/time to time -------------------------------------------
+        * convert calendar day/time to gtime_t struct
+        * args   : double *ep       I   day/time {year,month,day,hour,min,sec}
+        * return : gtime_t struct
+        * notes  : proper in 1970-2037 or 1970-2099 (64bit time_t)
+        *-----------------------------------------------------------------------------*/
+        static gtime_t epoch2time(const double* ep);
+
+        /* utc to gpstime --------------------------------------------------------------
+        * convert utc to gpstime considering leap seconds
+        * args   : gtime_t t        I   time expressed in utc
+        * return : time expressed in gpstime
+        * notes  : ignore slight time offset under 100 ns
+        *-----------------------------------------------------------------------------*/
+        static gtime_t utc2gpst(gtime_t t);
+
+        /* time to gps time ------------------------------------------------------------
+        * convert gtime_t struct to week and tow in gps time
+        * args   : gtime_t t        I   gtime_t struct
+        *          int    *week     IO  week number in gps time (NULL: no output)
+        * return : time of week in gps time (s)
+        *-----------------------------------------------------------------------------*/
+        static double time2gpst(gtime_t t, int* week);
+
+        /* gps time to time ------------------------------------------------------------
+        * convert week and tow in gps time to gtime_t struct
+        * args   : int    week      I   week number in gps time
+        *          double sec       I   time of week in gps time (s)
+        * return : gtime_t struct
+        *-----------------------------------------------------------------------------*/
+        static gtime_t  CommonRTK::gpst2time(int week, double sec);
+
         /* adjust gps week number ------------------------------------------------------
         * adjust gps week number using cpu time
         * args   : int   week       I   not-adjusted gps week number
@@ -122,6 +184,14 @@ namespace RTKFunctions {
         *-----------------------------------------------------------------------------*/
         static gtime_t bdt2gpst(gtime_t t);
 
+        /* beidou time (bdt) to time ---------------------------------------------------
+        * convert week and tow in beidou time (bdt) to gtime_t struct
+        * args   : int    week      I   week number in bdt
+        *          double sec       I   time of week in bdt (s)
+        * return : gtime_t struct
+        *-----------------------------------------------------------------------------*/
+        static gtime_t bdt2time(int week, double sec);
+
         /* extract unsigned/signed bits ------------------------------------------------
         * extract unsigned/signed bits from byte data
         * args   : unsigned char *buff I byte data
@@ -130,6 +200,35 @@ namespace RTKFunctions {
         * return : extracted unsigned/signed bits
         *-----------------------------------------------------------------------------*/
         static int getbitu(const unsigned char* buff, int pos, int len);
+        static int getbits(const unsigned char* buff, int pos, int len);
+
+        /* decode navigation data word -------------------------------------------------
+       * check party and decode navigation data word
+       * args   : unsigned int word I navigation data word (2+30bit)
+       *                              (previous word D29*-30* + current word D1-30)
+       *          unsigned char *data O decoded navigation data without parity
+       *                              (8bitx3)
+       * return : status (1:ok,0:parity error)
+       * notes  : see reference [1] 20.3.5.2 user parity algorithm
+       *-----------------------------------------------------------------------------*/
+        static int decode_word(unsigned int word, unsigned char* data);
+
+        /* inner product ---------------------------------------------------------------
+        * inner product of vectors
+        * args   : double *a,*b     I   vector a,b (n x 1)
+        *          int    n         I   size of vector a,b
+        * return : a'*b
+        *-----------------------------------------------------------------------------*/
+        static double dot(const double* a, const double* b, int n);
+
+        /* transform ecef to geodetic postion ------------------------------------------
+        * transform ecef position to geodetic position
+        * args   : double *r        I   ecef position {x,y,z} (m)
+        *          double *pos      O   geodetic position {lat,lon,h} (rad,m)
+        * return : none
+        * notes  : WGS84, ellipsoidal height
+        *-----------------------------------------------------------------------------*/
+        static void CommonRTK::ecef2pos(const double* r, double* pos);
         
         
     };
@@ -465,6 +564,64 @@ namespace RTKFunctions {
 
         /* decode rtcm ver.3 message -------------------------------------------------*/
         int decode_rtcm3(rtcm_t* rtcm);
+
+        /* adjust hourly rollover of rtcm 2 time -------------------------------------*/
+        void adjhour(rtcm_t* rtcm, double zcnt);
+        
+        /* get observation data index ------------------------------------------------*/
+        int obsindex(obs_t* obs, gtime_t time, int sat);
+        
+        /* decode type 1/9: differential gps correction/partial correction set -------*/
+        int decode_type1(rtcm_t* rtcm);
+        
+        /* decode type 3: reference station parameter --------------------------------*/
+        int decode_type3(rtcm_t* rtcm);
+        
+        /* decode type 14: gps time of week ------------------------------------------*/
+        int decode_type14(rtcm_t* rtcm);
+        
+        /* decode type 16: gps special message ---------------------------------------*/
+        int decode_type16(rtcm_t* rtcm);
+
+        /* decode type 17: gps ephemerides -------------------------------------------*/
+        int decode_type17(rtcm_t* rtcm);
+        
+        /* decode type 18: rtk uncorrected carrier-phase -----------------------------*/
+        int decode_type18(rtcm_t* rtcm);
+        
+        /* decode type 19: rtk uncorrected pseudorange -------------------------------*/
+        int decode_type19(rtcm_t* rtcm);
+        
+        /* decode type 22: extended reference station parameter ----------------------*/
+        int decode_type22(rtcm_t* rtcm);
+        
+        /* decode type 23: antenna type definition record ----------------------------*/
+        int decode_type23(rtcm_t* rtcm);
+        
+        /* decode type 24: antenna reference point (arp) -----------------------------*/
+        int decode_type24(rtcm_t* rtcm);
+
+        /* decode type 31: differential glonass correction ---------------------------*/
+        int decode_type31(rtcm_t* rtcm);
+
+        /* decode type 32: differential glonass reference station parameters ---------*/
+        int decode_type32(rtcm_t* rtcm);
+        
+        /* decode type 34: glonass partial differential correction set ---------------*/
+        int decode_type34(rtcm_t* rtcm);
+
+        /* decode type 36: glonass special message -----------------------------------*/
+        int decode_type36(rtcm_t* rtcm);
+     
+        /* decode type 37: gnss system time offset -----------------------------------*/
+        int decode_type37(rtcm_t* rtcm);
+
+        /* decode type 59: proprietary message ---------------------------------------*/
+        int decode_type59(rtcm_t* rtcm);
+        
+        /* decode rtcm ver.2 message -------------------------------------------------*/
+        int decode_rtcm2(rtcm_t* rtcm);
+       
     };
 }
 
