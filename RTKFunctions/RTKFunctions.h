@@ -1,8 +1,8 @@
 #pragma once
-
+extern "C" {
 #include "defs.h"
-
-using namespace System;
+}
+//using namespace System;
 
 /* constants -----------------------------------------------------------------*/
 
@@ -34,6 +34,34 @@ typedef struct {                    /* multi-signal-message header type */
     unsigned char cellmask[64];     /* cell mask */
 } msm_h_t;
 
+
+//const prcopt_t prcopt_default = уз{ /* defaults processing options */
+//    PMODE_SINGLE,0,2,SYS_GPS,   /* mode,soltype,nf,navsys */
+//    15.0 * D2R,{{0,0}},           /* elmin,snrmask */
+//    0,1,1,1,                    /* sateph,modear,glomodear,bdsmodear */
+//    5,0,10,1,                   /* maxout,minlock,minfix,armaxiter */
+//    0,0,0,0,                    /* estion,esttrop,dynamics,tidecorr */
+//    1,0,0,0,0,                  /* niter,codesmooth,intpref,sbascorr,sbassatsel */
+//    0,0,                        /* rovpos,refpos */
+//    {100.0,100.0},              /* eratio[] */
+//    {100.0,0.003,0.003,0.0,1.0}, /* err[] */
+//    {30.0,0.03,0.3},            /* std[] */
+//    {1E-4,1E-3,1E-4,1E-1,1E-2,0.0}, /* prn[] */
+//    5E-12,                      /* sclkstab */
+//    {3.0,0.9999,0.25,0.1,0.05}, /* thresar */
+//    0.0,0.0,0.05,               /* elmaskar,almaskhold,thresslip */
+//    30.0,30.0,30.0,             /* maxtdif,maxinno,maxgdop */
+//    {0},{0},{0},                /* baseline,ru,rb */
+//    {"",""},                    /* anttype */
+//    {{0}},{{0}},{0}             /* antdel,pcv,exsats */
+//};
+//const solopt_t solopt_default = { /* defaults solution output options */
+//    SOLF_LLH,TIMES_GPST,1,3,    /* posf,times,timef,timeu */
+//    0,1,0,0,0,0,0,              /* degf,outhead,outopt,outvel,datum,height,geoid */
+//    0,0,0,                      /* solstatic,sstat,trace */
+//    {0.0,0.0},                  /* nmeaintv */
+//    " ",""                      /* separator/program name */
+//};
 /* msm signal id table -------------------------------------------------------*/
 const char* msm_sig_gps[32] = {
     /* GPS: ref [13] table 3.5-87, ref [14][15] table 3.5-91 */
@@ -114,6 +142,53 @@ namespace RTKFunctions {
         * return : satellite number (0:error)
         *-----------------------------------------------------------------------------*/
         static int CommonRTK::satno(int sys, int prn);
+
+        /* obs code to obs code string -------------------------------------------------
+        * convert obs code to obs code string
+        * args   : unsigned char code I obs code (CODE_???)
+        *          int    *freq  IO     frequency (NULL: no output)
+        *                               (1:L1/E1, 2:L2/B1, 3:L5/E5a/L3, 4:L6/LEX/B3,
+                                         5:E5b/B2, 6:E5(a+b), 7:S)
+        * return : obs code string ("1C","1P","1P",...)
+        * notes  : obs codes are based on reference [6] and qzss extension
+        *-----------------------------------------------------------------------------*/
+        static char* code2obs(unsigned char code, int* freq);
+
+        /* obs type string to obs code -------------------------------------------------
+        * convert obs code type string to obs code
+        * args   : char   *str   I      obs code string ("1C","1P","1Y",...)
+        *          int    *freq  IO     frequency (1:L1,2:L2,3:L5,4:L6,5:L7,6:L8,0:err)
+        *                               (NULL: no output)
+        * return : obs code (CODE_???)
+        * notes  : obs codes are based on reference [6] and qzss extension
+        *-----------------------------------------------------------------------------*/
+        static unsigned char obs2code(const char* obs, int* freq);
+
+        /* get code priority -----------------------------------------------------------
+        * get code priority for multiple codes in a frequency
+        * args   : int    sys     I     system (SYS_???)
+        *          unsigned char code I obs code (CODE_???)
+        *          char   *opt    I     code options (NULL:no option)
+        * return : priority (15:highest-1:lowest,0:error)
+        *-----------------------------------------------------------------------------*/
+        static int getcodepri(int sys, unsigned char code, const char* opt);
+
+        /* satellite number to satellite system ----------------------------------------
+        * convert satellite number to satellite system
+        * args   : int    sat       I   satellite number (1-MAXSAT)
+        *          int    *prn      IO  satellite prn/slot number (NULL: no output)
+        * return : satellite system (SYS_GPS,SYS_GLO,...)
+        *-----------------------------------------------------------------------------*/
+        static int satsys(int sat, int* prn);
+
+        /* satellite carrier wave length -----------------------------------------------
+        * get satellite carrier wave lengths
+        * args   : int    sat       I   satellite number
+        *          int    frq       I   frequency index (0:L1,1:L2,2:L5/3,...)
+        *          nav_t  *nav      I   navigation messages
+        * return : carrier wave length (m) (0.0: error)
+        *-----------------------------------------------------------------------------*/
+        static double satwavelen(int sat, int frq, const nav_t* nav);
 
         /* add time --------------------------------------------------------------------
         * add time to gtime_t struct
@@ -425,7 +500,7 @@ namespace RTKFunctions {
         static void adjweek(rtcm_t* rtcm, double tow);
 
         /* adjust weekly rollover of bdt time ----------------------------------------*/
-        int adjbdtweek(int week);
+        static int adjbdtweek(int week);
 
         /* adjust daily rollover of glonass time -------------------------------------*/
         static void adjday_glot(rtcm_t* rtcm, double tod);
@@ -443,7 +518,7 @@ namespace RTKFunctions {
         int obsindex(obs_t* obs, gtime_t time, int sat);
 
         /* test station id consistency -----------------------------------------------*/
-        int test_staid(rtcm_t* rtcm, int staid);
+        static int test_staid(rtcm_t* rtcm, int staid);
 
         /* decode type 1001-1004 message header --------------------------------------*/
         int decode_head1001(rtcm_t* rtcm, int* sync);
@@ -560,7 +635,7 @@ namespace RTKFunctions {
         int decode_type1046(rtcm_t* rtcm);
 
         /* decode type 1042/63: beidou ephemerides -----------------------------------*/
-        int decode_type1042(rtcm_t* rtcm);
+        static int decode_type1042(rtcm_t* rtcm);
 
         /* decode ssr 1,4 message header ---------------------------------------------*/
         static int decode_ssr1_head(rtcm_t* rtcm, int sys, int* sync, int* iod, double* udint, int* refd, int* hsize);
@@ -599,10 +674,10 @@ namespace RTKFunctions {
         void save_msm_obs(rtcm_t* rtcm, int sys, msm_h_t* h, const double* r, const double* pr, const double* cp, const double* rr, const double* rrf, const double* cnr, const int* lock, const int* ex, const int* half);
 
         /* decode type msm message header --------------------------------------------*/
-        int decode_msm_head(rtcm_t* rtcm, int sys, int* sync, int* iod, msm_h_t* h, int* hsize);
+        static int decode_msm_head(rtcm_t* rtcm, int sys, int* sync, int* iod, msm_h_t* h, int* hsize);
 
         /* decode unsupported msm message --------------------------------------------*/
-        int decode_msm0(rtcm_t* rtcm, int sys);
+        static int decode_msm0(rtcm_t* rtcm, int sys);
 
         /* decode msm 4: full pseudorange and phaserange plus cnr --------------------*/
         int decode_msm4(rtcm_t* rtcm, int sys);
@@ -625,8 +700,7 @@ namespace RTKFunctions {
         /* adjust hourly rollover of rtcm 2 time -------------------------------------*/
         void adjhour(rtcm_t* rtcm, double zcnt);
         
-        /* get observation data index ------------------------------------------------*/
-        int obsindex(obs_t* obs, gtime_t time, int sat);
+        
         
         /* decode type 1/9: differential gps correction/partial correction set -------*/
         int decode_type1(rtcm_t* rtcm);
@@ -681,11 +755,7 @@ namespace RTKFunctions {
        
     };
 
-    public ref class BINEX {
-        /* adjust weekly rollover of gps time ----------------------------------------*/
-        static gtime_t adjweek(gtime_t time, double tow);
-        
-    };
+    
 }
 
 

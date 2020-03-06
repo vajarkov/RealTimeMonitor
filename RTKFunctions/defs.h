@@ -14,9 +14,9 @@
 //#else
 //#include <pthread.h>
 //#endif
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 
 //#ifdef WIN_DLL
 //#define EXPORT __declspec(dllexport) /* for Windows DLL */
@@ -540,33 +540,19 @@ const double lam_carr[MAXFREQ] = { /* carrier wave length (m) */
     CLIGHT / FREQ1,CLIGHT / FREQ2,CLIGHT / FREQ5,CLIGHT / FREQ6,CLIGHT / FREQ7,
     CLIGHT / FREQ8,CLIGHT / FREQ9
 };
-const prcopt_t prcopt_default = { /* defaults processing options */
-    PMODE_SINGLE,0,2,SYS_GPS,   /* mode,soltype,nf,navsys */
-    15.0 * D2R,{{0,0}},           /* elmin,snrmask */
-    0,1,1,1,                    /* sateph,modear,glomodear,bdsmodear */
-    5,0,10,1,                   /* maxout,minlock,minfix,armaxiter */
-    0,0,0,0,                    /* estion,esttrop,dynamics,tidecorr */
-    1,0,0,0,0,                  /* niter,codesmooth,intpref,sbascorr,sbassatsel */
-    0,0,                        /* rovpos,refpos */
-    {100.0,100.0},              /* eratio[] */
-    {100.0,0.003,0.003,0.0,1.0}, /* err[] */
-    {30.0,0.03,0.3},            /* std[] */
-    {1E-4,1E-3,1E-4,1E-1,1E-2,0.0}, /* prn[] */
-    5E-12,                      /* sclkstab */
-    {3.0,0.9999,0.25,0.1,0.05}, /* thresar */
-    0.0,0.0,0.05,               /* elmaskar,almaskhold,thresslip */
-    30.0,30.0,30.0,             /* maxtdif,maxinno,maxgdop */
-    {0},{0},{0},                /* baseline,ru,rb */
-    {"",""},                    /* anttype */
-    {{0}},{{0}},{0}             /* antdel,pcv,exsats */
-};
-const solopt_t solopt_default = { /* defaults solution output options */
-    SOLF_LLH,TIMES_GPST,1,3,    /* posf,times,timef,timeu */
-    0,1,0,0,0,0,0,              /* degf,outhead,outopt,outvel,datum,height,geoid */
-    0,0,0,                      /* solstatic,sstat,trace */
-    {0.0,0.0},                  /* nmeaintv */
-    " ",""                      /* separator/program name */
-};
+
+/* global variables ----------------------------------------------------------*/
+extern const double chisqr[];        /* chi-sqr(n) table (alpha=0.001) */
+extern const double lam_carr[];      /* carrier wave length (m) {L1,L2,...} */
+//extern const prcopt_t prcopt_default; /* default positioning options */
+//extern const solopt_t solopt_default; /* default solution output options */
+//extern const sbsigpband_t igpband1[9][8]; /* SBAS IGP band 0-8 */
+//extern const sbsigpband_t igpband2[2][5]; /* SBAS IGP band 9-10 */
+//extern const char* formatstrs[];     /* stream format strings */
+//extern opt_t sysopts[];              /* system options table */
+
+
+
 const char* formatstrs[32] = {    /* stream format strings */
     "RTCM 2",                   /*  0 */
     "RTCM 3",                   /*  1 */
@@ -920,12 +906,12 @@ static const unsigned int tbl_CRC24Q[] = {
         float delay;        /* vertical delay estimate (m) */
     } sbsigp_t;
 
-    typedef struct {        /* IGP band type */
-        short x;            /* longitude/latitude (deg) */
-        const short* y;     /* latitudes/longitudes (deg) */
-        unsigned char bits; /* IGP mask start bit */
-        unsigned char bite; /* IGP mask end bit */
-    } sbsigpband_t;
+    //typedef struct {        /* IGP band type */
+    //    short x;            /* longitude/latitude (deg) */
+    //    const short* y;     /* latitudes/longitudes (deg) */
+    //    unsigned char bits; /* IGP mask start bit */
+    //    unsigned char bite; /* IGP mask end bit */
+    //} sbsigpband_t;
 
     typedef struct {        /* SBAS ionospheric corrections type */
         int iodi;           /* IODI (issue of date ionos corr) */
@@ -1185,12 +1171,12 @@ static const unsigned int tbl_CRC24Q[] = {
         double tint;        /* time interval (s) */
     } url_t;
 
-    typedef struct {        /* option type */
-        const char* name;   /* option name */
-        int format;         /* option format (0:int,1:double,2:string,3:enum) */
-        void* var;          /* pointer to option variable */
-        const char* comment; /* option comment/enum labels/unit */
-    } opt_t;
+    //typedef struct {        /* option type */
+    //    const char* name;   /* option name */
+    //    int format;         /* option format (0:int,1:double,2:string,3:enum) */
+    //    void* var;          /* pointer to option variable */
+    //    const char* comment; /* option comment/enum labels/unit */
+    //} opt_t;
 
     typedef struct {        /* extended receiver error model */
         int ena[4];         /* model enabled */
