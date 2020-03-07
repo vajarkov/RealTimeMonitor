@@ -330,7 +330,7 @@ namespace RealTimeMonitor
 			try
 			{
 				streamTCP = new TCP();
-				streamTCP.Connect("192.168.0.186", 5018);
+				streamTCP.Connect("192.168.0.162", 5018);
 				//rtkLib.StartServerThread();
 				//Thread svr_thread = new Thread(DataRTK.Init);
 				//svr_thread.Name = "RTK_thread";

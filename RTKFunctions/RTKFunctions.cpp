@@ -551,26 +551,27 @@ namespace RTKFunctions {
     
     /* decode receiver raw/rtcm data ---------------------------------------------*/
     int DecodeRTCM::decoderaw(byte svr_bytes[], int index){ //rtksvr_t* svr, int index) {
-        rtksvr_t* svr;
+        rtksvr_t svr = new rtksvr_t();
         obs_t* obs;
         nav_t* nav;
         sbsmsg_t* sbsmsg = NULL;
         int i, ret, sat, fobs = 0;
-        svr->buff[index] = svr_bytes;
+        svr.buff[index] = new byte[];
+        svr.buff[index] = svr_bytes;
         ////tracet(4, "decoderaw: index=%d\n", index);
 
         ///rtksvrlock(svr);
 
-        for (i = 0; i < svr->nb[index]; i++) {
+        for (i = 0; i < svr.nb[index]; i++) {
 
             /* input rtcm/receiver raw data from stream */
-            if (svr->format[index] == STRFMT_RTCM2) {
-                ret = input_rtcm2(svr->rtcm + index, svr->buff[index][i]);
-                obs = &svr->rtcm[index].obs;
-                nav = &svr->rtcm[index].nav;
-                sat = svr->rtcm[index].ephsat;
+            if (svr.format[index] == STRFMT_RTCM2) {
+                ret = input_rtcm2(svr.rtcm + index, svr.buff[index][i]);
+                obs = &svr.rtcm[index].obs;
+                nav = &svr.rtcm[index].nav;
+                sat = svr.rtcm[index].ephsat;
             }
-            else if (svr->format[index] == STRFMT_RTCM3) {
+            else if (svrormat[index] == STRFMT_RTCM3) {
                 ret = input_rtcm3(svr->rtcm + index, svr->buff[index][i]);
                 obs = &svr->rtcm[index].obs;
                 nav = &svr->rtcm[index].nav;

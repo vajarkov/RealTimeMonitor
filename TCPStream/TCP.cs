@@ -21,7 +21,7 @@ namespace TCPStream
             
             try
             {
-                client.Connect(serverTCP, portTCP);
+                client.Connect(server, port);
                 //client.Connect(server, port);
             }
             catch (SocketException e)
