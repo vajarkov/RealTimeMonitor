@@ -550,12 +550,13 @@ namespace RTKFunctions {
     }
     
     /* decode receiver raw/rtcm data ---------------------------------------------*/
-    int DecodeRTCM::decoderaw(rtksvr_t* svr, int index) {
+    int DecodeRTCM::decoderaw(byte svr_bytes[], int index){ //rtksvr_t* svr, int index) {
+        rtksvr_t* svr;
         obs_t* obs;
         nav_t* nav;
         sbsmsg_t* sbsmsg = NULL;
         int i, ret, sat, fobs = 0;
-
+        svr->buff[index] = svr_bytes;
         ////tracet(4, "decoderaw: index=%d\n", index);
 
         ///rtksvrlock(svr);

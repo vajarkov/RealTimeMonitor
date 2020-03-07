@@ -366,9 +366,10 @@ namespace RTKFunctions {
     {
 
     public:
+        
 
         /* decode receiver raw/rtcm data ---------------------------------------------*/
-        int decoderaw(rtksvr_t* svr, int index);
+        int decoderaw(byte svr_bytes[], int index);
 
 
 

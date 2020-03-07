@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 using System.Text;
+using RTKFunctions;
 
 
 namespace TCPStream
@@ -12,7 +13,7 @@ namespace TCPStream
 
         private TcpClient client = new TcpClient();
         private byte[] data = new byte[1024];
-
+        private DecodeRTCM RTCM = new DecodeRTCM();
 
         public void Connect(string server, int port)
         {
@@ -33,14 +34,22 @@ namespace TCPStream
             }
         }
 
-        public byte[] GetBytes()
+
+        public unsafe byte[] GetBytes()
         {
             
             NetworkStream stream = client.GetStream();
             do
             {
                 int bytes = stream.Read(data, 0, data.Length);
-
+                {
+                    fixed(byte* p = data)
+                    {
+                        RTCM.decoderaw(p, 0);
+                    }
+                    
+                }
+                
             }
             while (stream.DataAvailable);
             stream.Close();

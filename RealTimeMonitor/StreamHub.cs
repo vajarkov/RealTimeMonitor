@@ -362,7 +362,7 @@ namespace RealTimeMonitor
 				{
 					if (streamTCP.ConnectionState)
 					{
-						strPos = streamTCP.GetData();
+						strPos = streamTCP.GetBytes().ToString();
 					}
 					//	mutexRTK = Mutex.OpenExisting("RTK_MUTEX");
 

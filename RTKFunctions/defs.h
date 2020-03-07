@@ -1463,7 +1463,7 @@ static const unsigned int tbl_CRC24Q[] = {
         thread_t thread;    /* server thread */
         lock_t lock;        /* lock flag */
     } strsvr_t;
-
+   
     typedef struct {        /* RTK server type */
         int state;          /* server state (0:stop,1:running) */
         int cycle;          /* processing cycle (ms) */
