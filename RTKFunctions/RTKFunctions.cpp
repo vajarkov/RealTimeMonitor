@@ -1,4 +1,4 @@
-#include "pch.h"
+//#include "pch.h"
 //#include <Windows.h>
 #include "RTKFunctions.h"
 
@@ -7,6 +7,7 @@
 
 namespace RTKFunctions {
 	
+    
 
     /* satellite system+prn/slot number to satellite number ------------------------
     * convert satellite system+prn/slot number to satellite number
@@ -552,6 +553,15 @@ namespace RTKFunctions {
         pos[2] = sqrt(r2 + z * z) - v;
     }
     
+    //DataExchange Test function
+    void DecodeRTCM::dataexchange_double() {
+        //RTK_SVR_DATA::pos = gcnew array<doudle>, rank = 3>;
+        RTK_SVR_DATA::pos[0] = 1.8;
+        RTK_SVR_DATA::pos[1] = 2.3;
+        RTK_SVR_DATA::pos[2] = -5.1;
+        //return RTK_SVR_DATA::pos;
+    }
+
     /* decode receiver raw/rtcm data ---------------------------------------------*/
     int DecodeRTCM::decoderaw(unsigned char* svr_bytes, int index){ //rtksvr_t* svr, int index) {
         rtksvr_t* svr;// = new rtksvr_t();
@@ -1047,11 +1057,13 @@ namespace RTKFunctions {
         return sync ? 0 : 1;
     }
 
+    /* get signed 38bit field ----------------------------------------------------*/
     double DecodeRTCM::getbits_38(const unsigned char* buff, int pos)
     {
         return (double)CommonRTK::getbits(buff, pos, 32) * 64.0 + CommonRTK::getbitu(buff, pos + 32, 6);
     }
 
+    /* decode type 1005: stationary rtk reference station arp --------------------*/
     int DecodeRTCM::decode_type1005(rtcm_t* rtcm)
     {
         double rr[3], re[3], pos[3];

@@ -181,7 +181,6 @@ namespace RealTimeMonitor
 			{
 				if (fileStreamTCP == null || !fileStreamTCP.ConnectionState)
 				{
-
 					fileStreamTCP.Connect("192.168.0.162", 5018);
 				}
 				//fileStreamTask = new Task(() => fileStreamTCP.SaveFile(@"C:\distr\data\0001-" + DateTime.Now.ToString("ddMMyyy_Hmmss") + ".rtcm"));

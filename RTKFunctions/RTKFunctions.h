@@ -8,6 +8,7 @@ extern "C" {
 
 using namespace System;
 using namespace System::Collections::Generic;
+using namespace DataExchange;
 
 /* constants -----------------------------------------------------------------*/
 
@@ -413,7 +414,7 @@ namespace RTKFunctions {
 
         /* decode receiver raw/rtcm data ---------------------------------------------*/
         int decoderaw(byte svr_bytes[], int index);
-
+        void dataexchange_double();
 
 
     private:

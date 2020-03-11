@@ -4,6 +4,7 @@ using System.Text;
 using System.IO;
 using RTKFunctions;
 using System.Threading;
+using DataExchange;
 
 namespace TCPStream
 {
@@ -39,8 +40,10 @@ namespace TCPStream
         }
 
 
-        public unsafe byte[] GetBytes()
+        public unsafe void GetBytes()
         {
+            //RTCM.dataexchange_double();
+            //RTK_SVR_DATA.pos[0] = 0; 
             
             stream = client.GetStream();
             do
@@ -56,8 +59,8 @@ namespace TCPStream
                 
             }
             while (stream.DataAvailable);
-            //stream.Close();
-            return data;
+            //stream.Close();*/
+            //return data;
         } 
 
 

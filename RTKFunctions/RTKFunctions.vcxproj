@@ -149,6 +149,9 @@
     <Image Include="app.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DataExchange\DataExchange.csproj">
+      <Project>{e8d2a986-280f-4a30-ad0f-547fc44fa44c}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\RTKLib\src.vcxproj">
       <Project>{c05c85ce-e6c3-317f-a9bb-d0f8039feb94}</Project>
     </ProjectReference>

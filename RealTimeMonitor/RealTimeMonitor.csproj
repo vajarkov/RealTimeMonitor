@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DataExchange\DataExchange.csproj" />
     <ProjectReference Include="..\RTKFunctions\RTKFunctions.vcxproj" />
     <ProjectReference Include="..\TCPStream\TCPStream.csproj" />
   </ItemGroup>
