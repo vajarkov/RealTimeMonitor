@@ -187,7 +187,7 @@ namespace RealTimeMonitor
 				//fileStreamTask = new Task(() => fileStreamTCP.SaveFile(@"C:\distr\data\0001-" + DateTime.Now.ToString("ddMMyyy_Hmmss") + ".rtcm"));
 				fileStreamTask.Start();
 			}
-			catch (Exception ex)
+			catch(Exception ex)
 			{
 				string str = ex.Message;
 			}
