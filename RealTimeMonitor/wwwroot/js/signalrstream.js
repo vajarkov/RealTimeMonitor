@@ -14,6 +14,35 @@
 var connection = new signalR.HubConnectionBuilder()
     .withUrl("/streamHub")
     .build();
+
+document.getElementById("FileSave").addEventListener("click", (event) => __awaiter(this, void 0, void 0, function* () {
+    try {
+        const subject = new signalR.Subject();
+        connection.send("StartUploadStream");
+
+    }
+    catch (e) {
+        console.error(e.toString());
+    }
+    event.preventDefault();
+}
+));
+
+document.getElementById("FileStop").addEventListener("click", (event) => __awaiter(this, void 0, void 0, function* () {
+    try {
+        const subject = new signalR.Subject();
+        connection.send("StopUploadStream");
+
+    }
+    catch (e) {
+        console.error(e.toString());
+    }
+    event.preventDefault();
+}
+));
+
+
+
 document.getElementById("streamButton").addEventListener("click", (event) => __awaiter(this, void 0, void 0, function* () {
     try {
         connection.stream("DelayCounter", 1000)

@@ -1,8 +1,13 @@
-#pragma once
+#pragma comment(lib, "RTKLib.lib")
 extern "C" {
-#include "defs.h"
+    #include "defs.h"
+    //#include "../RTKLib/rtklib.h"
 }
-//using namespace System;
+
+
+
+using namespace System;
+using namespace System::Collections::Generic;
 
 /* constants -----------------------------------------------------------------*/
 
@@ -34,6 +39,44 @@ typedef struct {                    /* multi-signal-message header type */
     unsigned char cellmask[64];     /* cell mask */
 } msm_h_t;
 
+//static const double gpst0[] = { 1980,1, 6,0,0,0 }; /* gps time reference */
+//static const double gst0[] = { 1999,8,22,0,0,0 }; /* galileo system time reference */
+//static const double bdt0[] = { 2006,1, 1,0,0,0 }; /* beidou time reference */
+
+
+//static double leaps[MAXLEAPS + 1][7] = { /* leap seconds (y,m,d,h,m,s,utc-gpst) */
+//    {2017,1,1,0,0,0,-18},
+//    {2015,7,1,0,0,0,-17},
+//    {2012,7,1,0,0,0,-16},
+//    {2009,1,1,0,0,0,-15},
+//    {2006,1,1,0,0,0,-14},
+//    {1999,1,1,0,0,0,-13},
+//    {1997,7,1,0,0,0,-12},
+//    {1996,1,1,0,0,0,-11},
+//    {1994,7,1,0,0,0,-10},
+//    {1993,7,1,0,0,0, -9},
+//    {1992,7,1,0,0,0, -8},
+//    {1991,1,1,0,0,0, -7},
+//    {1990,1,1,0,0,0, -6},
+//    {1988,1,1,0,0,0, -5},
+//    {1985,7,1,0,0,0, -4},
+//    {1983,7,1,0,0,0, -3},
+//    {1982,7,1,0,0,0, -2},
+//    {1981,7,1,0,0,0, -1},
+//    {0}
+//};
+
+//static char codepris[7][MAXFREQ][16] = {  /* code priority table */
+//
+//    L1/E1      L2/B1        L5/E5a/L3 L6/LEX/B3 E5b/B2    E5(a+b)  S */
+//    {"CPYWMNSL","PYWCMNDSLX","IQX"     ,""       ,""       ,""      ,""    }, /* GPS */
+//    {"PC"      ,"PC"        ,"IQX"     ,""       ,""       ,""      ,""    }, /* GLO */
+//    {"CABXZ"   ,""          ,"IQX"     ,"ABCXZ"  ,"IQX"    ,"IQX"   ,""    }, /* GAL */
+//    {"CSLXZ"   ,"SLX"       ,"IQX"     ,"SLX"    ,""       ,""      ,""    }, /* QZS */
+//    {"C"       ,""          ,"IQX"     ,""       ,""       ,""      ,""    }, /* SBS */
+//    {"IQX"     ,"IQX"       ,"IQX"     ,"IQX"    ,"IQX"    ,""      ,""    }, /* BDS */
+//    {""        ,""          ,"ABCX"    ,""       ,""       ,""      ,"ABCX"}  /* IRN */
+//};
 
 //const prcopt_t prcopt_default = уз{ /* defaults processing options */
 //    PMODE_SINGLE,0,2,SYS_GPS,   /* mode,soltype,nf,navsys */

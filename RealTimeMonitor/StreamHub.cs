@@ -19,7 +19,9 @@ namespace RealTimeMonitor
 
     public class StreamHub : Hub//, IDisposable
     {
-		TCP streamTCP;
+		static TCP fileStreamTCP = new TCP();
+		static Task fileStreamTask =  new Task(() => fileStreamTCP.SaveFile(@"C:\distr\data\0001-" + DateTime.Now.ToString("ddMMyyy_Hmmss") + ".rtcm"));
+		TCP streamTCP = new TCP();
 		#region Переменные для запуска сбора из C#
 		/*
         private const int MAXSCALE = 18;
@@ -154,9 +156,44 @@ namespace RealTimeMonitor
 
 		//Mutex mutexRTK = null;
 		//object lock_object = new object();
-		static SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
+		///static SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
+		public async Task StopUploadStream()
+		{
+			try
+			{
+				if (StreamHub.fileStreamTask.Status == TaskStatus.Running)
+				{
+					await Task.Run(() => fileStreamTCP.StopSave());
+					//await Task.Run(() => fileStreamTCP.CloseConnection());
+					//fileStreamTask.Dispose();
+				}
+			}
+			catch(Exception ex)
+			{
+				string str = ex.Message;
+			}
+		}
 
-        public ChannelReader<string> DelayCounter(int delay)
+
+		public async Task StartUploadStream()
+		{
+			try
+			{
+				if (fileStreamTCP == null || !fileStreamTCP.ConnectionState)
+				{
+
+					fileStreamTCP.Connect("192.168.0.162", 5018);
+				}
+				//fileStreamTask = new Task(() => fileStreamTCP.SaveFile(@"C:\distr\data\0001-" + DateTime.Now.ToString("ddMMyyy_Hmmss") + ".rtcm"));
+				fileStreamTask.Start();
+			}
+			catch (Exception ex)
+			{
+				string str = ex.Message;
+			}
+		}
+
+		public ChannelReader<string> DelayCounter(int delay)
         {
             var channel = Channel.CreateUnbounded<string>();
 			_ = WriteItems(channel.Writer, 1000, delay);

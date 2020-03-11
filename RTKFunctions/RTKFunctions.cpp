@@ -1,6 +1,9 @@
 #include "pch.h"
-
+//#include <Windows.h>
 #include "RTKFunctions.h"
+
+//using System;
+
 
 namespace RTKFunctions {
 	
@@ -550,18 +553,19 @@ namespace RTKFunctions {
     }
     
     /* decode receiver raw/rtcm data ---------------------------------------------*/
-    int DecodeRTCM::decoderaw(byte svr_bytes[], int index){ //rtksvr_t* svr, int index) {
-        rtksvr_t* svr = new rtksvr_t();
-        obs_t* obs;
-        nav_t* nav;
+    int DecodeRTCM::decoderaw(unsigned char* svr_bytes, int index){ //rtksvr_t* svr, int index) {
+        rtksvr_t* svr;// = new rtksvr_t();
+        //initrt
+        obs_t* obs = new obs_t();
+        nav_t* nav = new nav_t();
         sbsmsg_t* sbsmsg = NULL;
         int i, ret, sat, fobs = 0;
-        svr->buff[index] = new byte[];
         svr->buff[index] = svr_bytes;
         ////tracet(4, "decoderaw: index=%d\n", index);
 
         ///rtksvrlock(svr);
-
+        svr->format[index] = STRFMT_RTCM3;
+        svr->nb[index] = 1024;
         for (i = 0; i < svr->nb[index]; i++) {
 
             /* input rtcm/receiver raw data from stream */
@@ -754,7 +758,7 @@ namespace RTKFunctions {
     *-----------------------------------------------------------------------------*/
     int DecodeRTCM::input_rtcm3(rtcm_t* rtcm, unsigned char data) {
         ////trace(5, "input_rtcm3: data=%02x\n", data);
-
+        int nbyte = 0;
         /* synchronize frame */
         if (rtcm->nbyte == 0) {
             if (data != RTCM3PREAMB) return 0;

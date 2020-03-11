@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Net.Sockets;
 using System.Text;
+using System.IO;
 using RTKFunctions;
-
+using System.Threading;
 
 namespace TCPStream
 {
@@ -14,6 +15,9 @@ namespace TCPStream
         private TcpClient client = new TcpClient();
         private byte[] data = new byte[1024];
         private DecodeRTCM RTCM = new DecodeRTCM();
+        private static bool fileWriteStream;
+        private NetworkStream stream;
+        
 
         public void Connect(string server, int port)
         {
@@ -38,7 +42,7 @@ namespace TCPStream
         public unsafe byte[] GetBytes()
         {
             
-            NetworkStream stream = client.GetStream();
+            stream = client.GetStream();
             do
             {
                 int bytes = stream.Read(data, 0, data.Length);
@@ -52,7 +56,7 @@ namespace TCPStream
                 
             }
             while (stream.DataAvailable);
-            stream.Close();
+            //stream.Close();
             return data;
         } 
 
@@ -61,7 +65,7 @@ namespace TCPStream
         {
             
             StringBuilder response = new StringBuilder();
-            NetworkStream stream = client.GetStream();
+            stream = client.GetStream();
             do
             {
                 int bytes = stream.Read(data, 0, data.Length);
@@ -72,10 +76,40 @@ namespace TCPStream
             return response.ToString();
         }
 
+        public void SaveFile(string path)
+        {
+            fileWriteStream = true;
+            stream = client.GetStream();
+            using (FileStream fileStream = new FileStream(path, FileMode.Create))
+            { 
+                do
+                {
+                    stream.CopyTo(fileStream);
+                }
+                while (fileWriteStream && stream.DataAvailable); 
+            }
+            client.Close();
+        }
+
+        public void StopSave()
+        {
+            fileWriteStream = false;
+            Thread.Sleep(1000);
+            stream.Close();
+            
+        }
+
 
         public void CloseConnection()
         {
-            client.Close();
+            try
+            {
+                client.Close();
+            }
+            catch(Exception ex)
+            {
+                string str = ex.Message;
+            }
         }
 
         public bool ConnectionState { get {
