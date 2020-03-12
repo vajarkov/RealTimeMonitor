@@ -1335,14 +1335,14 @@ namespace RTKFunctions {
         int sync;
     //    if (DecodeRTCM::decode_head1009(rtcm, &sync) < 0) return -1;
     //    rtcm->obsflag = !sync;
-    //    return sync ? 0 : 1;
-    //}
+        return sync ? 0 : 1;
+    }
 
-    ///* decode type 1012: extended L1&L2 glonass rtk observables ------------------*/
-    //int DecodeRTCM::decode_type1012(rtcm_t* rtcm)
-    //{
+    /* decode type 1012: extended L1&L2 glonass rtk observables ------------------*/
+    int DecodeRTCM::decode_type1012(rtcm_t* rtcm)
+    {
     //    double pr1, cnr1, cnr2, tt, cp1, cp2, lam1, lam2;
-    //    int i = 24 + 61, j, index, nsat, sync, prn, sat, freq, code1, code2, pr21, ppr1, ppr2;
+        int i = 24 + 61, j, index, nsat, sync, prn, sat, freq, code1, code2, pr21, ppr1, ppr2;
     //    int lock1, lock2, amb, sys = SYS_GLO;
 
     //    if ((nsat = DecodeRTCM::decode_head1009(rtcm, &sync)) < 0) return -1;
