@@ -7,7 +7,30 @@
 
 namespace RTKFunctions {
 	
-    
+    /* inner product ---------------------------------------------------------------
+    * inner product of vectors
+    * args   : double *a,*b     I   vector a,b (n x 1)
+    *          int    n         I   size of vector a,b
+    * return : a'*b
+    *-----------------------------------------------------------------------------*/
+    double CommonRTK::dot(const double* a, const double* b, int n)
+    {
+        double c = 0.0;
+
+        while (--n >= 0) c += a[n] * b[n];
+        return c;
+    }
+
+    /* euclid norm -----------------------------------------------------------------
+    * euclid norm of vector
+    * args   : double *a        I   vector a (n x 1)
+    *          int    n         I   size of vector a
+    * return : || a ||
+    *-----------------------------------------------------------------------------*/
+    double CommonRTK::norm(const double* a, int n)
+    {
+        return sqrt(CommonRTK::dot(a, a, n));
+    }
 
     /* satellite system+prn/slot number to satellite number ------------------------
     * convert satellite system+prn/slot number to satellite number
@@ -1122,9 +1145,13 @@ namespace RTKFunctions {
         //rtcm->sta.deltype = 0; /* xyz */
         for (j = 0; j < 3; j++) {
             //rtcm->sta.pos[j] = rr[j] * 0.0001;
-            RTK_SVR_DATA::pos[j] = rr[j] * 0.0001;
+            RTK_SVR_DATA::pos_WGS84[j] = rr[j] * 0.0001;
+            //CommonRTK::ecef2pos()
+            //RTK_SVR_DATA::pos[j] = RTK_SVR_DATA::pos[j] * R2D;
             //rtcm->sta.del[j] = 0.0;
         }
+
+        if (CommonRTK::norm(rtcm.sta.pos, 3) > 0.0) CommonRTK::ecef2pos(rtcm.sta.pos, pos);
         //rtcm->sta.hgt = 0.0;
         //rtcm->sta.itrf = itrf;
         return 5;

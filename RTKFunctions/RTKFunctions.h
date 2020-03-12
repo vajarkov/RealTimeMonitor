@@ -179,6 +179,23 @@ namespace RTKFunctions {
     public  ref class CommonRTK {
     public:
 
+        /* inner product ---------------------------------------------------------------
+        * inner product of vectors
+        * args   : double *a,*b     I   vector a,b (n x 1)
+        *          int    n         I   size of vector a,b
+        * return : a'*b
+        *-----------------------------------------------------------------------------*/
+        double dot(const double* a, const double* b, int n);
+
+        /* euclid norm -----------------------------------------------------------------
+        * euclid norm of vector
+        * args   : double *a        I   vector a (n x 1)
+        *          int    n         I   size of vector a
+        * return : || a ||
+        *-----------------------------------------------------------------------------*/
+        double norm(const double* a, int n);
+
+
         /* satellite system+prn/slot number to satellite number ------------------------
         * convert satellite system+prn/slot number to satellite number
         * args   : int    sys       I   satellite system (SYS_GPS,SYS_GLO,...)

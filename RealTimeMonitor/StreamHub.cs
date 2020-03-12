@@ -11,6 +11,7 @@ using TCPStream;
 using System.Text;
 using DataExchange;
 using System.Globalization;
+
 //using RTKLibBridge;
 //using Rt
 //using RealTimeMonitor.
@@ -366,6 +367,8 @@ namespace RealTimeMonitor
 
 			//RTKLib rtkLib = new RTKLib();
 			StringBuilder strPos = new StringBuilder();
+
+			String outputString = String.Empty;
 			try
 			{
 				streamTCP = new TCP();
@@ -402,13 +405,15 @@ namespace RealTimeMonitor
 					if (streamTCP.ConnectionState)
 					{
 						await Task.Run(()=>streamTCP.GetBytes());
+						outputString = string.Format($"WGS84  X - {RTK_SVR_DATA.pos[0]:F3}  Y - {RTK_SVR_DATA.pos[1]:F3}  Z - {RTK_SVR_DATA.pos[2]:F3}" );
+						
 						//str
-						strPos.Append(RTK_SVR_DATA.pos[0].ToString("F3", CultureInfo.InvariantCulture));
-						strPos.Append("\t");
-						strPos.Append(RTK_SVR_DATA.pos[1].ToString("F3", CultureInfo.InvariantCulture));
-						strPos.Append("\t");
-						strPos.Append(RTK_SVR_DATA.pos[2].ToString("F3", CultureInfo.InvariantCulture));
-						strPos.Append("\n");
+						//strPos.Append(RTK_SVR_DATA.pos[0].ToString("F3", CultureInfo.InvariantCulture));
+						//strPos.Append("\t");
+						//strPos.Append(RTK_SVR_DATA.pos[1].ToString("F3", CultureInfo.InvariantCulture));
+						//strPos.Append("\t");
+						//strPos.Append(RTK_SVR_DATA.pos[2].ToString("F3", CultureInfo.InvariantCulture));
+						//strPos.Append("\n");
 					}
 					//	mutexRTK = Mutex.OpenExisting("RTK_MUTEX");
 
@@ -435,8 +440,8 @@ namespace RealTimeMonitor
 						//string strPos = pos.ToString();
 
 						
-						await writer.WriteAsync(strPos.ToString());
-						//await Task.Delay(1000);
+						await writer.WriteAsync(outputString);
+						await Task.Delay(1000);
 
 					}
 				
