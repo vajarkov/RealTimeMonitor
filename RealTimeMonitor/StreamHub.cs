@@ -8,6 +8,9 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using TCPStream;
+using System.Text;
+using DataExchange;
+using System.Globalization;
 //using RTKLibBridge;
 //using Rt
 //using RealTimeMonitor.
@@ -362,7 +365,7 @@ namespace RealTimeMonitor
 			#endregion
 
 			//RTKLib rtkLib = new RTKLib();
-
+			StringBuilder strPos = new StringBuilder();
 			try
 			{
 				streamTCP = new TCP();
@@ -383,7 +386,7 @@ namespace RealTimeMonitor
 			//int shmSize = 80;
 			//var shm = System.IO.MemoryMappedFiles.MemoryMappedFile.CreateOrOpen(shmName, shmSize);
 
-			string strPos = string.Empty;
+			//string strPos = string.Empty;
 
 
 			while (true)
@@ -398,7 +401,14 @@ namespace RealTimeMonitor
 				{
 					if (streamTCP.ConnectionState)
 					{
-						strPos = streamTCP.GetBytes().ToString();
+						await Task.Run(()=>streamTCP.GetBytes());
+						//str
+						strPos.Append(RTK_SVR_DATA.pos[0].ToString("F3", CultureInfo.InvariantCulture));
+						strPos.Append("\t");
+						strPos.Append(RTK_SVR_DATA.pos[1].ToString("F3", CultureInfo.InvariantCulture));
+						strPos.Append("\t");
+						strPos.Append(RTK_SVR_DATA.pos[2].ToString("F3", CultureInfo.InvariantCulture));
+						strPos.Append("\n");
 					}
 					//	mutexRTK = Mutex.OpenExisting("RTK_MUTEX");
 
@@ -425,8 +435,8 @@ namespace RealTimeMonitor
 						//string strPos = pos.ToString();
 
 						
-						await writer.WriteAsync(strPos);
-						await Task.Delay(1000);
+						await writer.WriteAsync(strPos.ToString());
+						//await Task.Delay(1000);
 
 					}
 				

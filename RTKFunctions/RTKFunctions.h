@@ -363,8 +363,9 @@ namespace RTKFunctions {
         *          int    len    I      bit length (bits) (len<=32)
         * return : extracted unsigned/signed bits
         *-----------------------------------------------------------------------------*/
-        static int getbitu(const unsigned char* buff, int pos, int len);
-        static int getbits(const unsigned char* buff, int pos, int len);
+        static int getbitu(array<unsigned char>^ buff, int pos, int len);  // const unsigned char* buff, int pos, int len);
+        //static int getbitu(unsigned char* buff, int pos, int len);
+        static int getbits(array<unsigned char>^ buff, int pos, int len); //const unsigned char* buff, int pos, int len);
 
         /* decode navigation data word -------------------------------------------------
        * check party and decode navigation data word
@@ -401,7 +402,7 @@ namespace RTKFunctions {
         * return : crc-24Q parity
         * notes  : see reference [2] A.4.3.3 Parity
         *-----------------------------------------------------------------------------*/
-        static unsigned int rtk_crc24q(const unsigned char* buff, int len);
+        static unsigned int rtk_crc24q(int len); //const unsigned char* buff, int len);
         
         
     };
@@ -413,7 +414,7 @@ namespace RTKFunctions {
         
 
         /* decode receiver raw/rtcm data ---------------------------------------------*/
-        int decoderaw(byte svr_bytes[], int index);
+        int decoderaw();//unsigned char svr_bytes[], int index);
         void dataexchange_double();
 
 
@@ -534,12 +535,12 @@ namespace RTKFunctions {
         *            |<-- 8 --->|<- 6 -->|<-- 10 --->|<--- length x 8 --->|<-- 24 -->|
         *
         *-----------------------------------------------------------------------------*/
-        int input_rtcm3(rtcm_t* rtcm, unsigned char data);
+        int input_rtcm3(unsigned char data);//rtcm_t* rtcm, unsigned char data);
 
 
 
         /* get sign-magnitude bits ---------------------------------------------------*/
-        double getbitg(const unsigned char* buff, int pos, int len);
+        double getbitg(array<unsigned char>^ buff, int pos, int len); //const unsigned char* buff, int pos, int len);
 
         /* adjust weekly rollover of gps time ----------------------------------------*/
         static void adjweek(rtcm_t* rtcm, double tow);
@@ -580,14 +581,20 @@ namespace RTKFunctions {
         /* decode type 1004: extended L1&L2 gps rtk observables ----------------------*/
         int decode_type1004(rtcm_t* rtcm);
 
+
         /* get signed 38bit field ----------------------------------------------------*/
-        double getbits_38(const unsigned char* buff, int pos);
+        //double getbits_38(unsigned char* buff, int pos);
+
+        /* get signed 38bit field ----------------------------------------------------*/
+        double getbits_38(array<unsigned char>^ buff, int pos);//const unsigned char* buff, int pos);
+
+        
 
         /* decode type 1005: stationary rtk reference station arp --------------------*/
-        int decode_type1005(rtcm_t* rtcm);
+        int decode_type1005();// rtcm_t* rtcm);
 
         /* decode type 1006: stationary rtk reference station arp with height --------*/
-        int decode_type1006(rtcm_t* rtcm);
+        int decode_type1006();// rtcm_t* rtcm);
 
         /* decode type 1007: antenna descriptor --------------------------------------*/
         int decode_type1007(rtcm_t* rtcm);
@@ -740,7 +747,7 @@ namespace RTKFunctions {
         int decode_type1230(rtcm_t* rtcm);
 
         /* decode rtcm ver.3 message -------------------------------------------------*/
-        int decode_rtcm3(rtcm_t* rtcm);
+        int decode_rtcm3();//rtcm_t* rtcm);
 
         /* adjust hourly rollover of rtcm 2 time -------------------------------------*/
         void adjhour(rtcm_t* rtcm, double zcnt);

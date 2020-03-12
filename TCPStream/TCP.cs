@@ -40,7 +40,7 @@ namespace TCPStream
         }
 
 
-        public unsafe void GetBytes()
+        public void GetBytes()
         {
             //RTCM.dataexchange_double();
             //RTK_SVR_DATA.pos[0] = 0; 
@@ -49,13 +49,8 @@ namespace TCPStream
             do
             {
                 int bytes = stream.Read(data, 0, data.Length);
-                {
-                    fixed(byte* p = data)
-                    {
-                        RTCM.decoderaw(p, 0);
-                    }
-                    
-                }
+                RTK_SVR_DATA.tcp_buff = data;
+                RTCM.decoderaw();
                 
             }
             while (stream.DataAvailable);
