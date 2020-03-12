@@ -13,13 +13,13 @@ namespace RTKFunctions {
     *          int    n         I   size of vector a,b
     * return : a'*b
     *-----------------------------------------------------------------------------*/
-    double CommonRTK::dot(const double* a, const double* b, int n)
+    /*double CommonRTK::dot(const double* a, const double* b, int n)
     {
         double c = 0.0;
 
         while (--n >= 0) c += a[n] * b[n];
         return c;
-    }
+    }*/
 
     /* euclid norm -----------------------------------------------------------------
     * euclid norm of vector
@@ -1143,15 +1143,25 @@ namespace RTKFunctions {
         //if (!test_staid(rtcm, staid)) return -1;
 
         //rtcm->sta.deltype = 0; /* xyz */
+        double pos_temp[3];
         for (j = 0; j < 3; j++) {
             //rtcm->sta.pos[j] = rr[j] * 0.0001;
-            RTK_SVR_DATA::pos_WGS84[j] = rr[j] * 0.0001;
+            pos_temp[j] = RTK_SVR_DATA::pos_WGS84[j] = rr[j] * 0.0001;
             //CommonRTK::ecef2pos()
             //RTK_SVR_DATA::pos[j] = RTK_SVR_DATA::pos[j] * R2D;
             //rtcm->sta.del[j] = 0.0;
         }
 
-        if (CommonRTK::norm(rtcm.sta.pos, 3) > 0.0) CommonRTK::ecef2pos(rtcm.sta.pos, pos);
+        double pos_prepare[3];
+        if (CommonRTK::norm(pos_temp, 3) > 0.0) CommonRTK::ecef2pos(pos_temp, pos_prepare);
+        for (j = 0; j < 3; j++) {
+            //rtcm->sta.pos[j] = rr[j] * 0.0001;
+            //RTK_SVR_DATA::pos_WGS84[j] = rr[j] * 0.0001;
+            //CommonRTK::ecef2pos()
+            RTK_SVR_DATA::pos[j] = pos_prepare[j] * R2D;
+            //rtcm->sta.del[j] = 0.0;
+        }
+
         //rtcm->sta.hgt = 0.0;
         //rtcm->sta.itrf = itrf;
         return 5;
@@ -1193,11 +1203,31 @@ namespace RTKFunctions {
         //if (!test_staid(rtcm, staid)) return -1;
 
         //rtcm->sta.deltype = 1; /* xyz */
+        //for (j = 0; j < 3; j++) {
+        //    //rtcm->sta.pos[j] = rr[j] * 0.0001;
+        //    RTK_SVR_DATA::pos[j] = rr[j] * 0.0001;
+        //    //rtcm->sta.del[j] = 0.0;
+        //}
+
+        double pos_temp[3];
         for (j = 0; j < 3; j++) {
             //rtcm->sta.pos[j] = rr[j] * 0.0001;
-            RTK_SVR_DATA::pos[j] = rr[j] * 0.0001;
+            pos_temp[j] = RTK_SVR_DATA::pos_WGS84[j] = rr[j] * 0.0001;
+            //CommonRTK::ecef2pos()
+            //RTK_SVR_DATA::pos[j] = RTK_SVR_DATA::pos[j] * R2D;
             //rtcm->sta.del[j] = 0.0;
         }
+
+        double pos_prepare[3];
+        if (CommonRTK::norm(pos_temp, 3) > 0.0) CommonRTK::ecef2pos(pos_temp, pos_prepare);
+        for (j = 0; j < 3; j++) {
+            //rtcm->sta.pos[j] = rr[j] * 0.0001;
+            //RTK_SVR_DATA::pos_WGS84[j] = rr[j] * 0.0001;
+            //CommonRTK::ecef2pos()
+            RTK_SVR_DATA::pos[j] = pos_prepare[j] * R2D;
+            //rtcm->sta.del[j] = 0.0;
+        }
+        RTK_SVR_DATA::pos[2] /= R2D;
        /* rtcm->sta.hgt = anth * 0.0001;
         rtcm->sta.itrf = itrf;*/
         return 5;
@@ -3030,53 +3060,53 @@ namespace RTKFunctions {
         //case 1046: ret = DecodeRTCM::decode_type1046(rtcm); break;
         //case   63: ret = DecodeRTCM::decode_type1042(rtcm); break; /* RTCM draft */
         //case 1042: ret = DecodeRTCM::decode_type1042(rtcm); break;
-        //case 1057: ret = DecodeRTCM::decode_ssr1(rtcm, SYS_GPS); break;
-        //case 1058: ret = DecodeRTCM::decode_ssr2(rtcm, SYS_GPS); break;
-        //case 1059: ret = DecodeRTCM::decode_ssr3(rtcm, SYS_GPS); break;
-        //case 1060: ret = DecodeRTCM::decode_ssr4(rtcm, SYS_GPS); break;
-        //case 1061: ret = DecodeRTCM::decode_ssr5(rtcm, SYS_GPS); break;
-        //case 1062: ret = DecodeRTCM::decode_ssr6(rtcm, SYS_GPS); break;
-        //case 1063: ret = DecodeRTCM::decode_ssr1(rtcm, SYS_GLO); break;
-        //case 1064: ret = DecodeRTCM::decode_ssr2(rtcm, SYS_GLO); break;
-        //case 1065: ret = DecodeRTCM::decode_ssr3(rtcm, SYS_GLO); break;
-        //case 1066: ret = DecodeRTCM::decode_ssr4(rtcm, SYS_GLO); break;
-        //case 1067: ret = DecodeRTCM::decode_ssr5(rtcm, SYS_GLO); break;
-        //case 1068: ret = DecodeRTCM::decode_ssr6(rtcm, SYS_GLO); break;
+        case 1057: ret = DecodeRTCM::decode_ssr1(SYS_GPS); break;
+        case 1058: ret = DecodeRTCM::decode_ssr2(SYS_GPS); break;
+        case 1059: ret = DecodeRTCM::decode_ssr3(SYS_GPS); break;
+        case 1060: ret = DecodeRTCM::decode_ssr4(SYS_GPS); break;
+        case 1061: ret = DecodeRTCM::decode_ssr5(SYS_GPS); break;
+        case 1062: ret = DecodeRTCM::decode_ssr6(SYS_GPS); break;
+        case 1063: ret = DecodeRTCM::decode_ssr1(SYS_GLO); break;
+        case 1064: ret = DecodeRTCM::decode_ssr2(SYS_GLO); break;
+        case 1065: ret = DecodeRTCM::decode_ssr3(SYS_GLO); break;
+        case 1066: ret = DecodeRTCM::decode_ssr4(SYS_GLO); break;
+        case 1067: ret = DecodeRTCM::decode_ssr5(SYS_GLO); break;
+        case 1068: ret = DecodeRTCM::decode_ssr6(SYS_GLO); break;
         //case 1071: ret = DecodeRTCM::decode_msm0(rtcm, SYS_GPS); break; /* not supported */
         //case 1072: ret = DecodeRTCM::decode_msm0(rtcm, SYS_GPS); break; /* not supported */
         //case 1073: ret = DecodeRTCM::decode_msm0(rtcm, SYS_GPS); break; /* not supported */
-        //case 1074: ret = DecodeRTCM::decode_msm4(rtcm, SYS_GPS); break;
-        //case 1075: ret = DecodeRTCM::decode_msm5(rtcm, SYS_GPS); break;
-        //case 1076: ret = DecodeRTCM::decode_msm6(rtcm, SYS_GPS); break;
-        //case 1077: ret = DecodeRTCM::decode_msm7(rtcm, SYS_GPS); break;
+        case 1074: ret = DecodeRTCM::decode_msm4(SYS_GPS); break;
+        case 1075: ret = DecodeRTCM::decode_msm5(SYS_GPS); break;
+        case 1076: ret = DecodeRTCM::decode_msm6(SYS_GPS); break;
+        case 1077: ret = DecodeRTCM::decode_msm7(SYS_GPS); break;
         //case 1081: ret = DecodeRTCM::decode_msm0(rtcm, SYS_GLO); break; /* not supported */
         //case 1082: ret = DecodeRTCM::decode_msm0(rtcm, SYS_GLO); break; /* not supported */
         //case 1083: ret = DecodeRTCM::decode_msm0(rtcm, SYS_GLO); break; /* not supported */
-        //case 1084: ret = DecodeRTCM::decode_msm4(rtcm, SYS_GLO); break;
-        //case 1085: ret = DecodeRTCM::decode_msm5(rtcm, SYS_GLO); break;
-        //case 1086: ret = DecodeRTCM::decode_msm6(rtcm, SYS_GLO); break;
-        //case 1087: ret = DecodeRTCM::decode_msm7(rtcm, SYS_GLO); break;
+        case 1084: ret = DecodeRTCM::decode_msm4(SYS_GLO); break;
+        case 1085: ret = DecodeRTCM::decode_msm5(SYS_GLO); break;
+        case 1086: ret = DecodeRTCM::decode_msm6(SYS_GLO); break;
+        case 1087: ret = DecodeRTCM::decode_msm7(SYS_GLO); break;
         //case 1091: ret = DecodeRTCM::decode_msm0(rtcm, SYS_GAL); break; /* not supported */
         //case 1092: ret = DecodeRTCM::decode_msm0(rtcm, SYS_GAL); break; /* not supported */
         //case 1093: ret = DecodeRTCM::decode_msm0(rtcm, SYS_GAL); break; /* not supported */
-        //case 1094: ret = DecodeRTCM::decode_msm4(rtcm, SYS_GAL); break;
-        //case 1095: ret = DecodeRTCM::decode_msm5(rtcm, SYS_GAL); break;
-        //case 1096: ret = DecodeRTCM::decode_msm6(rtcm, SYS_GAL); break;
-        //case 1097: ret = DecodeRTCM::decode_msm7(rtcm, SYS_GAL); break;
+        case 1094: ret = DecodeRTCM::decode_msm4(SYS_GAL); break;
+        case 1095: ret = DecodeRTCM::decode_msm5(SYS_GAL); break;
+        case 1096: ret = DecodeRTCM::decode_msm6(SYS_GAL); break;
+        case 1097: ret = DecodeRTCM::decode_msm7(SYS_GAL); break;
         //case 1101: ret = DecodeRTCM::decode_msm0(rtcm, SYS_SBS); break; /* not supported */
         //case 1102: ret = DecodeRTCM::decode_msm0(rtcm, SYS_SBS); break; /* not supported */
         //case 1103: ret = DecodeRTCM::decode_msm0(rtcm, SYS_SBS); break; /* not supported */
-        //case 1104: ret = DecodeRTCM::decode_msm4(rtcm, SYS_SBS); break;
-        //case 1105: ret = DecodeRTCM::decode_msm5(rtcm, SYS_SBS); break;
-        //case 1106: ret = DecodeRTCM::decode_msm6(rtcm, SYS_SBS); break;
-        //case 1107: ret = DecodeRTCM::decode_msm7(rtcm, SYS_SBS); break;
+        case 1104: ret = DecodeRTCM::decode_msm4(SYS_SBS); break;
+        case 1105: ret = DecodeRTCM::decode_msm5(SYS_SBS); break;
+        case 1106: ret = DecodeRTCM::decode_msm6(SYS_SBS); break;
+        case 1107: ret = DecodeRTCM::decode_msm7(SYS_SBS); break;
         //case 1111: ret = DecodeRTCM::decode_msm0(rtcm, SYS_QZS); break; /* not supported */
         //case 1112: ret = DecodeRTCM::decode_msm0(rtcm, SYS_QZS); break; /* not supported */
         //case 1113: ret = DecodeRTCM::decode_msm0(rtcm, SYS_QZS); break; /* not supported */
-        //case 1114: ret = DecodeRTCM::decode_msm4(rtcm, SYS_QZS); break;
-        //case 1115: ret = DecodeRTCM::decode_msm5(rtcm, SYS_QZS); break;
-        //case 1116: ret = DecodeRTCM::decode_msm6(rtcm, SYS_QZS); break;
-        //case 1117: ret = DecodeRTCM::decode_msm7(rtcm, SYS_QZS); break;
+        case 1114: ret = DecodeRTCM::decode_msm4(rtcm, SYS_QZS); break;
+        case 1115: ret = DecodeRTCM::decode_msm5(rtcm, SYS_QZS); break;
+        case 1116: ret = DecodeRTCM::decode_msm6(rtcm, SYS_QZS); break;
+        case 1117: ret = DecodeRTCM::decode_msm7(rtcm, SYS_QZS); break;
         //case 1121: ret = DecodeRTCM::decode_msm0(rtcm, SYS_CMP); break; /* not supported */
         //case 1122: ret = DecodeRTCM::decode_msm0(rtcm, SYS_CMP); break; /* not supported */
         //case 1123: ret = DecodeRTCM::decode_msm0(rtcm, SYS_CMP); break; /* not supported */

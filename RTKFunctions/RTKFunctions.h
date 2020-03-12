@@ -185,7 +185,7 @@ namespace RTKFunctions {
         *          int    n         I   size of vector a,b
         * return : a'*b
         *-----------------------------------------------------------------------------*/
-        double dot(const double* a, const double* b, int n);
+        //double dot(const double* a, const double* b, int n);
 
         /* euclid norm -----------------------------------------------------------------
         * euclid norm of vector
@@ -193,7 +193,7 @@ namespace RTKFunctions {
         *          int    n         I   size of vector a
         * return : || a ||
         *-----------------------------------------------------------------------------*/
-        double norm(const double* a, int n);
+        static double norm(const double* a, int n);
 
 
         /* satellite system+prn/slot number to satellite number ------------------------

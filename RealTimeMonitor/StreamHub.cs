@@ -199,11 +199,11 @@ namespace RealTimeMonitor
 		public ChannelReader<string> DelayCounter(int delay)
         {
             var channel = Channel.CreateUnbounded<string>();
-			_ = WriteItems(channel.Writer, 1000, delay);
+			_ = WriteItems(channel.Writer);
             return channel.Reader;
         }
 
-        private async Task WriteItems(ChannelWriter<string> writer, int count, int delay)
+        private async Task WriteItems(ChannelWriter<string> writer)
 		{
 			#region Код для ининциализации опроса из C#
 			/*
@@ -405,8 +405,10 @@ namespace RealTimeMonitor
 					if (streamTCP.ConnectionState)
 					{
 						await Task.Run(()=>streamTCP.GetBytes());
-						outputString = string.Format($"WGS84  X - {RTK_SVR_DATA.pos[0]:F3}  Y - {RTK_SVR_DATA.pos[1]:F3}  Z - {RTK_SVR_DATA.pos[2]:F3}" );
-						
+						outputString = string.Format($"WGS84  X - {RTK_SVR_DATA.pos_WGS84[0]:F3}  Y - {RTK_SVR_DATA.pos_WGS84[1]:F3}  Z - {RTK_SVR_DATA.pos_WGS84[2]:F3}" );
+						await writer.WriteAsync(outputString);
+						outputString = string.Format($"  Lat - {RTK_SVR_DATA.pos[0]:F8}  Lon - {RTK_SVR_DATA.pos[1]:F8}  Height - {RTK_SVR_DATA.pos[2]:F3}");
+						await writer.WriteAsync(outputString);
 						//str
 						//strPos.Append(RTK_SVR_DATA.pos[0].ToString("F3", CultureInfo.InvariantCulture));
 						//strPos.Append("\t");
