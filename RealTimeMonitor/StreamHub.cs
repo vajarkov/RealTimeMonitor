@@ -185,7 +185,7 @@ namespace RealTimeMonitor
 			{
 				if (fileStreamTCP == null || !fileStreamTCP.ConnectionState)
 				{
-					fileStreamTCP.Connect("192.168.0.162", 5018);
+					fileStreamTCP.Connect("192.168.0.186", 5018);
 				}
 				//fileStreamTask = new Task(() => fileStreamTCP.SaveFile(@"C:\distr\data\0001-" + DateTime.Now.ToString("ddMMyyy_Hmmss") + ".rtcm"));
 				fileStreamTask.Start();
@@ -405,9 +405,9 @@ namespace RealTimeMonitor
 					if (streamTCP.ConnectionState)
 					{
 						await Task.Run(()=>streamTCP.GetBytes());
-						outputString = string.Format($"WGS84  X - {RTK_SVR_DATA.pos_WGS84[1]:F3}; Y - {RTK_SVR_DATA.pos_WGS84[1]:F3}; Z - {RTK_SVR_DATA.pos_WGS84[2]:F3}" );
+						outputString = string.Format($"WGS84  X - {RTK_SVR_DATA.pos_WGS84[0]:F3}; Y - {RTK_SVR_DATA.pos_WGS84[1]:F3}; Z - {RTK_SVR_DATA.pos_WGS84[2]:F3}" );
 						await writer.WriteAsync(outputString);
-						outputString = string.Format($"GEO  Lat - {RTK_SVR_DATA.pos[1]:F8}; Lon - {RTK_SVR_DATA.pos[1]:F8}; Height - {RTK_SVR_DATA.pos[2]:F3}");
+						outputString = string.Format($"GEO  Lat - {RTK_SVR_DATA.pos[0]:F20}; Lon - {RTK_SVR_DATA.pos[1]:F20}; Height - {RTK_SVR_DATA.pos[2]:F3}");
 						await writer.WriteAsync(outputString);
 						outputString = string.Format($"OBS code - {RTK_SVR_DATA.code[0]:F8}; D - {RTK_SVR_DATA.D[0]:F3}; L - {RTK_SVR_DATA.L[0]:F8}; LLI - {RTK_SVR_DATA.LLI[0]}; type - {RTK_SVR_DATA.msmtype[0,0]}; n - {RTK_SVR_DATA.n}; nmax - {RTK_SVR_DATA.nmax}; P - {RTK_SVR_DATA.P[0]:F8}; rcv - {RTK_SVR_DATA.rcv}; sat - {RTK_SVR_DATA.sat}; SNR - {RTK_SVR_DATA.SNR[0]}");
 						await writer.WriteAsync(outputString);
