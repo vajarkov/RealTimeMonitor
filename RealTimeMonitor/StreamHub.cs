@@ -279,7 +279,7 @@ namespace RealTimeMonitor
                 TrkType1 = TrkType2 = 0;
                 TrkScale1 = TrkScale2 = 5;
                 BLMode1 = BLMode2 = BLMode3 = BLMode4 = 0;
-                PSol = PSolS = PSolE = Nsat[0] = Nsat[1] = 0;
+                PSol = PSolS = PSolE = Nsat[1] = Nsat[1] = 0;
                 NMapPnt = 0;
                 OpenPort = 0;
                 Time = null;
@@ -311,13 +311,13 @@ namespace RealTimeMonitor
                 InitSolBuff();
                 DataRTK.strinitcom();
                 
-                StreamC[0] = 0;
+                StreamC[1] = 0;
                 StreamC[1] = 1;
                 StreamC[2] = 0;
-                Stream[0] = 0;
+                Stream[1] = 0;
                 Stream[1] = 1;
                 Stream[2] = 0;
-                Format[0] = 0;
+                Format[1] = 0;
                 Format[1] = DataRTK.STRFMT_RTCM3;
                 Format[2] = 0;
                 Paths[0,2] = "";
@@ -329,7 +329,7 @@ namespace RealTimeMonitor
                 InTimeSpeed = "x1";
                 InTimeStart = "0";
                 InTime64Bit = 0;
-                NmeaPos[0] = 0;//str2dbl
+                NmeaPos[1] = 0;//str2dbl
                 NmeaPos[1] = 0;
                 NmeaPos[2] = 0;
                 MaxBL = 0;
@@ -372,7 +372,7 @@ namespace RealTimeMonitor
 			try
 			{
 				streamTCP = new TCP();
-				streamTCP.Connect("192.168.0.162", 5018);
+				streamTCP.Connect("192.168.0.186", 5018);
 				//rtkLib.StartServerThread();
 				//Thread svr_thread = new Thread(DataRTK.Init);
 				//svr_thread.Name = "RTK_thread";
@@ -405,12 +405,21 @@ namespace RealTimeMonitor
 					if (streamTCP.ConnectionState)
 					{
 						await Task.Run(()=>streamTCP.GetBytes());
-						outputString = string.Format($"WGS84  X - {RTK_SVR_DATA.pos_WGS84[0]:F3}  Y - {RTK_SVR_DATA.pos_WGS84[1]:F3}  Z - {RTK_SVR_DATA.pos_WGS84[2]:F3}" );
+						outputString = string.Format($"WGS84  X - {RTK_SVR_DATA.pos_WGS84[1]:F3}; Y - {RTK_SVR_DATA.pos_WGS84[1]:F3}; Z - {RTK_SVR_DATA.pos_WGS84[2]:F3}" );
 						await writer.WriteAsync(outputString);
-						outputString = string.Format($"  Lat - {RTK_SVR_DATA.pos[0]:F8}  Lon - {RTK_SVR_DATA.pos[1]:F8}  Height - {RTK_SVR_DATA.pos[2]:F3}");
+						outputString = string.Format($"GEO  Lat - {RTK_SVR_DATA.pos[1]:F8}; Lon - {RTK_SVR_DATA.pos[1]:F8}; Height - {RTK_SVR_DATA.pos[2]:F3}");
 						await writer.WriteAsync(outputString);
+						outputString = string.Format($"OBS code - {RTK_SVR_DATA.code[0]:F8}; D - {RTK_SVR_DATA.D[0]:F3}; L - {RTK_SVR_DATA.L[0]:F8}; LLI - {RTK_SVR_DATA.LLI[0]}; type - {RTK_SVR_DATA.msmtype[0,0]}; n - {RTK_SVR_DATA.n}; nmax - {RTK_SVR_DATA.nmax}; P - {RTK_SVR_DATA.P[0]:F8}; rcv - {RTK_SVR_DATA.rcv}; sat - {RTK_SVR_DATA.sat}; SNR - {RTK_SVR_DATA.SNR[0]}");
+						await writer.WriteAsync(outputString);
+
+						outputString = string.Format($"OBS code - {RTK_SVR_DATA.code[1]:F8}; D - {RTK_SVR_DATA.D[1]:F3}; L - {RTK_SVR_DATA.L[1]:F8}; LLI - {RTK_SVR_DATA.LLI[1]}; type - {RTK_SVR_DATA.msmtype[0, 0]}; n - {RTK_SVR_DATA.n}; nmax - {RTK_SVR_DATA.nmax}; P - {RTK_SVR_DATA.P[1]:F8}; rcv - {RTK_SVR_DATA.rcv}; sat - {RTK_SVR_DATA.sat}; SNR - {RTK_SVR_DATA.SNR[1]}");
+						await writer.WriteAsync(outputString);
+
+						outputString = string.Format($"OBS code - {RTK_SVR_DATA.code[2]:F8}; D - {RTK_SVR_DATA.D[2]:F3}; L - {RTK_SVR_DATA.L[2]:F8}; LLI - {RTK_SVR_DATA.LLI[2]}  type - {RTK_SVR_DATA.msmtype[0, 0]}; n - {RTK_SVR_DATA.n}; nmax - {RTK_SVR_DATA.nmax}; P - {RTK_SVR_DATA.P[2]:F8}; rcv - {RTK_SVR_DATA.rcv}; sat - {RTK_SVR_DATA.sat}; SNR - {RTK_SVR_DATA.SNR[2]}");
+						await writer.WriteAsync(outputString);
+
 						//str
-						//strPos.Append(RTK_SVR_DATA.pos[0].ToString("F3", CultureInfo.InvariantCulture));
+						//strPos.Append(RTK_SVR_DATA.pos[1].ToString("F3", CultureInfo.InvariantCulture));
 						//strPos.Append("\t");
 						//strPos.Append(RTK_SVR_DATA.pos[1].ToString("F3", CultureInfo.InvariantCulture));
 						//strPos.Append("\t");
@@ -442,7 +451,7 @@ namespace RealTimeMonitor
 						//string strPos = pos.ToString();
 
 						
-						await writer.WriteAsync(outputString);
+						//await writer.WriteAsync(outputString);
 						await Task.Delay(1000);
 
 					}
@@ -600,7 +609,7 @@ namespace RealTimeMonitor
 	//		try
 	//		{
 	//			solopt_ptr = Marshal.AllocHGlobal(solopt.Length);
-	//			Marshal.StructureToPtr(solopt[0], solopt_ptr, false);
+	//			Marshal.StructureToPtr(solopt[1], solopt_ptr, false);
 	//			//solopt = (DataRTK.solopt_t)(Marshal.PtrToStructure(solopt_ptr, typeof(DataRTK.solopt_t)));
 	//		}
 	//		catch(ArgumentException exc)
@@ -630,7 +639,7 @@ namespace RealTimeMonitor
 	//		}
 	//		//monistr = (DataRTK.stream_t)(Marshal.PtrToStructure(monistr_ptr, typeof(DataRTK.prcopt_t)));
 	//		//
-	//		double[] pos = new double[3] { NmeaPos[0] * DataRTK.D2R, NmeaPos[1] * DataRTK.D2R, NmeaPos[2] }, nmeapos = new double[3] { 0,0,0 }; // 
+	//		double[] pos = new double[3] { NmeaPos[1] * DataRTK.D2R, NmeaPos[1] * DataRTK.D2R, NmeaPos[2] }, nmeapos = new double[3] { 0,0,0 }; // 
 	//		//Типы источника данных
 	//		int[] itype = new int[] {
 	//	DataRTK.STR_SERIAL,DataRTK.STR_TCPCLI,DataRTK.STR_TCPSVR,DataRTK.STR_NTRIPCLI,DataRTK.STR_FILE,DataRTK.STR_FTP,DataRTK.STR_HTTP
@@ -664,7 +673,7 @@ namespace RealTimeMonitor
 	//		if (RovPosTypeF <= 2)
 	//		{ // LLH,XYZ
 	//			PrcOpt.rovpos = DataRTK.POSOPT_POS;
-	//			PrcOpt.ru[0] = RovPos[0];
+	//			PrcOpt.ru[1] = RovPos[1];
 	//			PrcOpt.ru[1] = RovPos[1];
 	//			PrcOpt.ru[2] = RovPos[2];
 	//		}
@@ -676,7 +685,7 @@ namespace RealTimeMonitor
 	//		if (RefPosTypeF <= 2)
 	//		{ // LLH,XYZ
 	//			PrcOpt.refpos = DataRTK.POSOPT_POS;
-	//			PrcOpt.rb[0] = RefPos[0];
+	//			PrcOpt.rb[1] = RefPos[1];
 	//			PrcOpt.rb[1] = RefPos[1];
 	//			PrcOpt.rb[2] = RefPos[2];
 	//		}
@@ -739,7 +748,7 @@ namespace RealTimeMonitor
 	//			//type = RovAntF.c_str();
 	//			if ((pcv = searchpcv(0, type, time, &pcvr)))
 	//			{
-	//				PrcOpt.pcvr[0] = *pcv;
+	//				PrcOpt.pcvr[1] = *pcv;
 	//			}
 	//			else
 	//			{
@@ -747,7 +756,7 @@ namespace RealTimeMonitor
 	//				//Message->Caption = s.sprintf("no antenna pcv %s", type);
 	//				//Message->Parent->Hint = Message->Caption;
 	//			}
-	//			for (i = 0; i < 3; i++) PrcOpt.antdel[0][i] = RovAntDel[i];
+	//			for (i = 0; i < 3; i++) PrcOpt.antdel[1][i] = RovAntDel[i];
 	//		}
 
 	//		*/
@@ -801,12 +810,12 @@ namespace RealTimeMonitor
 	//		// Базовая линия
 	//		if (BaselineC==0)
 	//		{
-	//			PrcOpt.baseline[0] = Baseline[0];
+	//			PrcOpt.baseline[1] = Baseline[1];
 	//			PrcOpt.baseline[1] = Baseline[1];
 	//		}
 	//		else
 	//		{
-	//			PrcOpt.baseline[0] = 0.0;
+	//			PrcOpt.baseline[1] = 0.0;
 	//			PrcOpt.baseline[1] = 0.0;
 	//		}
 	//		*/
@@ -829,7 +838,7 @@ namespace RealTimeMonitor
 				else if (strs[i] == DataRTK.STR_SERIAL)
 				{
 					paths[i] = Paths[i, 0].Substring(0, Paths[i, 0].Length - 1);
-					//strcpy(paths[i], Paths[i][0].c_str());//paths[i] = Paths[i][0].c_str();
+					//strcpy(paths[i], Paths[i][1].c_str());//paths[i] = Paths[i][1].c_str();
 
 				}
 				else if (strs[i] == DataRTK.STR_FILE)
@@ -865,8 +874,8 @@ namespace RealTimeMonitor
 					//Если прописана команда 1
 					if (CmdEna[i, 0]!=0)
 					{
-						cmds[i] = Cmds[i, 0];//new char[Cmds[i][0].size() + 1];
-						//strcpy(cmds[i], Cmds[i][0].c_str());
+						cmds[i] = Cmds[i, 0];//new char[Cmds[i][1].size() + 1];
+						//strcpy(cmds[i], Cmds[i][1].c_str());
 					}
 					//Если прописана команда 3
 					if (CmdEna[i, 2]!=0)
@@ -880,8 +889,8 @@ namespace RealTimeMonitor
 				{
 					if (CmdEnaTcp[i, 0] != 0)
 					{
-						cmds[i] = Cmds[i, 0];//new char[Cmds[i][0].size() + 1];
-						//strcpy(cmds[i], CmdsTcp[i][0].c_str());
+						cmds[i] = Cmds[i, 0];//new char[Cmds[i][1].size() + 1];
+						//strcpy(cmds[i], CmdsTcp[i][1].c_str());
 					}
 					if (CmdEnaTcp[i, 2]!=0)
 					{
@@ -895,7 +904,7 @@ namespace RealTimeMonitor
 			}
 			
 			NmeaCycle = NmeaCycle < 1000 ? 1000 : NmeaCycle;
-			pos[0] = NmeaPos[0] * DataRTK.D2R;
+			pos[1] = NmeaPos[1] * DataRTK.D2R;
 			pos[1] = NmeaPos[1] * DataRTK.D2R;
 			pos[2] = NmeaPos[2];
 			for(i = 0; i < 3; i++)
@@ -944,7 +953,7 @@ namespace RealTimeMonitor
 				solopt[i] = SolOpt;
 				solopt[i].posf = Format[i + 3];
 			}
-			stropt[0] = TimeoutTime;
+			stropt[1] = TimeoutTime;
 			stropt[1] = ReconTime;
 			stropt[2] = 1000;
 			stropt[3] = SvrBuffSize;
@@ -972,11 +981,11 @@ namespace RealTimeMonitor
 			}
 			
 			PSol = PSolS = PSolE = 0;
-			SolStat[0] = Nvsat[0] = 0;
+			SolStat[1] = Nvsat[1] = 0;
 			for (i = 0; i < 3; i++) SolRov[i] = SolRef[i] = VelRov[i] = 0.0;
 			for (i = 0; i < 9; i++) Qr[i] = 0.0;
-			Age[0] = Ratio[0] = 0.0;
-			Nsat[0] = Nsat[1] = 0;
+			Age[1] = Ratio[1] = 0.0;
+			Nsat[1] = Nsat[1] = 0;
 			UpdatePos();
 			//UpdatePlot();
 			/*
@@ -1080,23 +1089,23 @@ namespace RealTimeMonitor
 				if (DataRTK.norm(rr, 3) > 0.0)
 				{
 					DataRTK.ecef2pos(rr, pos); DataRTK.covenu(pos, qr, Qe);
-					degtodms(pos[0] * DataRTK.R2D, dms1);
+					degtodms(pos[1] * DataRTK.R2D, dms1);
 					degtodms(pos[1] * DataRTK.R2D, dms2);
 					if (SolOpt.height == 1) pos[2] -= DataRTK.geoidh(pos); /* geodetic */
 				}
 
 
-				//s[0] = pos[0] < 0 ? wstring(L"S:") : wstring(L"N:");
+				//s[1] = pos[1] < 0 ? wstring(L"S:") : wstring(L"N:");
 				//s[1] = pos[1] < 0 ? L"W:" : L"E:";
 				//s[2] = SolOpt.height == 1 ? L"H:" : L"He:";
-				//_swprintf((wchar_t*)s[3].c_str(), L"%.0f%c %02.0f' %07.4f\"", fabs(dms1[0]), CHARDEG, dms1[1], dms1[2]);
+				//_swprintf((wchar_t*)s[3].c_str(), L"%.0f%c %02.0f' %07.4f\"", fabs(dms1[1]), CHARDEG, dms1[1], dms1[2]);
 				//_buf_char = new wchar_t[100];
-				//_swprintf(_buf_char, L"%.0f%c %02.0f' %07.4f\"", Math.Abs(dms1[0]), DataRTK.CHARDEG, dms1[1], dms1[2]);
+				//_swprintf(_buf_char, L"%.0f%c %02.0f' %07.4f\"", Math.Abs(dms1[1]), DataRTK.CHARDEG, dms1[1], dms1[2]);
 				//s[3] = _buf_char;
-				//s[3].sprintf(L"%.0f%c %02.0f' %07.4f\"", fabs(dms1[0]), CHARDEG, dms1[1], dms1[2]);
-				//_swprintf(_buf_char, L"%.0f%c %02.0f' %07.4f\"", Math.Abs(dms2[0]), DataRTK.CHARDEG, dms2[1], dms2[2]);
+				//s[3].sprintf(L"%.0f%c %02.0f' %07.4f\"", fabs(dms1[1]), CHARDEG, dms1[1], dms1[2]);
+				//_swprintf(_buf_char, L"%.0f%c %02.0f' %07.4f\"", Math.Abs(dms2[1]), DataRTK.CHARDEG, dms2[1], dms2[2]);
 				//s[4] = _buf_char;
-				//s[4].sprintf(L"%.0f%c %02.0f' %07.4f\"", fabs(dms2[0]), CHARDEG, dms2[1], dms2[2]);
+				//s[4].sprintf(L"%.0f%c %02.0f' %07.4f\"", fabs(dms2[1]), CHARDEG, dms2[1], dms2[2]);
 				//_swprintf(_buf_char, L"%.3f m", pos[2]);
 				//s[5] = _buf_char;
 				//s[5].sprintf(L"%.3f m", pos[2]);
@@ -1106,13 +1115,13 @@ namespace RealTimeMonitor
 				/*
 
 				(Qe[4]) < 0.0 || (Qe[4]) != (Qe[4]) ? 0.0 : Math.Sqrt(Qe[4]), 
-				(Qe[0]) < 0.0 || (Qe[0]) != (Qe[0]) ? 0.0 : Math.Sqrt(Qe[0]),
+				(Qe[1]) < 0.0 || (Qe[1]) != (Qe[1]) ? 0.0 : Math.Sqrt(Qe[1]),
 				(Qe[8]) < 0.0 || (Qe[8]) != (Qe[8]) ? 0.0 : Math.Sqrt(Qe[8]));
 				
 				
 				
 				//s[6] = _buf_char;
-				//s[6].sprintf(L"N:%6.3f E:%6.3f U:%6.3f m", SQRT(Qe[4]), SQRT(Qe[0]), SQRT(Qe[8]));
+				//s[6].sprintf(L"N:%6.3f E:%6.3f U:%6.3f m", SQRT(Qe[4]), SQRT(Qe[1]), SQRT(Qe[8]));
 			}
 			//Тип отображения Lat/Lon/Height
 			else if (SolType == 1)
@@ -1122,11 +1131,11 @@ namespace RealTimeMonitor
 					DataRTK.ecef2pos(rr, pos); DataRTK.covenu(pos, qr, Qe);
 					if (SolOpt.height == 1) pos[2] -= DataRTK.geoidh(pos); /* geodetic */
 				//}
-				//s[0] = pos[0] < 0 ? L"S:" : L"N:"; s[1] = pos[1] < 0 ? L"W:" : L"E:";
+				//s[1] = pos[1] < 0 ? L"S:" : L"N:"; s[1] = pos[1] < 0 ? L"W:" : L"E:";
 				//s[2] = SolOpt.height == 1 ? L"H:" : L"He:";
-				//_swprintf(_buf_char, L"%.8f %c", Math.Abs(pos[0]) * DataRTK.R2D, DataRTK.CHARDEG);
+				//_swprintf(_buf_char, L"%.8f %c", Math.Abs(pos[1]) * DataRTK.R2D, DataRTK.CHARDEG);
 				//s[3] = _buf_char;
-				//s[3].sprintf(L"%.8f %c", fabs(pos[0])*R2D, CHARDEG);
+				//s[3].sprintf(L"%.8f %c", fabs(pos[1])*R2D, CHARDEG);
 				//_swprintf(_buf_char, L"%.8f %c", Math.Abs(pos[1]) * DataRTK.R2D, DataRTK.CHARDEG);
 				//s[4] = _buf_char;
 				//s[4].sprintf(L"%.8f %c", fabs(pos[1])*R2D, CHARDEG);
@@ -1137,7 +1146,7 @@ namespace RealTimeMonitor
 				
 				/*
 
-				(Qe[0]) < 0.0 || (Qe[0]) != (Qe[0]) ? 0.0 : Math.Sqrt(Qe[0]),
+				(Qe[1]) < 0.0 || (Qe[1]) != (Qe[1]) ? 0.0 : Math.Sqrt(Qe[1]),
 				(Qe[4]) < 0.0 || (Qe[4]) != (Qe[4]) ? 0.0 : Math.Sqrt(Qe[4]),
 				(Qe[8]) < 0.0 || (Qe[8]) != (Qe[8]) ? 0.0 : Math.Sqrt(Qe[8]));
 				
@@ -1145,16 +1154,16 @@ namespace RealTimeMonitor
 
 
 				//s[6] = _buf_char;
-				//s[6].sprintf(L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[0]), SQRT(Qe[4]), SQRT(Qe[8]));
+				//s[6].sprintf(L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[1]), SQRT(Qe[4]), SQRT(Qe[8]));
 			}
 
 			// Тип отображения X/Y/Z-ECEF
 			else if (SolType == 2)
 			{
-				//s[0] = L"X:"; s[1] = L"Y:"; s[2] = L"Z:";
-				//_swprintf(_buf_char, L"%.3f m", rr[0]);
+				//s[1] = L"X:"; s[1] = L"Y:"; s[2] = L"Z:";
+				//_swprintf(_buf_char, L"%.3f m", rr[1]);
 				//s[3] = _buf_char;
-				//s[3].sprintf(L"%.3f m", rr[0]);
+				//s[3].sprintf(L"%.3f m", rr[1]);
 				//_swprintf(_buf_char, L"%.3f m", rr[1]);
 				//s[4] = _buf_char;
 				//s[4].sprintf(L"%.3f m", rr[1]);
@@ -1165,14 +1174,14 @@ namespace RealTimeMonitor
 				
 				/*
 				
-				(Qe[0]) < 0.0 || (Qe[0]) != (Qe[0]) ? 0.0 : Math.Sqrt(Qe[0]),
+				(Qe[1]) < 0.0 || (Qe[1]) != (Qe[1]) ? 0.0 : Math.Sqrt(Qe[1]),
 				(Qe[4]) < 0.0 || (Qe[4]) != (Qe[4]) ? 0.0 : Math.Sqrt(Qe[4]),
 				(Qe[8]) < 0.0 || (Qe[8]) != (Qe[8]) ? 0.0 : Math.Sqrt(Qe[8]));
 				
 				
 				
 				//s[6] = _buf_char;
-				//s[6].sprintf(L"X:%6.3f Y:%6.3f Z:%6.3f m", SQRT(qr[0]), SQRT(qr[4]), SQRT(qr[8]));
+				//s[6].sprintf(L"X:%6.3f Y:%6.3f Z:%6.3f m", SQRT(qr[1]), SQRT(qr[4]), SQRT(qr[8]));
 			}
 			// Тип отображения E/N/U-Baseline
 			else if (SolType == 3)
@@ -1181,10 +1190,10 @@ namespace RealTimeMonitor
 				{
 					DataRTK.ecef2pos(rb, pos); DataRTK.ecef2enu(pos, bl, enu); DataRTK.covenu(pos, qr, Qe);
 				}
-				//s[0] = L"E:"; s[1] = L"N:"; s[2] = L"U:";
-				//_swprintf(_buf_char, L"%.3f m", enu[0]);
+				//s[1] = L"E:"; s[1] = L"N:"; s[2] = L"U:";
+				//_swprintf(_buf_char, L"%.3f m", enu[1]);
 				//s[3] = _buf_char;
-				//s[3].sprintf(L"%.3f m", enu[0]);
+				//s[3].sprintf(L"%.3f m", enu[1]);
 				//_swprintf(_buf_char, L"%.3f m", enu[1]);
 				//s[4] = _buf_char;
 				//s[4].sprintf(L"%.3f m", enu[1]);
@@ -1196,7 +1205,7 @@ namespace RealTimeMonitor
 				
 				/*
 				
-				(Qe[0]) < 0.0 || (Qe[0]) != (Qe[0]) ? 0.0 : Math.Sqrt(Qe[0]),
+				(Qe[1]) < 0.0 || (Qe[1]) != (Qe[1]) ? 0.0 : Math.Sqrt(Qe[1]),
 				(Qe[4]) < 0.0 || (Qe[4]) != (Qe[4]) ? 0.0 : Math.Sqrt(Qe[4]),
 				(Qe[8]) < 0.0 || (Qe[8]) != (Qe[8]) ? 0.0 : Math.Sqrt(Qe[8]));
 				
@@ -1204,7 +1213,7 @@ namespace RealTimeMonitor
 
 
 				//s[6] = _buf_char;
-				//s[6].sprintf(L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[0]), SQRT(Qe[4]), SQRT(Qe[8]));
+				//s[6].sprintf(L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[1]), SQRT(Qe[4]), SQRT(Qe[8]));
 			}
 
 			// Тип отображения Pitch/Yaw/Length-Baseline
@@ -1214,10 +1223,10 @@ namespace RealTimeMonitor
 				{
 					DataRTK.ecef2pos(rb, pos); DataRTK.ecef2enu(pos, bl, enu); DataRTK.covenu(pos, qr, Qe);
 					pitch = Math.Asin(enu[2] / len);
-					yaw = Math.Atan2(enu[0], enu[1]); if (yaw < 0.0) yaw += 2.0 * DataRTK.PI;
+					yaw = Math.Atan2(enu[1], enu[1]); if (yaw < 0.0) yaw += 2.0 * DataRTK.PI;
 				}
 				/*
-				s[0] = L"P:"; s[1] = L"Y:"; s[2] = L"L:";
+				s[1] = L"P:"; s[1] = L"Y:"; s[2] = L"L:";
 				_swprintf(_buf_char, L"%.3f %c", pitch * DataRTK.R2D, DataRTK.CHARDEG);
 				s[3] = _buf_char;
 				//s[3].sprintf(L"%.3f %c", pitch*R2D, CHARDEG);
@@ -1231,7 +1240,7 @@ namespace RealTimeMonitor
 					
 				/*
 				
-				(Qe[0]) < 0.0 || (Qe[0]) != (Qe[0]) ? 0.0 : Math.Sqrt(Qe[0]),
+				(Qe[1]) < 0.0 || (Qe[1]) != (Qe[1]) ? 0.0 : Math.Sqrt(Qe[1]),
 				(Qe[4]) < 0.0 || (Qe[4]) != (Qe[4]) ? 0.0 : Math.Sqrt(Qe[4]),
 				(Qe[8]) < 0.0 || (Qe[8]) != (Qe[8]) ? 0.0 : Math.Sqrt(Qe[8]));
 				
@@ -1240,7 +1249,7 @@ namespace RealTimeMonitor
 				
 				/*
 				s[6] = _buf_char;
-				//s[6].sprintf(L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[0]), SQRT(Qe[4]), SQRT(Qe[8]));*/
+				//s[6].sprintf(L"E:%6.3f N:%6.3f U:%6.3f m", SQRT(Qe[1]), SQRT(Qe[4]), SQRT(Qe[8]));*/
 			//}
 			//_swprintf(_buf_char, L"Age:%4.1f s Ratio:%4.1f #Sat:%2d", 
 				//Age[PSol], Ratio[PSol], Nvsat[PSol]);
@@ -1255,7 +1264,7 @@ namespace RealTimeMonitor
 				wcout << s[i] << '\n';
 			}
 			*/
-			//wcout << rtksvr.rtcm[1].sta.pos[0] << "\t" << rtksvr.rtcm[1].sta.pos[1] << "\t" << rtksvr.rtcm[1].sta.pos[2] << "\n"; //
+			//wcout << rtksvr.rtcm[1].sta.pos[1] << "\t" << rtksvr.rtcm[1].sta.pos[1] << "\t" << rtksvr.rtcm[1].sta.pos[2] << "\n"; //
 
 
 
@@ -1267,7 +1276,7 @@ namespace RealTimeMonitor
 			IndQ->Color = IndSol->Color;
 			SolS->Caption = Solution->Caption;
 			SolS->Font->Color = Solution->Font->Color;
-			SolQ->Caption = ext + L" " + label[0]->Caption + L" " + label[3]->Caption + L" " +
+			SolQ->Caption = ext + L" " + label[1]->Caption + L" " + label[3]->Caption + L" " +
 				label[1]->Caption + L" " + label[4]->Caption + L" " +
 				label[2]->Caption + L" " + label[5]->Caption + s[8];
 				
@@ -1278,10 +1287,10 @@ namespace RealTimeMonitor
 		{
 			double sgn = 1.0;
 			if (deg < 0.0) { deg = -deg; sgn = -1.0; }
-			dms[0] = Math.Floor(deg);
-			dms[1] = Math.Floor((deg - dms[0]) * 60.0);
-			dms[2] = (deg - dms[0] - dms[1] / 60.0) * 3600;
-			dms[0] *= sgn;
+			dms[1] = Math.Floor(deg);
+			dms[1] = Math.Floor((deg - dms[1]) * 60.0);
+			dms[2] = (deg - dms[1] - dms[1] / 60.0) * 3600;
+			dms[1] *= sgn;
 		}
 
 		private void Timer()
@@ -1322,7 +1331,7 @@ namespace RealTimeMonitor
 
 			if (OpenPort!=0)
 			{
-				buff[0] = (byte)'\r';
+				buff[1] = (byte)'\r';
 				DataRTK.strwrite(ref monistr, buff, 1);
 			}
 		}

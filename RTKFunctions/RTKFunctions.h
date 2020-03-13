@@ -578,10 +578,10 @@ namespace RTKFunctions {
         unsigned char snratio(double snr);
 
         /* get observation data index ------------------------------------------------*/
-        int obsindex(obs_t* obs, gtime_t time, int sat);
+        int obsindex(int sat);//obs_t* obs, gtime_t time, int sat);
 
         /* test station id consistency -----------------------------------------------*/
-        static int test_staid(rtcm_t* rtcm, int staid);
+        static int test_staid(int staid);//rtcm_t* rtcm, int staid);
 
         /* decode type 1001-1004 message header --------------------------------------*/
         int decode_head1001(rtcm_t* rtcm, int* sync);
@@ -704,61 +704,63 @@ namespace RTKFunctions {
         int decode_type1046(rtcm_t* rtcm);
 
         /* decode type 1042/63: beidou ephemerides -----------------------------------*/
-        static int decode_type1042(rtcm_t* rtcm);
+        int decode_type1042(rtcm_t* rtcm);
 
         /* decode ssr 1,4 message header ---------------------------------------------*/
-        static int decode_ssr1_head(rtcm_t* rtcm, int sys, int* sync, int* iod, double* udint, int* refd, int* hsize);
+        int decode_ssr1_head(int sys, int* sync, int* iod, double* udint, int* refd, int* hsize);//rtcm_t* rtcm, int sys, int* sync, int* iod, double* udint, int* refd, int* hsize);
 
         /* decode ssr 2,3,5,6 message header -----------------------------------------*/
-        int decode_ssr2_head(rtcm_t* rtcm, int sys, int* sync, int* iod, double* udint, int* hsize);
+        int decode_ssr2_head(int sys, int* sync, int* iod, double* udint, int* hsize);//rtcm_t* rtcm, int sys, int* sync, int* iod, double* udint, int* hsize);
 
         /* decode ssr 1: orbit corrections -------------------------------------------*/
-        int decode_ssr1(rtcm_t* rtcm, int sys);
+        int decode_ssr1(int sys);//rtcm_t* rtcm, int sys);
 
         /* decode ssr 2: clock corrections -------------------------------------------*/
-        int decode_ssr2(rtcm_t* rtcm, int sys);
+        int decode_ssr2(int sys);
 
         /* decode ssr 3: satellite code biases ---------------------------------------*/
-        int decode_ssr3(rtcm_t* rtcm, int sys);
+        int decode_ssr3(int sys);
 
         /* decode ssr 4: combined orbit and clock corrections ------------------------*/
-        int decode_ssr4(rtcm_t* rtcm, int sys);
+        int decode_ssr4(int sys);
 
         /* decode ssr 5: ura ---------------------------------------------------------*/
-        int decode_ssr5(rtcm_t* rtcm, int sys);
+        int decode_ssr5(int sys);
 
         /* decode ssr 6: high rate clock correction ----------------------------------*/
-        int decode_ssr6(rtcm_t* rtcm, int sys);
+        int decode_ssr6(int sys);
 
         /* decode ssr 7 message header -----------------------------------------------*/
-        int decode_ssr7_head(rtcm_t* rtcm, int sys, int* sync, int* iod, double* udint, int* dispe, int* mw, int* hsize);
+        int decode_ssr7_head(int sys, int* sync, int* iod, double* udint, int* dispe, int* mw, int* hsize);//rtcm_t* rtcm, int sys, int* sync, int* iod, double* udint, int* dispe, int* mw, int* hsize);
 
         /* decode ssr 7: phase bias --------------------------------------------------*/
-        int decode_ssr7(rtcm_t* rtcm, int sys);
+        int decode_ssr7(int sys);
 
         /* get signal index ----------------------------------------------------------*/
         void sigindex(int sys, const unsigned char* code, const int* freq, int n, const char* opt, int* ind);
 
         /* save obs data in msm message ----------------------------------------------*/
-        void save_msm_obs(rtcm_t* rtcm, int sys, msm_h_t* h, const double* r, const double* pr, const double* cp, const double* rr, const double* rrf, const double* cnr, const int* lock, const int* ex, const int* half);
+        void save_msm_obs(int sys, msm_h_t* h, const double* r, const double* pr, const double* cp, const double* rr, const double* rrf, const double* cnr, const int* lock, const int* ex, const int* half);
+        //rtcm_t* rtcm, int sys, msm_h_t* h, const double* r, const double* pr, const double* cp, const double* rr, const double* rrf, const double* cnr, const int* lock, const int* ex, const int* half);
 
         /* decode type msm message header --------------------------------------------*/
-        static int decode_msm_head(rtcm_t* rtcm, int sys, int* sync, int* iod, msm_h_t* h, int* hsize);
+        static int decode_msm_head(int sys, int* sync, int* iod, msm_h_t* h, int* hsize);
+        //rtcm_t* rtcm, int sys, int* sync, int* iod, msm_h_t* h, int* hsize);
 
         /* decode unsupported msm message --------------------------------------------*/
         static int decode_msm0(rtcm_t* rtcm, int sys);
 
         /* decode msm 4: full pseudorange and phaserange plus cnr --------------------*/
-        int decode_msm4(rtcm_t* rtcm, int sys);
+        int decode_msm4(int sys);
 
         /* decode msm 5: full pseudorange, phaserange, phaserangerate and cnr --------*/
-        int decode_msm5(rtcm_t* rtcm, int sys);
+        int decode_msm5(int sys);
 
         /* decode msm 6: full pseudorange and phaserange plus cnr (high-res) ---------*/
-        int decode_msm6(rtcm_t* rtcm, int sys);
+        int decode_msm6(int sys);
 
         /* decode msm 7: full pseudorange, phaserange, phaserangerate and cnr (h-res) */
-        int decode_msm7(rtcm_t* rtcm, int sys);
+        int decode_msm7(int sys);
 
         /* decode type 1230: glonass L1 and L2 code-phase biases ---------------------*/
         int decode_type1230(rtcm_t* rtcm);

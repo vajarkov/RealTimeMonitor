@@ -922,27 +922,27 @@ namespace RTKFunctions {
         return i;
     }
 
-    int DecodeRTCM::test_staid(rtcm_t* rtcm, int staid)
+    int DecodeRTCM::test_staid(int staid)
     {
         char* p;
         int type, id;
 
         /* test station id option */
-        if ((p = strstr(rtcm->opt, "-STA=")) && sscanf(p, "-STA=%d", &id) == 1) {
+        /*if ((p = strstr(rtcm->opt, "-STA=")) && sscanf(p, "-STA=%d", &id) == 1) {
             if (staid != id) return 0;
-        }
+        }*/
         /* save station id */
-        if (rtcm->staid == 0 || rtcm->obsflag) {
+        /*if (rtcm->staid == 0 || rtcm->obsflag) {
             rtcm->staid = staid;
-        }
-        else if (staid != rtcm->staid) {
-            type = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, 24, 12);
-            //trace(2, "rtcm3 %d staid invalid id=%d %d\n", type, staid, rtcm->staid);
+        }*/
+        //else if (staid != rtcm->staid) {
+        //    type = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, 24, 12);
+        //    //trace(2, "rtcm3 %d staid invalid id=%d %d\n", type, staid, rtcm->staid);
 
-            /* reset station id if station id error */
-            rtcm->staid = 0;
-            return 0;
-        }
+        //    /* reset station id if station id error */
+        //    rtcm->staid = 0;
+        //    return 0;
+        //}
         return 1;
     }
 
@@ -2072,72 +2072,70 @@ namespace RTKFunctions {
         return 2;
     }
     /* decode ssr 1,4 message header ---------------------------------------------*/
-    int DecodeRTCM::decode_ssr1_head(rtcm_t* rtcm, int sys, int* sync, int* iod,
-        double* udint, int* refd, int* hsize)
+    int DecodeRTCM::decode_ssr1_head(int sys, int* sync, int* iod, double* udint, int* refd, int* hsize)
     {
         double tod, tow;
         char* msg, tstr[64];
         int i = 24 + 12, nsat, udi, provid = 0, solid = 0, ns;
 
-        //ns = sys == SYS_QZS ? 4 : 6;
+        ns = sys == SYS_QZS ? 4 : 6;
 
-        //if (i + (sys == SYS_GLO ? 53 : 50 + ns) > rtcm->len * 8) return -1;
+        if (i + (sys == SYS_GLO ? 53 : 50 + ns) > RTK_SVR_DATA::len * 8) return -1;
 
-        //if (sys == SYS_GLO) {
-        //    tod = CommonRTK::getbitu(rtcm->buff, i, 17); i += 17;
-        //    DecodeRTCM::adjday_glot(rtcm, tod);
-        //}
-        //else {
-        //    tow = CommonRTK::getbitu(rtcm->buff, i, 20); i += 20;
-        //    DecodeRTCM::adjweek(rtcm, tow);
-        //}
-        //udi = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4;
-        //*sync = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
-        //*refd = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1; /* satellite ref datum */
-        //*iod = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4; /* iod */
-        //provid = CommonRTK::getbitu(rtcm->buff, i, 16); i += 16; /* provider id */
-        //solid = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4; /* solution id */
-        //nsat = CommonRTK::getbitu(rtcm->buff, i, ns); i += ns;
-        //*udint = ssrudint[udi];
+        if (sys == SYS_GLO) {
+            tod = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 17); i += 17;
+            //DecodeRTCM::adjday_glot(rtcm, tod);
+        }
+        else {
+            tow = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 20); i += 20;
+            //DecodeRTCM::adjweek(rtcm, tow);
+        }
+        udi = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 4); i += 4;
+        *sync = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 1); i += 1;
+        *refd = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 1); i += 1; /* satellite ref datum */
+        *iod = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 4); i += 4; /* iod */
+        provid = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 16); i += 16; /* provider id */
+        solid = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 4); i += 4; /* solution id */
+        nsat = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, ns); i += ns;
+        *udint = ssrudint[udi];
 
         //CommonRTK::time2str(rtcm->time, tstr, 2);
-        ////trace(4, "decode_ssr1_head: time=%s sys=%d nsat=%d sync=%d iod=%d provid=%d solid=%d\n",tstr, sys, nsat, *sync, *iod, provid, solid);
+        //trace(4, "decode_ssr1_head: time=%s sys=%d nsat=%d sync=%d iod=%d provid=%d solid=%d\n",tstr, sys, nsat, *sync, *iod, provid, solid);
 
-        //if (rtcm->outtype) {
-        //    msg = rtcm->msgtype + strlen(rtcm->msgtype);
-        //    sprintf(msg, " %s nsat=%2d iod=%2d udi=%2d sync=%d", tstr, nsat, *iod, udi,
-        //        *sync);
-        //}
-        //*hsize = i;
+        /*if (rtcm->outtype) {
+            msg = rtcm->msgtype + strlen(rtcm->msgtype);
+            sprintf(msg, " %s nsat=%2d iod=%2d udi=%2d sync=%d", tstr, nsat, *iod, udi,
+                *sync);
+        }*/
+        *hsize = i;
         return nsat;
     }
     /* decode ssr 2,3,5,6 message header -----------------------------------------*/
-    int DecodeRTCM::decode_ssr2_head(rtcm_t* rtcm, int sys, int* sync, int* iod,
-        double* udint, int* hsize)
+    int DecodeRTCM::decode_ssr2_head(int sys, int* sync, int* iod, double* udint, int* hsize) //rtcm_t* rtcm, int sys, int* sync, int* iod, double* udint, int* hsize)
     {
-        //double tod, tow;
-        //char* msg, tstr[64];
+        double tod, tow;
+        char* msg, tstr[64];
         int i = 24 + 12, nsat, udi, provid = 0, solid = 0, ns;
 
-        //ns = sys == SYS_QZS ? 4 : 6;
+        ns = sys == SYS_QZS ? 4 : 6;
 
-        //if (i + (sys == SYS_GLO ? 52 : 49 + ns) > rtcm->len * 8) return -1;
+        if (i + (sys == SYS_GLO ? 52 : 49 + ns) > RTK_SVR_DATA::len * 8) return -1;
 
-        //if (sys == SYS_GLO) {
-        //    tod = CommonRTK::getbitu(rtcm->buff, i, 17); i += 17;
-        //    adjday_glot(rtcm, tod);
-        //}
-        //else {
-        //    tow = CommonRTK::getbitu(rtcm->buff, i, 20); i += 20;
-        //    DecodeRTCM::adjweek(rtcm, tow);
-        //}
-        //udi = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4;
-        //*sync = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
-        //*iod = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4;
-        //provid = CommonRTK::getbitu(rtcm->buff, i, 16); i += 16; /* provider id */
-        //solid = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4; /* solution id */
-        //nsat = CommonRTK::getbitu(rtcm->buff, i, ns); i += ns;
-        //*udint = ssrudint[udi];
+        if (sys == SYS_GLO) {
+            tod = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 17); i += 17;
+            //adjday_glot(rtcm, tod);
+        }
+        else {
+            tow = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 20); i += 20;
+            //DecodeRTCM::adjweek(rtcm, tow);
+        }
+        udi = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 4); i += 4;
+        *sync = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 1); i += 1;
+        *iod = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 4); i += 4;
+        provid = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 16); i += 16; /* provider id */
+        solid = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 4); i += 4; /* solution id */
+        nsat = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, ns); i += ns;
+        *udint = ssrudint[udi];
 
         //CommonRTK::time2str(rtcm->time, tstr, 2);
         ////trace(4, "decode_ssr2_head: time=%s sys=%d nsat=%d sync=%d iod=%d provid=%d solid=%d\n",           tstr, sys, nsat, *sync, *iod, provid, solid);
@@ -2152,379 +2150,379 @@ namespace RTKFunctions {
     }
 
     /* decode ssr 1: orbit corrections -------------------------------------------*/
-    int DecodeRTCM::decode_ssr1(rtcm_t* rtcm, int sys)
+    int DecodeRTCM::decode_ssr1(int sys)
     {
         double udint, deph[3], ddeph[3];
         int i, j, k, type, sync, iod, nsat, prn, sat, iode, iodcrc, refd = 0, np, ni, nj, offp;
 
-        //type = CommonRTK::getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, 24, 12);
 
-        //if ((nsat = DecodeRTCM::decode_ssr1_head(rtcm, sys, &sync, &iod, &udint, &refd, &i)) < 0) {
-        //    //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
-        //    return -1;
-        //}
-        //switch (sys) {
-        //case SYS_GPS: np = 6; ni = 8; nj = 0; offp = 0; break;
-        //case SYS_GLO: np = 5; ni = 8; nj = 0; offp = 0; break;
-        //case SYS_GAL: np = 6; ni = 10; nj = 0; offp = 0; break;
-        //case SYS_QZS: np = 4; ni = 8; nj = 0; offp = 192; break;
-        //case SYS_CMP: np = 6; ni = 10; nj = 24; offp = 1; break;
-        //case SYS_SBS: np = 6; ni = 9; nj = 24; offp = 120; break;
-        //default: return sync ? 0 : 10;
-        //}
-        //for (j = 0; j < nsat && i + 121 + np + ni + nj <= rtcm->len * 8; j++) {
-        //    prn = CommonRTK::getbitu(rtcm->buff, i, np) + offp; i += np;
-        //    iode = CommonRTK::getbitu(rtcm->buff, i, ni);      i += ni;
-        //    iodcrc = CommonRTK::getbitu(rtcm->buff, i, nj);      i += nj;
-        //    deph[0] = CommonRTK::getbits(rtcm->buff, i, 22) * 1E-4; i += 22;
-        //    deph[1] = CommonRTK::getbits(rtcm->buff, i, 20) * 4E-4; i += 20;
-        //    deph[2] = CommonRTK::getbits(rtcm->buff, i, 20) * 4E-4; i += 20;
-        //    ddeph[0] = CommonRTK::getbits(rtcm->buff, i, 21) * 1E-6; i += 21;
-        //    ddeph[1] = CommonRTK::getbits(rtcm->buff, i, 19) * 4E-6; i += 19;
-        //    ddeph[2] = CommonRTK::getbits(rtcm->buff, i, 19) * 4E-6; i += 19;
+        if ((nsat = DecodeRTCM::decode_ssr1_head(sys, &sync, &iod, &udint, &refd, &i)) < 0) {
+            //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
+            return -1;
+        }
+        switch (sys) {
+        case SYS_GPS: np = 6; ni = 8; nj = 0; offp = 0; break;
+        case SYS_GLO: np = 5; ni = 8; nj = 0; offp = 0; break;
+        case SYS_GAL: np = 6; ni = 10; nj = 0; offp = 0; break;
+        case SYS_QZS: np = 4; ni = 8; nj = 0; offp = 192; break;
+        case SYS_CMP: np = 6; ni = 10; nj = 24; offp = 1; break;
+        case SYS_SBS: np = 6; ni = 9; nj = 24; offp = 120; break;
+        default: return sync ? 0 : 10;
+        }
+        for (j = 0; j < nsat && i + 121 + np + ni + nj <= RTK_SVR_DATA::len * 8; j++) {
+            prn = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, np) + offp; i += np;
+            iode = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, ni);      i += ni;
+            iodcrc = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, nj);      i += nj;
+            deph[0] = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 22) * 1E-4; i += 22;
+            deph[1] = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 20) * 4E-4; i += 20;
+            deph[2] = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 20) * 4E-4; i += 20;
+            ddeph[0] = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 21) * 1E-6; i += 21;
+            ddeph[1] = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 19) * 4E-6; i += 19;
+            ddeph[2] = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 19) * 4E-6; i += 19;
 
-        //    if (!(sat = CommonRTK::satno(sys, prn))) {
-        //        //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
-        //        continue;
-        //    }
-        //    rtcm->ssr[sat - 1].t0[0] = rtcm->time;
-        //    rtcm->ssr[sat - 1].udi[0] = udint;
-        //    rtcm->ssr[sat - 1].iod[0] = iod;
-        //    rtcm->ssr[sat - 1].iode = iode;     /* sbas/bds: toe/t0 modulo */
-        //    rtcm->ssr[sat - 1].iodcrc = iodcrc; /* sbas/bds: iod crc */
-        //    rtcm->ssr[sat - 1].refd = refd;
+            if (!(sat = CommonRTK::satno(sys, prn))) {
+                //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
+                continue;
+            }
+            //rtcm->ssr[sat - 1].t0[0] = rtcm->time;
+            //rtcm->ssr[sat - 1].udi[0] = udint;
+            //rtcm->ssr[sat - 1].iod[0] = iod;
+            //rtcm->ssr[sat - 1].iode = iode;     /* sbas/bds: toe/t0 modulo */
+            //rtcm->ssr[sat - 1].iodcrc = iodcrc; /* sbas/bds: iod crc */
+            //rtcm->ssr[sat - 1].refd = refd;
 
-        //    for (k = 0; k < 3; k++) {
-        //        rtcm->ssr[sat - 1].deph[k] = deph[k];
-        //        rtcm->ssr[sat - 1].ddeph[k] = ddeph[k];
-        //    }
-        //    rtcm->ssr[sat - 1].update = 1;
-        //}
+            /*for (k = 0; k < 3; k++) {
+                rtcm->ssr[sat - 1].deph[k] = deph[k];
+                rtcm->ssr[sat - 1].ddeph[k] = ddeph[k];
+            }
+            rtcm->ssr[sat - 1].update = 1;*/
+        }
         return sync ? 0 : 10;
     }
     /* decode ssr 2: clock corrections -------------------------------------------*/
-    int DecodeRTCM::decode_ssr2(rtcm_t* rtcm, int sys)
+    int DecodeRTCM::decode_ssr2(int sys)
     {
         double udint, dclk[3];
         int i, j, k, type, sync, iod, nsat, prn, sat, np, offp;
 
-        //type = CommonRTK::getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, 24, 12);
 
-        //if ((nsat = DecodeRTCM::decode_ssr2_head(rtcm, sys, &sync, &iod, &udint, &i)) < 0) {
-        //    //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
-        //    return -1;
-        //}
-        //switch (sys) {
-        //case SYS_GPS: np = 6; offp = 0; break;
-        //case SYS_GLO: np = 5; offp = 0; break;
-        //case SYS_GAL: np = 6; offp = 0; break;
-        //case SYS_QZS: np = 4; offp = 192; break;
-        //case SYS_CMP: np = 6; offp = 1; break;
-        //case SYS_SBS: np = 6; offp = 120; break;
-        //default: return sync ? 0 : 10;
-        //}
-        //for (j = 0; j < nsat && i + 70 + np <= rtcm->len * 8; j++) {
-        //    prn = CommonRTK::getbitu(rtcm->buff, i, np) + offp; i += np;
-        //    dclk[0] = CommonRTK::getbits(rtcm->buff, i, 22) * 1E-4; i += 22;
-        //    dclk[1] = CommonRTK::getbits(rtcm->buff, i, 21) * 1E-6; i += 21;
-        //    dclk[2] = CommonRTK::getbits(rtcm->buff, i, 27) * 2E-8; i += 27;
+        if ((nsat = DecodeRTCM::decode_ssr2_head(sys, &sync, &iod, &udint, &i)) < 0) {
+            //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
+            return -1;
+        }
+        switch (sys) {
+        case SYS_GPS: np = 6; offp = 0; break;
+        case SYS_GLO: np = 5; offp = 0; break;
+        case SYS_GAL: np = 6; offp = 0; break;
+        case SYS_QZS: np = 4; offp = 192; break;
+        case SYS_CMP: np = 6; offp = 1; break;
+        case SYS_SBS: np = 6; offp = 120; break;
+        default: return sync ? 0 : 10;
+        }
+        for (j = 0; j < nsat && i + 70 + np <= RTK_SVR_DATA::len * 8; j++) {
+            prn = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, np) + offp; i += np;
+            dclk[0] = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 22) * 1E-4; i += 22;
+            dclk[1] = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 21) * 1E-6; i += 21;
+            dclk[2] = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 27) * 2E-8; i += 27;
 
-        //    if (!(sat = CommonRTK::satno(sys, prn))) {
-        //        //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
-        //        continue;
-        //    }
-        //    rtcm->ssr[sat - 1].t0[1] = rtcm->time;
-        //    rtcm->ssr[sat - 1].udi[1] = udint;
-        //    rtcm->ssr[sat - 1].iod[1] = iod;
+            if (!(sat = CommonRTK::satno(sys, prn))) {
+                //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
+                continue;
+            }
+            /*rtcm->ssr[sat - 1].t0[1] = rtcm->time;
+            rtcm->ssr[sat - 1].udi[1] = udint;
+            rtcm->ssr[sat - 1].iod[1] = iod;
 
-        //    for (k = 0; k < 3; k++) {
-        //        rtcm->ssr[sat - 1].dclk[k] = dclk[k];
-        //    }
-        //    rtcm->ssr[sat - 1].update = 1;
-        //}
+            for (k = 0; k < 3; k++) {
+                rtcm->ssr[sat - 1].dclk[k] = dclk[k];
+            }
+            rtcm->ssr[sat - 1].update = 1;*/
+        }
         return sync ? 0 : 10;
     }
     /* decode ssr 3: satellite code biases ---------------------------------------*/
-    int DecodeRTCM::decode_ssr3(rtcm_t* rtcm, int sys)
+    int DecodeRTCM::decode_ssr3(int sys)
     {
         const int* codes;
         double udint, bias, cbias[MAXCODE];
         int i, j, k, type, mode, sync, iod, nsat, prn, sat, nbias, np, offp, ncode;
 
-        //type = CommonRTK::getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, 24, 12);
 
-        //if ((nsat = DecodeRTCM::decode_ssr2_head(rtcm, sys, &sync, &iod, &udint, &i)) < 0) {
-        //    //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
-        //    return -1;
-        //}
-        //switch (sys) {
-        //case SYS_GPS: np = 6; offp = 0; codes = codes_gps; ncode = 17; break;
-        //case SYS_GLO: np = 5; offp = 0; codes = codes_glo; ncode = 4; break;
-        //case SYS_GAL: np = 6; offp = 0; codes = codes_gal; ncode = 19; break;
-        //case SYS_QZS: np = 4; offp = 192; codes = codes_qzs; ncode = 13; break;
-        //case SYS_CMP: np = 6; offp = 1; codes = codes_bds; ncode = 9; break;
-        //case SYS_SBS: np = 6; offp = 120; codes = codes_sbs; ncode = 4; break;
-        //default: return sync ? 0 : 10;
-        //}
-        //for (j = 0; j < nsat && i + 5 + np <= rtcm->len * 8; j++) {
-        //    prn = CommonRTK::getbitu(rtcm->buff, i, np) + offp; i += np;
-        //    nbias = CommonRTK::getbitu(rtcm->buff, i, 5);      i += 5;
+        if ((nsat = DecodeRTCM::decode_ssr2_head(sys, &sync, &iod, &udint, &i)) < 0) {
+            //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
+            return -1;
+        }
+        switch (sys) {
+        case SYS_GPS: np = 6; offp = 0; codes = codes_gps; ncode = 17; break;
+        case SYS_GLO: np = 5; offp = 0; codes = codes_glo; ncode = 4; break;
+        case SYS_GAL: np = 6; offp = 0; codes = codes_gal; ncode = 19; break;
+        case SYS_QZS: np = 4; offp = 192; codes = codes_qzs; ncode = 13; break;
+        case SYS_CMP: np = 6; offp = 1; codes = codes_bds; ncode = 9; break;
+        case SYS_SBS: np = 6; offp = 120; codes = codes_sbs; ncode = 4; break;
+        default: return sync ? 0 : 10;
+        }
+        for (j = 0; j < nsat && i + 5 + np <= RTK_SVR_DATA::len * 8; j++) {
+            prn = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, np) + offp; i += np;
+            nbias = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 5);      i += 5;
 
-        //    for (k = 0; k < MAXCODE; k++) cbias[k] = 0.0;
-        //    for (k = 0; k < nbias && i + 19 <= rtcm->len * 8; k++) {
-        //        mode = CommonRTK::getbitu(rtcm->buff, i, 5);      i += 5;
-        //        bias = CommonRTK::getbits(rtcm->buff, i, 14) * 0.01; i += 14;
-        //        if (mode <= ncode) {
-        //            cbias[codes[mode] - 1] = (float)bias;
-        //        }
-        //        else {
-        //            //trace(2, "rtcm3 %d not supported mode: mode=%d\n", type, mode);
-        //        }
-        //    }
-        //    if (!(sat = CommonRTK::satno(sys, prn))) {
-        //        //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
-        //        continue;
-        //    }
-        //    rtcm->ssr[sat - 1].t0[4] = rtcm->time;
-        //    rtcm->ssr[sat - 1].udi[4] = udint;
-        //    rtcm->ssr[sat - 1].iod[4] = iod;
+            for (k = 0; k < MAXCODE; k++) cbias[k] = 0.0;
+            for (k = 0; k < nbias && i + 19 <= RTK_SVR_DATA::len * 8; k++) {
+                mode = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 5);      i += 5;
+                bias = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 14) * 0.01; i += 14;
+                if (mode <= ncode) {
+                    cbias[codes[mode] - 1] = (float)bias;
+                }
+                else {
+                    //trace(2, "rtcm3 %d not supported mode: mode=%d\n", type, mode);
+                }
+            }
+            if (!(sat = CommonRTK::satno(sys, prn))) {
+                //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
+                continue;
+            }
+            /*rtcm->ssr[sat - 1].t0[4] = rtcm->time;
+            rtcm->ssr[sat - 1].udi[4] = udint;
+            rtcm->ssr[sat - 1].iod[4] = iod;
 
-        //    for (k = 0; k < MAXCODE; k++) {
-        //        rtcm->ssr[sat - 1].cbias[k] = (float)cbias[k];
-        //    }
-        //    rtcm->ssr[sat - 1].update = 1;
-        //}
+            for (k = 0; k < MAXCODE; k++) {
+                rtcm->ssr[sat - 1].cbias[k] = (float)cbias[k];
+            }
+            rtcm->ssr[sat - 1].update = 1;*/
+        }
         return sync ? 0 : 10;
     }
     /* decode ssr 4: combined orbit and clock corrections ------------------------*/
-    int DecodeRTCM::decode_ssr4(rtcm_t* rtcm, int sys)
+    int DecodeRTCM::decode_ssr4(int sys)
     {
         double udint, deph[3], ddeph[3], dclk[3];
         int i, j, k, type, nsat, sync, iod, prn, sat, iode, iodcrc, refd = 0, np, ni, nj, offp;
 
-        //type = CommonRTK::getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, 24, 12);
 
-        //if ((nsat = DecodeRTCM::decode_ssr1_head(rtcm, sys, &sync, &iod, &udint, &refd, &i)) < 0) {
-        //    //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
-        //    return -1;
-        //}
-        //switch (sys) {
-        //case SYS_GPS: np = 6; ni = 8; nj = 0; offp = 0; break;
-        //case SYS_GLO: np = 5; ni = 8; nj = 0; offp = 0; break;
-        //case SYS_GAL: np = 6; ni = 10; nj = 0; offp = 0; break;
-        //case SYS_QZS: np = 4; ni = 8; nj = 0; offp = 192; break;
-        //case SYS_CMP: np = 6; ni = 10; nj = 24; offp = 1; break;
-        //case SYS_SBS: np = 6; ni = 9; nj = 24; offp = 120; break;
-        //default: return sync ? 0 : 10;
-        //}
-        //for (j = 0; j < nsat && i + 191 + np + ni + nj <= rtcm->len * 8; j++) {
-        //    prn = CommonRTK::getbitu(rtcm->buff, i, np) + offp; i += np;
-        //    iode = CommonRTK::getbitu(rtcm->buff, i, ni);      i += ni;
-        //    iodcrc = CommonRTK::getbitu(rtcm->buff, i, nj);      i += nj;
-        //    deph[0] = CommonRTK::getbits(rtcm->buff, i, 22) * 1E-4; i += 22;
-        //    deph[1] = CommonRTK::getbits(rtcm->buff, i, 20) * 4E-4; i += 20;
-        //    deph[2] = CommonRTK::getbits(rtcm->buff, i, 20) * 4E-4; i += 20;
-        //    ddeph[0] = CommonRTK::getbits(rtcm->buff, i, 21) * 1E-6; i += 21;
-        //    ddeph[1] = CommonRTK::getbits(rtcm->buff, i, 19) * 4E-6; i += 19;
-        //    ddeph[2] = CommonRTK::getbits(rtcm->buff, i, 19) * 4E-6; i += 19;
+        if ((nsat = DecodeRTCM::decode_ssr1_head(sys, &sync, &iod, &udint, &refd, &i)) < 0) {
+            //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
+            return -1;
+        }
+        switch (sys) {
+        case SYS_GPS: np = 6; ni = 8; nj = 0; offp = 0; break;
+        case SYS_GLO: np = 5; ni = 8; nj = 0; offp = 0; break;
+        case SYS_GAL: np = 6; ni = 10; nj = 0; offp = 0; break;
+        case SYS_QZS: np = 4; ni = 8; nj = 0; offp = 192; break;
+        case SYS_CMP: np = 6; ni = 10; nj = 24; offp = 1; break;
+        case SYS_SBS: np = 6; ni = 9; nj = 24; offp = 120; break;
+        default: return sync ? 0 : 10;
+        }
+        for (j = 0; j < nsat && i + 191 + np + ni + nj <= RTK_SVR_DATA::len * 8; j++) {
+            prn = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, np) + offp; i += np;
+            iode = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, ni);      i += ni;
+            iodcrc = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, nj);      i += nj;
+            deph[0] = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 22) * 1E-4; i += 22;
+            deph[1] = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 20) * 4E-4; i += 20;
+            deph[2] = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 20) * 4E-4; i += 20;
+            ddeph[0] = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 21) * 1E-6; i += 21;
+            ddeph[1] = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 19) * 4E-6; i += 19;
+            ddeph[2] = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 19) * 4E-6; i += 19;
 
-        //    dclk[0] = CommonRTK::getbits(rtcm->buff, i, 22) * 1E-4; i += 22;
-        //    dclk[1] = CommonRTK::getbits(rtcm->buff, i, 21) * 1E-6; i += 21;
-        //    dclk[2] = CommonRTK::getbits(rtcm->buff, i, 27) * 2E-8; i += 27;
+            dclk[0] = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 22) * 1E-4; i += 22;
+            dclk[1] = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 21) * 1E-6; i += 21;
+            dclk[2] = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 27) * 2E-8; i += 27;
 
-        //    if (!(sat = CommonRTK::satno(sys, prn))) {
-        //        //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
-        //        continue;
-        //    }
-        //    rtcm->ssr[sat - 1].t0[0] = rtcm->ssr[sat - 1].t0[1] = rtcm->time;
-        //    rtcm->ssr[sat - 1].udi[0] = rtcm->ssr[sat - 1].udi[1] = udint;
-        //    rtcm->ssr[sat - 1].iod[0] = rtcm->ssr[sat - 1].iod[1] = iod;
-        //    rtcm->ssr[sat - 1].iode = iode;
-        //    rtcm->ssr[sat - 1].iodcrc = iodcrc;
-        //    rtcm->ssr[sat - 1].refd = refd;
+            if (!(sat = CommonRTK::satno(sys, prn))) {
+                //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
+                continue;
+            }
+            /*rtcm->ssr[sat - 1].t0[0] = rtcm->ssr[sat - 1].t0[1] = rtcm->time;
+            rtcm->ssr[sat - 1].udi[0] = rtcm->ssr[sat - 1].udi[1] = udint;
+            rtcm->ssr[sat - 1].iod[0] = rtcm->ssr[sat - 1].iod[1] = iod;
+            rtcm->ssr[sat - 1].iode = iode;
+            rtcm->ssr[sat - 1].iodcrc = iodcrc;
+            rtcm->ssr[sat - 1].refd = refd;
 
-        //    for (k = 0; k < 3; k++) {
-        //        rtcm->ssr[sat - 1].deph[k] = deph[k];
-        //        rtcm->ssr[sat - 1].ddeph[k] = ddeph[k];
-        //        rtcm->ssr[sat - 1].dclk[k] = dclk[k];
-        //    }
-        //    rtcm->ssr[sat - 1].update = 1;
-        //}
+            for (k = 0; k < 3; k++) {
+                rtcm->ssr[sat - 1].deph[k] = deph[k];
+                rtcm->ssr[sat - 1].ddeph[k] = ddeph[k];
+                rtcm->ssr[sat - 1].dclk[k] = dclk[k];
+            }
+            rtcm->ssr[sat - 1].update = 1;*/
+        }
         return sync ? 0 : 10;
     }
     /* decode ssr 5: ura ---------------------------------------------------------*/
-    int DecodeRTCM::decode_ssr5(rtcm_t* rtcm, int sys)
+    int DecodeRTCM::decode_ssr5(int sys)
     {
         double udint;
         int i, j, type, nsat, sync, iod, prn, sat, ura, np, offp;
 
-        //type = CommonRTK::getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, 24, 12);
 
-        //if ((nsat = DecodeRTCM::decode_ssr2_head(rtcm, sys, &sync, &iod, &udint, &i)) < 0) {
-        //    //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
-        //    return -1;
-        //}
-        //switch (sys) {
-        //case SYS_GPS: np = 6; offp = 0; break;
-        //case SYS_GLO: np = 5; offp = 0; break;
-        //case SYS_GAL: np = 6; offp = 0; break;
-        //case SYS_QZS: np = 4; offp = 192; break;
-        //case SYS_CMP: np = 6; offp = 1; break;
-        //case SYS_SBS: np = 6; offp = 120; break;
-        //default: return sync ? 0 : 10;
-        //}
-        //for (j = 0; j < nsat && i + 6 + np <= rtcm->len * 8; j++) {
-        //    prn = CommonRTK::getbitu(rtcm->buff, i, np) + offp; i += np;
-        //    ura = CommonRTK::getbitu(rtcm->buff, i, 6);      i += 6;
+        if ((nsat = DecodeRTCM::decode_ssr2_head(sys, &sync, &iod, &udint, &i)) < 0) {
+            //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
+            return -1;
+        }
+        switch (sys) {
+        case SYS_GPS: np = 6; offp = 0; break;
+        case SYS_GLO: np = 5; offp = 0; break;
+        case SYS_GAL: np = 6; offp = 0; break;
+        case SYS_QZS: np = 4; offp = 192; break;
+        case SYS_CMP: np = 6; offp = 1; break;
+        case SYS_SBS: np = 6; offp = 120; break;
+        default: return sync ? 0 : 10;
+        }
+        for (j = 0; j < nsat && i + 6 + np <= RTK_SVR_DATA::len * 8; j++) {
+            prn = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, np) + offp; i += np;
+            ura = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 6);      i += 6;
 
-        //    if (!(sat = CommonRTK::satno(sys, prn))) {
-        //        //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
-        //        continue;
-        //    }
-        //    rtcm->ssr[sat - 1].t0[3] = rtcm->time;
-        //    rtcm->ssr[sat - 1].udi[3] = udint;
-        //    rtcm->ssr[sat - 1].iod[3] = iod;
-        //    rtcm->ssr[sat - 1].ura = ura;
-        //    rtcm->ssr[sat - 1].update = 1;
-        //}
+            if (!(sat = CommonRTK::satno(sys, prn))) {
+                //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
+                continue;
+            }
+            /*rtcm->ssr[sat - 1].t0[3] = rtcm->time;
+            rtcm->ssr[sat - 1].udi[3] = udint;
+            rtcm->ssr[sat - 1].iod[3] = iod;
+            rtcm->ssr[sat - 1].ura = ura;
+            rtcm->ssr[sat - 1].update = 1;*/
+        }
         return sync ? 0 : 10;
     }
     /* decode ssr 6: high rate clock correction ----------------------------------*/
-    int DecodeRTCM::decode_ssr6(rtcm_t* rtcm, int sys)
+    int DecodeRTCM::decode_ssr6(int sys)
     {
         double udint, hrclk;
         int i, j, type, nsat, sync, iod, prn, sat, np, offp;
 
-        //type = CommonRTK::getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, 24, 12);
 
-        //if ((nsat = DecodeRTCM::decode_ssr2_head(rtcm, sys, &sync, &iod, &udint, &i)) < 0) {
-        //    //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
-        //    return -1;
-        //}
-        //switch (sys) {
-        //case SYS_GPS: np = 6; offp = 0; break;
-        //case SYS_GLO: np = 5; offp = 0; break;
-        //case SYS_GAL: np = 6; offp = 0; break;
-        //case SYS_QZS: np = 4; offp = 192; break;
-        //case SYS_CMP: np = 6; offp = 1; break;
-        //case SYS_SBS: np = 6; offp = 120; break;
-        //default: return sync ? 0 : 10;
-        //}
-        //for (j = 0; j < nsat && i + 22 + np <= rtcm->len * 8; j++) {
-        //    prn = CommonRTK::getbitu(rtcm->buff, i, np) + offp; i += np;
-        //    hrclk = CommonRTK::getbits(rtcm->buff, i, 22) * 1E-4; i += 22;
+        if ((nsat = DecodeRTCM::decode_ssr2_head(sys, &sync, &iod, &udint, &i)) < 0) {
+            //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
+            return -1;
+        }
+        switch (sys) {
+        case SYS_GPS: np = 6; offp = 0; break;
+        case SYS_GLO: np = 5; offp = 0; break;
+        case SYS_GAL: np = 6; offp = 0; break;
+        case SYS_QZS: np = 4; offp = 192; break;
+        case SYS_CMP: np = 6; offp = 1; break;
+        case SYS_SBS: np = 6; offp = 120; break;
+        default: return sync ? 0 : 10;
+        }
+        for (j = 0; j < nsat && i + 22 + np <= RTK_SVR_DATA::len * 8; j++) {
+            prn = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, np) + offp; i += np;
+            hrclk = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 22) * 1E-4; i += 22;
 
-        //    if (!(sat = CommonRTK::satno(sys, prn))) {
-        //        //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
-        //        continue;
-        //    }
-        //    rtcm->ssr[sat - 1].t0[2] = rtcm->time;
-        //    rtcm->ssr[sat - 1].udi[2] = udint;
-        //    rtcm->ssr[sat - 1].iod[2] = iod;
-        //    rtcm->ssr[sat - 1].hrclk = hrclk;
-        //    rtcm->ssr[sat - 1].update = 1;
-        //}
+            if (!(sat = CommonRTK::satno(sys, prn))) {
+                //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
+                continue;
+            }
+            /*rtcm->ssr[sat - 1].t0[2] = rtcm->time;
+            rtcm->ssr[sat - 1].udi[2] = udint;
+            rtcm->ssr[sat - 1].iod[2] = iod;
+            rtcm->ssr[sat - 1].hrclk = hrclk;
+            rtcm->ssr[sat - 1].update = 1;*/
+        }
         return sync ? 0 : 10;
     }
     /* decode ssr 7 message header -----------------------------------------------*/
-    int DecodeRTCM::decode_ssr7_head(rtcm_t* rtcm, int sys, int* sync, int* iod, double* udint, int* dispe, int* mw, int* hsize)
+    int DecodeRTCM::decode_ssr7_head(int sys, int* sync, int* iod, double* udint, int* dispe, int* mw, int* hsize)
     {
-        /*double tod, tow;
-        char* msg, tstr[64];*/
+        double tod, tow;
+        char* msg, tstr[64];
         int i = 24 + 12, nsat, udi, provid = 0, solid = 0, ns;
 
-        //ns = sys == SYS_QZS ? 4 : 6;
+        ns = sys == SYS_QZS ? 4 : 6;
 
-        //if (i + (sys == SYS_GLO ? 54 : 51 + ns) > rtcm->len * 8) return -1;
+        if (i + (sys == SYS_GLO ? 54 : 51 + ns) > RTK_SVR_DATA::len * 8) return -1;
 
-        //if (sys == SYS_GLO) {
-        //    tod = CommonRTK::getbitu(rtcm->buff, i, 17); i += 17;
-        //    DecodeRTCM::adjday_glot(rtcm, tod);
-        //}
-        //else {
-        //    tow = CommonRTK::getbitu(rtcm->buff, i, 20); i += 20;
-        //    DecodeRTCM::adjweek(rtcm, tow);
-        //}
-        //udi = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4;
-        //*sync = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
-        //*iod = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4;
-        //provid = CommonRTK::getbitu(rtcm->buff, i, 16); i += 16; /* provider id */
-        //solid = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4; /* solution id */
-        //*dispe = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1; /* dispersive bias consistency ind */
-        //*mw = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1; /* MW consistency indicator */
-        //nsat = CommonRTK::getbitu(rtcm->buff, i, ns); i += ns;
-        //*udint = ssrudint[udi];
+        if (sys == SYS_GLO) {
+            tod = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 17); i += 17;
+            //DecodeRTCM::adjday_glot(rtcm, tod);
+        }
+        else {
+            tow = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 20); i += 20;
+            //DecodeRTCM::adjweek(rtcm, tow);
+        }
+        udi = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 4); i += 4;
+        *sync = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 1); i += 1;
+        *iod = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 4); i += 4;
+        provid = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 16); i += 16; /* provider id */
+        solid = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 4); i += 4; /* solution id */
+        *dispe = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 1); i += 1; /* dispersive bias consistency ind */
+        *mw = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 1); i += 1; /* MW consistency indicator */
+        nsat = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, ns); i += ns;
+        *udint = ssrudint[udi];
 
         //CommonRTK::time2str(rtcm->time, tstr, 2);
-        ////trace(4, "decode_ssr7_head: time=%s sys=%d nsat=%d sync=%d iod=%d provid=%d solid=%d\n",            tstr, sys, nsat, *sync, *iod, provid, solid);
+        //trace(4, "decode_ssr7_head: time=%s sys=%d nsat=%d sync=%d iod=%d provid=%d solid=%d\n",            tstr, sys, nsat, *sync, *iod, provid, solid);
 
         //if (rtcm->outtype) {
         //    msg = rtcm->msgtype + strlen(rtcm->msgtype);
         //    sprintf(msg, " %s nsat=%2d iod=%2d udi=%2d sync=%d", tstr, nsat, *iod, udi,
         //        *sync);
         //}
-        //*hsize = i;
+        *hsize = i;
         return nsat;
     }
     /* decode ssr 7: phase bias --------------------------------------------------*/
-    int DecodeRTCM::decode_ssr7(rtcm_t* rtcm, int sys)
+    int DecodeRTCM::decode_ssr7(int sys)
     {
-        //const int* codes;
-        //double udint, bias, std, pbias[MAXCODE], stdpb[MAXCODE];
-        //int i, j, k, type, mode, sync, iod, nsat, prn, sat, nbias, ncode, np, mw, offp, sii, swl;
-        //int dispe, sdc, yaw_ang, yaw_rate;
+        const int* codes;
+        double udint, bias, std, pbias[MAXCODE], stdpb[MAXCODE];
+        int i, j, k, type, mode, sync, iod, nsat, prn, sat, nbias, ncode, np, mw, offp, sii, swl;
+        int dispe, sdc, yaw_ang, yaw_rate;
 
-        //type = CommonRTK::getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, 24, 12);
 
-        //if ((nsat = DecodeRTCM::decode_ssr7_head(rtcm, sys, &sync, &iod, &udint, &dispe, &mw, &i)) < 0) {
-        //    //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
-        //    return -1;
-        //}
-        //switch (sys) {
-        //case SYS_GPS: np = 6; offp = 0; codes = codes_gps; ncode = 17; break;
-        //case SYS_GLO: np = 5; offp = 0; codes = codes_glo; ncode = 4; break;
-        //case SYS_GAL: np = 6; offp = 0; codes = codes_gal; ncode = 19; break;
-        //case SYS_QZS: np = 4; offp = 192; codes = codes_qzs; ncode = 13; break;
-        //case SYS_CMP: np = 6; offp = 1; codes = codes_bds; ncode = 9; break;
-        //default: return sync ? 0 : 10;
-        //}
-        //for (j = 0; j < nsat && i + 5 + 17 + np <= rtcm->len * 8; j++) {
-        //    prn = CommonRTK::getbitu(rtcm->buff, i, np) + offp; i += np;
-        //    nbias = CommonRTK::getbitu(rtcm->buff, i, 5);      i += 5;
-        //    yaw_ang = CommonRTK::getbitu(rtcm->buff, i, 9);      i += 9;
-        //    yaw_rate = CommonRTK::getbits(rtcm->buff, i, 8);      i += 8;
+        if ((nsat = DecodeRTCM::decode_ssr7_head(sys, &sync, &iod, &udint, &dispe, &mw, &i)) < 0) {
+            //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
+            return -1;
+        }
+        switch (sys) {
+        case SYS_GPS: np = 6; offp = 0; codes = codes_gps; ncode = 17; break;
+        case SYS_GLO: np = 5; offp = 0; codes = codes_glo; ncode = 4; break;
+        case SYS_GAL: np = 6; offp = 0; codes = codes_gal; ncode = 19; break;
+        case SYS_QZS: np = 4; offp = 192; codes = codes_qzs; ncode = 13; break;
+        case SYS_CMP: np = 6; offp = 1; codes = codes_bds; ncode = 9; break;
+        default: return sync ? 0 : 10;
+        }
+        for (j = 0; j < nsat && i + 5 + 17 + np <= RTK_SVR_DATA::len * 8; j++) {
+            prn = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, np) + offp; i += np;
+            nbias = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 5);      i += 5;
+            yaw_ang = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 9);      i += 9;
+            yaw_rate = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 8);      i += 8;
 
-        //    for (k = 0; k < MAXCODE; k++) pbias[k] = stdpb[k] = 0.0;
-        //    for (k = 0; k < nbias && i + 49 <= rtcm->len * 8; k++) {
-        //        mode = CommonRTK::getbitu(rtcm->buff, i, 5); i += 5;
-        //        sii = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1; /* integer-indicator */
-        //        swl = CommonRTK::getbitu(rtcm->buff, i, 2); i += 2; /* WL integer-indicator */
-        //        sdc = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4; /* discontinuity counter */
-        //        bias = CommonRTK::getbits(rtcm->buff, i, 20); i += 20; /* phase bias (m) */
-        //        std = CommonRTK::getbitu(rtcm->buff, i, 17); i += 17; /* phase bias std-dev (m) */
-        //        if (mode <= ncode) {
-        //            pbias[codes[mode] - 1] = bias * 0.0001; /* (m) */
-        //            stdpb[codes[mode] - 1] = std * 0.0001; /* (m) */
-        //        }
-        //        else {
-        //            //trace(2, "rtcm3 %d not supported mode: mode=%d\n", type, mode);
-        //        }
-        //    }
-        //    if (!(sat = CommonRTK::satno(sys, prn))) {
-        //        //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
-        //        continue;
-        //    }
-        //    rtcm->ssr[sat - 1].t0[5] = rtcm->time;
-        //    rtcm->ssr[sat - 1].udi[5] = udint;
-        //    rtcm->ssr[sat - 1].iod[5] = iod;
-        //    rtcm->ssr[sat - 1].yaw_ang = yaw_ang / 256.0 * 180.0; /* (deg) */
-        //    rtcm->ssr[sat - 1].yaw_rate = yaw_rate / 8192.0 * 180.0; /* (deg/s) */
+            for (k = 0; k < MAXCODE; k++) pbias[k] = stdpb[k] = 0.0;
+            for (k = 0; k < nbias && i + 49 <= RTK_SVR_DATA::len * 8; k++) {
+                mode = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 5); i += 5;
+                sii = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 1); i += 1; /* integer-indicator */
+                swl = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 2); i += 2; /* WL integer-indicator */
+                sdc = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 4); i += 4; /* discontinuity counter */
+                bias = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 20); i += 20; /* phase bias (m) */
+                std = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 17); i += 17; /* phase bias std-dev (m) */
+                if (mode <= ncode) {
+                    pbias[codes[mode] - 1] = bias * 0.0001; /* (m) */
+                    stdpb[codes[mode] - 1] = std * 0.0001; /* (m) */
+                }
+                else {
+                    //trace(2, "rtcm3 %d not supported mode: mode=%d\n", type, mode);
+                }
+            }
+            if (!(sat = CommonRTK::satno(sys, prn))) {
+                //trace(2, "rtcm3 %d satellite number error: prn=%d\n", type, prn);
+                continue;
+            }
+            //rtcm->ssr[sat - 1].t0[5] = rtcm->time;
+            //rtcm->ssr[sat - 1].udi[5] = udint;
+            //rtcm->ssr[sat - 1].iod[5] = iod;
+            //rtcm->ssr[sat - 1].yaw_ang = yaw_ang / 256.0 * 180.0; /* (deg) */
+            //rtcm->ssr[sat - 1].yaw_rate = yaw_rate / 8192.0 * 180.0; /* (deg/s) */
 
-        //    for (k = 0; k < MAXCODE; k++) {
-        //        rtcm->ssr[sat - 1].pbias[k] = pbias[k];
-        //        rtcm->ssr[sat - 1].stdpb[k] = (float)stdpb[k];
-        //    }
-        //}
+            //for (k = 0; k < MAXCODE; k++) {
+            //    rtcm->ssr[sat - 1].pbias[k] = pbias[k];
+            //    rtcm->ssr[sat - 1].stdpb[k] = (float)stdpb[k];
+            //}
+        }
         return 20;
     }
     /* get signal index ----------------------------------------------------------*/
@@ -2565,10 +2563,7 @@ namespace RTKFunctions {
         }
     }
     /* save obs data in msm message ----------------------------------------------*/
-    void DecodeRTCM::save_msm_obs(rtcm_t* rtcm, int sys, msm_h_t* h, const double* r,
-        const double* pr, const double* cp, const double* rr,
-        const double* rrf, const double* cnr, const int* lock,
-        const int* ex, const int* half)
+    void DecodeRTCM::save_msm_obs(int sys, msm_h_t* h, const double* r, const double* pr, const double* cp, const double* rr, const double* rrf, const double* cnr, const int* lock, const int* ex, const int* half)
     {
         const char* sig[32];
         double tt, wl;
@@ -2578,14 +2573,14 @@ namespace RTKFunctions {
 
         type = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, 24, 12);
 
-        switch (sys) {
-        case SYS_GPS: msm_type = q = rtcm->msmtype[0]; break;
-        case SYS_GLO: msm_type = q = rtcm->msmtype[1]; break;
-        case SYS_GAL: msm_type = q = rtcm->msmtype[2]; break;
-        case SYS_QZS: msm_type = q = rtcm->msmtype[3]; break;
-        case SYS_SBS: msm_type = q = rtcm->msmtype[4]; break;
-        case SYS_CMP: msm_type = q = rtcm->msmtype[5]; break;
-        }
+        //switch (sys) {
+        //case SYS_GPS: {wcstombs(msm_type, RTK_SVR_DATA::msmtype[0,0], wcslen(RTK_SVR_DATA::msmtype[0])); q = msm_type;  break; }
+        //case SYS_GLO: {wcstombs(msm_type, RTK_SVR_DATA::msmtype[1], wcslen(RTK_SVR_DATA::msmtype[1])); q = msm_type;  break; }//msm_type = q = RTK_SVR_DATA::msmtype[1,0]; break;
+        //case SYS_GAL: {wcstombs(msm_type, RTK_SVR_DATA::msmtype[2], wcslen(RTK_SVR_DATA::msmtype[2])); q = msm_type;  break; }//msm_type = q = RTK_SVR_DATA::msmtype[2,0]; break;
+        //case SYS_QZS: {wcstombs(msm_type, RTK_SVR_DATA::msmtype[3], wcslen(RTK_SVR_DATA::msmtype[3])); q = msm_type;  break; }//msm_type = q = RTK_SVR_DATA::msmtype[3,0]; break;
+        //case SYS_SBS: {wcstombs(msm_type, RTK_SVR_DATA::msmtype[4], wcslen(RTK_SVR_DATA::msmtype[4])); q = msm_type;  break; }//msm_type = q = RTK_SVR_DATA::msmtype[4,0]; break;
+        //case SYS_CMP: {wcstombs(msm_type, RTK_SVR_DATA::msmtype[5], wcslen(RTK_SVR_DATA::msmtype[5])); q = msm_type;  break; }//msm_type = q = RTK_SVR_DATA::msmtype[5,0]; break;
+        //}
         /* id to signal */
         for (i = 0; i < h->nsig; i++) {
             switch (sys) {
@@ -2620,7 +2615,7 @@ namespace RTKFunctions {
         //trace(3, "rtcm3 %d: signals=%s\n", type, msm_type);
 
         /* get signal index */
-        DecodeRTCM::sigindex(sys, code, freq, h->nsig, rtcm->opt, ind);
+        DecodeRTCM::sigindex(sys, code, freq, h->nsig, {0}, ind);
 
         for (i = j = 0; i < h->nsat; i++) {
 
@@ -2629,11 +2624,11 @@ namespace RTKFunctions {
             else if (sys == SYS_SBS) prn += MINPRNSBS - 1;
 
             if ((sat = CommonRTK::satno(sys, prn))) {
-                tt = CommonRTK::timediff(rtcm->obs.data[0].time, rtcm->time);
+                /*tt = CommonRTK::timediff(rtcm->obs.data[0].time, rtcm->time);
                 if (rtcm->obsflag || fabs(tt) > 1E-9) {
                     rtcm->obs.n = rtcm->obsflag = 0;
-                }
-                index = obsindex(&rtcm->obs, rtcm->time, sat);
+                }*/
+                index = obsindex(sat);
             }
             else {
                 //trace(2, "rtcm3 %d satellite error: prn=%d\n", type, prn);
@@ -2644,7 +2639,7 @@ namespace RTKFunctions {
                 if (sat && index >= 0 && ind[k] >= 0) {
 
                     /* satellite carrier wave length */
-                    wl = CommonRTK::satwavelen(sat, freq[k] - 1, &rtcm->nav);
+                    //wl = CommonRTK::satwavelen(sat, freq[k] - 1, &rtcm->nav);
 
                     /* glonass wave length by extended info */
                     if (sys == SYS_GLO && ex && ex[i] <= 13) {
@@ -2654,98 +2649,98 @@ namespace RTKFunctions {
                     }
                     /* pseudorange (m) */
                     if (r[i] != 0.0 && pr[j] > -1E12) {
-                        rtcm->obs.data[index].P[ind[k]] = r[i] + pr[j];
+                        RTK_SVR_DATA::P[ind[k]] = r[i] + pr[j];
                     }
                     /* carrier-phase (cycle) */
                     if (r[i] != 0.0 && cp[j] > -1E12 && wl > 0.0) {
-                        rtcm->obs.data[index].L[ind[k]] = (r[i] + cp[j]) / wl;
+                        RTK_SVR_DATA::L[ind[k]] = (r[i] + cp[j]) / wl;
                     }
                     /* doppler (hz) */
                     if (rr && rrf && rrf[j] > -1E12 && wl > 0.0) {
-                        rtcm->obs.data[index].D[ind[k]] = (float)(-(rr[i] + rrf[j]) / wl);
+                        RTK_SVR_DATA::D[ind[k]] = (float)(-(rr[i] + rrf[j]) / wl);
                     }
-                    rtcm->obs.data[index].LLI[ind[k]] =
-                        lossoflock(rtcm, sat, ind[k], lock[j]) + (half[j] ? 3 : 0);
-                    rtcm->obs.data[index].SNR[ind[k]] = (unsigned char)(cnr[j] * 4.0);
-                    rtcm->obs.data[index].code[ind[k]] = code[k];
+                    //RTK_SVR_DATA::LLI[ind[k]] =
+                      //  lossoflock(rtcm, sat, ind[k], lock[j]) + (half[j] ? 3 : 0);
+                    RTK_SVR_DATA::SNR[ind[k]] = (unsigned char)(cnr[j] * 4.0);
+                    RTK_SVR_DATA::code[ind[k]] = code[k];
                 }
                 j++;
             }
         }
     }
     /* decode type msm message header --------------------------------------------*/
-    int DecodeRTCM::decode_msm_head(rtcm_t* rtcm, int sys, int* sync, int* iod, msm_h_t* h, int* hsize)
+    int DecodeRTCM::decode_msm_head(int sys, int* sync, int* iod, msm_h_t* h, int* hsize)
     {
-        //msm_h_t h0 = { 0 };
-        //double tow, tod;
-        //char* msg, tstr[64];
+        msm_h_t h0 = { 0 };
+        double tow, tod;
+        char* msg, tstr[64];
         int i = 24, j, dow, mask, staid, type, ncell = 0;
 
-        //type = CommonRTK::getbitu(rtcm->buff, i, 12); i += 12;
+        type = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 12); i += 12;
 
-        //*h = h0;
-        //if (i + 157 <= rtcm->len * 8) {
-        //    staid = CommonRTK::getbitu(rtcm->buff, i, 12);       i += 12;
+        *h = h0;
+        if (i + 157 <= RTK_SVR_DATA::len * 8) {
+            staid = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 12);       i += 12;
 
-        //    if (sys == SYS_GLO) {
-        //        dow = CommonRTK::getbitu(rtcm->buff, i, 3);       i += 3;
-        //        tod = CommonRTK::getbitu(rtcm->buff, i, 27) * 0.001; i += 27;
-        //        adjday_glot(rtcm, tod);
-        //    }
-        //    else if (sys == SYS_CMP) {
-        //        tow = CommonRTK::getbitu(rtcm->buff, i, 30) * 0.001; i += 30;
-        //        tow += 14.0; /* BDT -> GPST */
-        //        DecodeRTCM::adjweek(rtcm, tow);
-        //    }
-        //    else {
-        //        tow = CommonRTK::getbitu(rtcm->buff, i, 30) * 0.001; i += 30;
-        //        DecodeRTCM::adjweek(rtcm, tow);
-        //    }
-        //    *sync = CommonRTK::getbitu(rtcm->buff, i, 1);       i += 1;
-        //    *iod = CommonRTK::getbitu(rtcm->buff, i, 3);       i += 3;
-        //    h->time_s = CommonRTK::getbitu(rtcm->buff, i, 7);       i += 7;
-        //    h->clk_str = CommonRTK::getbitu(rtcm->buff, i, 2);       i += 2;
-        //    h->clk_ext = CommonRTK::getbitu(rtcm->buff, i, 2);       i += 2;
-        //    h->smooth = CommonRTK::getbitu(rtcm->buff, i, 1);       i += 1;
-        //    h->tint_s = CommonRTK::getbitu(rtcm->buff, i, 3);       i += 3;
-        //    for (j = 1; j <= 64; j++) {
-        //        mask = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
-        //        if (mask) h->sats[h->nsat++] = j;
-        //    }
-        //    for (j = 1; j <= 32; j++) {
-        //        mask = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
-        //        if (mask) h->sigs[h->nsig++] = j;
-        //    }
-        //}
-        //else {
-        //    //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
-        //    return -1;
-        //}
-        ///* test station id */
+            if (sys == SYS_GLO) {
+                dow = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 3);       i += 3;
+                tod = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 27) * 0.001; i += 27;
+                //adjday_glot(rtcm, tod);
+            }
+            else if (sys == SYS_CMP) {
+                tow = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 30) * 0.001; i += 30;
+                tow += 14.0; /* BDT -> GPST */
+                //DecodeRTCM::adjweek(rtcm, tow);
+            }
+            else {
+                tow = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 30) * 0.001; i += 30;
+                //DecodeRTCM::adjweek(rtcm, tow);
+            }
+            *sync = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 1);       i += 1;
+            *iod = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 3);       i += 3;
+            h->time_s = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 7);       i += 7;
+            h->clk_str = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 2);       i += 2;
+            h->clk_ext = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 2);       i += 2;
+            h->smooth = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 1);       i += 1;
+            h->tint_s = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 3);       i += 3;
+            for (j = 1; j <= 64; j++) {
+                mask = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 1); i += 1;
+                if (mask) h->sats[h->nsat++] = j;
+            }
+            for (j = 1; j <= 32; j++) {
+                mask = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 1); i += 1;
+                if (mask) h->sigs[h->nsig++] = j;
+            }
+        }
+        else {
+            //trace(2, "rtcm3 %d length error: len=%d\n", type, rtcm->len);
+            return -1;
+        }
+        /* test station id */
         //if (!DecodeRTCM::test_staid(rtcm, staid)) return -1;
 
-        //if (h->nsat * h->nsig > 64) {
-        //    //trace(2, "rtcm3 %d number of sats and sigs error: nsat=%d nsig=%d\n",                type, h->nsat, h->nsig);
-        //    return -1;
-        //}
-        //if (i + h->nsat * h->nsig > rtcm->len * 8) {
-        //    //trace(2, "rtcm3 %d length error: len=%d nsat=%d nsig=%d\n", type,                rtcm->len, h->nsat, h->nsig);
-        //    return -1;
-        //}
-        //for (j = 0; j < h->nsat * h->nsig; j++) {
-        //    h->cellmask[j] = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
-        //    if (h->cellmask[j]) ncell++;
-        //}
-        //*hsize = i;
+        if (h->nsat * h->nsig > 64) {
+            //trace(2, "rtcm3 %d number of sats and sigs error: nsat=%d nsig=%d\n",                type, h->nsat, h->nsig);
+            return -1;
+        }
+        if (i + h->nsat * h->nsig > RTK_SVR_DATA::len * 8) {
+            //trace(2, "rtcm3 %d length error: len=%d nsat=%d nsig=%d\n", type,                rtcm->len, h->nsat, h->nsig);
+            return -1;
+        }
+        for (j = 0; j < h->nsat * h->nsig; j++) {
+            h->cellmask[j] = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 1); i += 1;
+            if (h->cellmask[j]) ncell++;
+        }
+        *hsize = i;
 
         //CommonRTK::time2str(rtcm->time, tstr, 2);
-        ////trace(4, "decode_head_msm: time=%s sys=%d staid=%d nsat=%d nsig=%d sync=%d iod=%d ncell=%d\n",            tstr, sys, staid, h->nsat, h->nsig, *sync, *iod, ncell);
+        //trace(4, "decode_head_msm: time=%s sys=%d staid=%d nsat=%d nsig=%d sync=%d iod=%d ncell=%d\n",            tstr, sys, staid, h->nsat, h->nsig, *sync, *iod, ncell);
 
-        //if (rtcm->outtype) {
-        //    msg = rtcm->msgtype + strlen(rtcm->msgtype);
-        //    sprintf(msg, " staid=%4d %s nsat=%2d nsig=%2d iod=%2d ncell=%2d sync=%d",
-        //        staid, tstr, h->nsat, h->nsig, *iod, ncell, *sync);
-        //}
+        /*if (rtcm->outtype) {
+            msg = rtcm->msgtype + strlen(rtcm->msgtype);
+            sprintf(msg, " staid=%4d %s nsat=%2d nsig=%2d iod=%2d ncell=%2d sync=%d",
+                staid, tstr, h->nsat, h->nsig, *iod, ncell, *sync);
+        }*/
         return ncell;
     }
     /* decode unsupported msm message --------------------------------------------*/
@@ -2758,243 +2753,243 @@ namespace RTKFunctions {
         return sync ? 0 : 1;
     }
     /* decode msm 4: full pseudorange and phaserange plus cnr --------------------*/
-    int DecodeRTCM::decode_msm4(rtcm_t* rtcm, int sys)
+    int DecodeRTCM::decode_msm4(int sys)
     {
         int sync;
-        //msm_h_t h = { 0 };
-        //double r[64], pr[64], cp[64], cnr[64];
-        //int i, j, type, sync, iod, ncell, rng, rng_m, prv, cpv, lock[64], half[64];
+        msm_h_t h = { 0 };
+        double r[64], pr[64], cp[64], cnr[64];
+        int i, j, type, iod, ncell, rng, rng_m, prv, cpv, lock[64], half[64];
 
-        //type = CommonRTK::getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, 24, 12);
 
-        ///* decode msm header */
-        //if ((ncell = DecodeRTCM::decode_msm_head(rtcm, sys, &sync, &iod, &h, &i)) < 0) return -1;
+        /* decode msm header */
+        if ((ncell = DecodeRTCM::decode_msm_head(sys, &sync, &iod, &h, &i)) < 0) return -1;
 
-        //if (i + h.nsat * 18 + ncell * 48 > rtcm->len * 8) {
-        //    //trace(2, "rtcm3 %d length error: nsat=%d ncell=%d len=%d\n", type, h.nsat,                ncell, rtcm->len);
-        //    return -1;
-        //}
-        //for (j = 0; j < h.nsat; j++) r[j] = 0.0;
-        //for (j = 0; j < ncell; j++) pr[j] = cp[j] = -1E16;
+        if (i + h.nsat * 18 + ncell * 48 > RTK_SVR_DATA::len * 8) {
+            //trace(2, "rtcm3 %d length error: nsat=%d ncell=%d len=%d\n", type, h.nsat,                ncell, rtcm->len);
+            return -1;
+        }
+        for (j = 0; j < h.nsat; j++) r[j] = 0.0;
+        for (j = 0; j < ncell; j++) pr[j] = cp[j] = -1E16;
 
-        ///* decode satellite data */
-        //for (j = 0; j < h.nsat; j++) { /* range */
-        //    rng = CommonRTK::getbitu(rtcm->buff, i, 8); i += 8;
-        //    if (rng != 255) r[j] = rng * RANGE_MS;
-        //}
-        //for (j = 0; j < h.nsat; j++) {
-        //    rng_m = CommonRTK::getbitu(rtcm->buff, i, 10); i += 10;
-        //    if (r[j] != 0.0) r[j] += rng_m * P2_10 * RANGE_MS;
-        //}
-        ///* decode signal data */
-        //for (j = 0; j < ncell; j++) { /* pseudorange */
-        //    prv = CommonRTK::getbits(rtcm->buff, i, 15); i += 15;
-        //    if (prv != -16384) pr[j] = prv * P2_24 * RANGE_MS;
-        //}
-        //for (j = 0; j < ncell; j++) { /* phaserange */
-        //    cpv = CommonRTK::getbits(rtcm->buff, i, 22); i += 22;
-        //    if (cpv != -2097152) cp[j] = cpv * P2_29 * RANGE_MS;
-        //}
-        //for (j = 0; j < ncell; j++) { /* lock time */
-        //    lock[j] = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4;
-        //}
-        //for (j = 0; j < ncell; j++) { /* half-cycle ambiguity */
-        //    half[j] = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
-        //}
-        //for (j = 0; j < ncell; j++) { /* cnr */
-        //    cnr[j] = CommonRTK::getbitu(rtcm->buff, i, 6) * 1.0; i += 6;
-        //}
-        ///* save obs data in msm message */
-        //DecodeRTCM::save_msm_obs(rtcm, sys, &h, r, pr, cp, NULL, NULL, cnr, lock, NULL, half);
+        /* decode satellite data */
+        for (j = 0; j < h.nsat; j++) { /* range */
+            rng = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 8); i += 8;
+            if (rng != 255) r[j] = rng * RANGE_MS;
+        }
+        for (j = 0; j < h.nsat; j++) {
+            rng_m = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 10); i += 10;
+            if (r[j] != 0.0) r[j] += rng_m * P2_10 * RANGE_MS;
+        }
+        /* decode signal data */
+        for (j = 0; j < ncell; j++) { /* pseudorange */
+            prv = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 15); i += 15;
+            if (prv != -16384) pr[j] = prv * P2_24 * RANGE_MS;
+        }
+        for (j = 0; j < ncell; j++) { /* phaserange */
+            cpv = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 22); i += 22;
+            if (cpv != -2097152) cp[j] = cpv * P2_29 * RANGE_MS;
+        }
+        for (j = 0; j < ncell; j++) { /* lock time */
+            lock[j] = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 4); i += 4;
+        }
+        for (j = 0; j < ncell; j++) { /* half-cycle ambiguity */
+            half[j] = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 1); i += 1;
+        }
+        for (j = 0; j < ncell; j++) { /* cnr */
+            cnr[j] = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 6) * 1.0; i += 6;
+        }
+        /* save obs data in msm message */
+        DecodeRTCM::save_msm_obs(sys, &h, r, pr, cp, NULL, NULL, cnr, lock, NULL, half);
 
         //rtcm->obsflag = !sync;
         return sync ? 0 : 1;
     }
     
     /* decode msm 5: full pseudorange, phaserange, phaserangerate and cnr --------*/
-    int DecodeRTCM::decode_msm5(rtcm_t* rtcm, int sys)
+    int DecodeRTCM::decode_msm5(int sys)
     {
         int sync;
-        //msm_h_t h = { 0 };
-        //double r[64], rr[64], pr[64], cp[64], rrf[64], cnr[64];
-        //int i, j, type, sync, iod, ncell, rng, rng_m, rate, prv, cpv, rrv, lock[64];
-        //int ex[64], half[64];
+        msm_h_t h = { 0 };
+        double r[64], rr[64], pr[64], cp[64], rrf[64], cnr[64];
+        int i, j, type, iod, ncell, rng, rng_m, rate, prv, cpv, rrv, lock[64];
+        int ex[64], half[64];
 
-        //type = CommonRTK::getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, 24, 12);
 
-        ///* decode msm header */
-        //if ((ncell = DecodeRTCM::decode_msm_head(rtcm, sys, &sync, &iod, &h, &i)) < 0) return -1;
+        /* decode msm header */
+        if ((ncell = DecodeRTCM::decode_msm_head(sys, &sync, &iod, &h, &i)) < 0) return -1;
 
-        //if (i + h.nsat * 36 + ncell * 63 > rtcm->len * 8) {
-        //    //trace(2, "rtcm3 %d length error: nsat=%d ncell=%d len=%d\n", type, h.nsat,                 ncell, rtcm->len);
-        //    return -1;
-        //}
-        //for (j = 0; j < h.nsat; j++) {
-        //    r[j] = rr[j] = 0.0; ex[j] = 15;
-        //}
-        //for (j = 0; j < ncell; j++) pr[j] = cp[j] = rrf[j] = -1E16;
+        if (i + h.nsat * 36 + ncell * 63 > RTK_SVR_DATA::len * 8) {
+            //trace(2, "rtcm3 %d length error: nsat=%d ncell=%d len=%d\n", type, h.nsat,                 ncell, rtcm->len);
+            return -1;
+        }
+        for (j = 0; j < h.nsat; j++) {
+            r[j] = rr[j] = 0.0; ex[j] = 15;
+        }
+        for (j = 0; j < ncell; j++) pr[j] = cp[j] = rrf[j] = -1E16;
 
-        ///* decode satellite data */
-        //for (j = 0; j < h.nsat; j++) { /* range */
-        //    rng = CommonRTK::getbitu(rtcm->buff, i, 8); i += 8;
-        //    if (rng != 255) r[j] = rng * RANGE_MS;
-        //}
-        //for (j = 0; j < h.nsat; j++) { /* extended info */
-        //    ex[j] = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4;
-        //}
-        //for (j = 0; j < h.nsat; j++) {
-        //    rng_m = CommonRTK::getbitu(rtcm->buff, i, 10); i += 10;
-        //    if (r[j] != 0.0) r[j] += rng_m * P2_10 * RANGE_MS;
-        //}
-        //for (j = 0; j < h.nsat; j++) { /* phaserangerate */
-        //    rate = CommonRTK::getbits(rtcm->buff, i, 14); i += 14;
-        //    if (rate != -8192) rr[j] = rate * 1.0;
-        //}
-        ///* decode signal data */
-        //for (j = 0; j < ncell; j++) { /* pseudorange */
-        //    prv = CommonRTK::getbits(rtcm->buff, i, 15); i += 15;
-        //    if (prv != -16384) pr[j] = prv * P2_24 * RANGE_MS;
-        //}
-        //for (j = 0; j < ncell; j++) { /* phaserange */
-        //    cpv = CommonRTK::getbits(rtcm->buff, i, 22); i += 22;
-        //    if (cpv != -2097152) cp[j] = cpv * P2_29 * RANGE_MS;
-        //}
-        //for (j = 0; j < ncell; j++) { /* lock time */
-        //    lock[j] = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4;
-        //}
-        //for (j = 0; j < ncell; j++) { /* half-cycle ambiguity */
-        //    half[j] = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
-        //}
-        //for (j = 0; j < ncell; j++) { /* cnr */
-        //    cnr[j] = CommonRTK::getbitu(rtcm->buff, i, 6) * 1.0; i += 6;
-        //}
-        //for (j = 0; j < ncell; j++) { /* phaserangerate */
-        //    rrv = CommonRTK::getbits(rtcm->buff, i, 15); i += 15;
-        //    if (rrv != -16384) rrf[j] = rrv * 0.0001;
-        //}
-        ///* save obs data in msm message */
-        //DecodeRTCM::save_msm_obs(rtcm, sys, &h, r, pr, cp, rr, rrf, cnr, lock, ex, half);
+        /* decode satellite data */
+        for (j = 0; j < h.nsat; j++) { /* range */
+            rng = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 8); i += 8;
+            if (rng != 255) r[j] = rng * RANGE_MS;
+        }
+        for (j = 0; j < h.nsat; j++) { /* extended info */
+            ex[j] = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 4); i += 4;
+        }
+        for (j = 0; j < h.nsat; j++) {
+            rng_m = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 10); i += 10;
+            if (r[j] != 0.0) r[j] += rng_m * P2_10 * RANGE_MS;
+        }
+        for (j = 0; j < h.nsat; j++) { /* phaserangerate */
+            rate = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 14); i += 14;
+            if (rate != -8192) rr[j] = rate * 1.0;
+        }
+        /* decode signal data */
+        for (j = 0; j < ncell; j++) { /* pseudorange */
+            prv = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 15); i += 15;
+            if (prv != -16384) pr[j] = prv * P2_24 * RANGE_MS;
+        }
+        for (j = 0; j < ncell; j++) { /* phaserange */
+            cpv = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 22); i += 22;
+            if (cpv != -2097152) cp[j] = cpv * P2_29 * RANGE_MS;
+        }
+        for (j = 0; j < ncell; j++) { /* lock time */
+            lock[j] = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 4); i += 4;
+        }
+        for (j = 0; j < ncell; j++) { /* half-cycle ambiguity */
+            half[j] = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 1); i += 1;
+        }
+        for (j = 0; j < ncell; j++) { /* cnr */
+            cnr[j] = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 6) * 1.0; i += 6;
+        }
+        for (j = 0; j < ncell; j++) { /* phaserangerate */
+            rrv = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 15); i += 15;
+            if (rrv != -16384) rrf[j] = rrv * 0.0001;
+        }
+        /* save obs data in msm message */
+        DecodeRTCM::save_msm_obs(sys, &h, r, pr, cp, rr, rrf, cnr, lock, ex, half);
 
         //rtcm->obsflag = !sync;
         return sync ? 0 : 1;
     }
     /* decode msm 6: full pseudorange and phaserange plus cnr (high-res) ---------*/
-    int DecodeRTCM::decode_msm6(rtcm_t* rtcm, int sys)
+    int DecodeRTCM::decode_msm6(int sys)
     {
         int sync;
-        //msm_h_t h = { 0 };
-        //double r[64], pr[64], cp[64], cnr[64];
-        //int i, j, type, sync, iod, ncell, rng, rng_m, prv, cpv, lock[64], half[64];
+        msm_h_t h = { 0 };
+        double r[64], pr[64], cp[64], cnr[64];
+        int i, j, type, iod, ncell, rng, rng_m, prv, cpv, lock[64], half[64];
 
-        //type = CommonRTK::getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, 24, 12);
 
-        ///* decode msm header */
-        //if ((ncell = DecodeRTCM::decode_msm_head(rtcm, sys, &sync, &iod, &h, &i)) < 0) return -1;
+        /* decode msm header */
+        if ((ncell = DecodeRTCM::decode_msm_head(sys, &sync, &iod, &h, &i)) < 0) return -1;
 
-        //if (i + h.nsat * 18 + ncell * 65 > rtcm->len * 8) {
-        //    //trace(2, "rtcm3 %d length error: nsat=%d ncell=%d len=%d\n", type, h.nsat,                ncell, rtcm->len);
-        //    return -1;
-        //}
-        //for (j = 0; j < h.nsat; j++) r[j] = 0.0;
-        //for (j = 0; j < ncell; j++) pr[j] = cp[j] = -1E16;
+        if (i + h.nsat * 18 + ncell * 65 > RTK_SVR_DATA::len * 8) {
+            //trace(2, "rtcm3 %d length error: nsat=%d ncell=%d len=%d\n", type, h.nsat,                ncell, rtcm->len);
+            return -1;
+        }
+        for (j = 0; j < h.nsat; j++) r[j] = 0.0;
+        for (j = 0; j < ncell; j++) pr[j] = cp[j] = -1E16;
 
-        ///* decode satellite data */
-        //for (j = 0; j < h.nsat; j++) { /* range */
-        //    rng = CommonRTK::getbitu(rtcm->buff, i, 8); i += 8;
-        //    if (rng != 255) r[j] = rng * RANGE_MS;
-        //}
-        //for (j = 0; j < h.nsat; j++) {
-        //    rng_m = CommonRTK::getbitu(rtcm->buff, i, 10); i += 10;
-        //    if (r[j] != 0.0) r[j] += rng_m * P2_10 * RANGE_MS;
-        //}
-        ///* decode signal data */
-        //for (j = 0; j < ncell; j++) { /* pseudorange */
-        //    prv = CommonRTK::getbits(rtcm->buff, i, 20); i += 20;
-        //    if (prv != -524288) pr[j] = prv * P2_29 * RANGE_MS;
-        //}
-        //for (j = 0; j < ncell; j++) { /* phaserange */
-        //    cpv = CommonRTK::getbits(rtcm->buff, i, 24); i += 24;
-        //    if (cpv != -8388608) cp[j] = cpv * P2_31 * RANGE_MS;
-        //}
-        //for (j = 0; j < ncell; j++) { /* lock time */
-        //    lock[j] = CommonRTK::getbitu(rtcm->buff, i, 10); i += 10;
-        //}
-        //for (j = 0; j < ncell; j++) { /* half-cycle ambiguity */
-        //    half[j] = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
-        //}
-        //for (j = 0; j < ncell; j++) { /* cnr */
-        //    cnr[j] = CommonRTK::getbitu(rtcm->buff, i, 10) * 0.0625; i += 10;
-        //}
-        ///* save obs data in msm message */
-        //save_msm_obs(rtcm, sys, &h, r, pr, cp, NULL, NULL, cnr, lock, NULL, half);
+        /* decode satellite data */
+        for (j = 0; j < h.nsat; j++) { /* range */
+            rng = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 8); i += 8;
+            if (rng != 255) r[j] = rng * RANGE_MS;
+        }
+        for (j = 0; j < h.nsat; j++) {
+            rng_m = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 10); i += 10;
+            if (r[j] != 0.0) r[j] += rng_m * P2_10 * RANGE_MS;
+        }
+        /* decode signal data */
+        for (j = 0; j < ncell; j++) { /* pseudorange */
+            prv = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 20); i += 20;
+            if (prv != -524288) pr[j] = prv * P2_29 * RANGE_MS;
+        }
+        for (j = 0; j < ncell; j++) { /* phaserange */
+            cpv = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 24); i += 24;
+            if (cpv != -8388608) cp[j] = cpv * P2_31 * RANGE_MS;
+        }
+        for (j = 0; j < ncell; j++) { /* lock time */
+            lock[j] = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 10); i += 10;
+        }
+        for (j = 0; j < ncell; j++) { /* half-cycle ambiguity */
+            half[j] = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 1); i += 1;
+        }
+        for (j = 0; j < ncell; j++) { /* cnr */
+            cnr[j] = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 10) * 0.0625; i += 10;
+        }
+        /* save obs data in msm message */
+        save_msm_obs(sys, &h, r, pr, cp, NULL, NULL, cnr, lock, NULL, half);
 
         //rtcm->obsflag = !sync;
         return sync ? 0 : 1;
     }
     
     /* decode msm 7: full pseudorange, phaserange, phaserangerate and cnr (h-res) */
-    int DecodeRTCM::decode_msm7(rtcm_t* rtcm, int sys)
+    int DecodeRTCM::decode_msm7(int sys)
     {
         int sync;
-        //msm_h_t h = { 0 };
-        //double r[64], rr[64], pr[64], cp[64], rrf[64], cnr[64];
-        //int i, j, type, sync, iod, ncell, rng, rng_m, rate, prv, cpv, rrv, lock[64];
-        //int ex[64], half[64];
+        msm_h_t h = { 0 };
+        double r[64], rr[64], pr[64], cp[64], rrf[64], cnr[64];
+        int i, j, type,  iod, ncell, rng, rng_m, rate, prv, cpv, rrv, lock[64];
+        int ex[64], half[64];
 
-        //type = CommonRTK::getbitu(rtcm->buff, 24, 12);
+        type = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, 24, 12);
 
-        ///* decode msm header */
-        //if ((ncell = DecodeRTCM::decode_msm_head(rtcm, sys, &sync, &iod, &h, &i)) < 0) return -1;
+        /* decode msm header */
+        if ((ncell = DecodeRTCM::decode_msm_head(sys, &sync, &iod, &h, &i)) < 0) return -1;
 
-        //if (i + h.nsat * 36 + ncell * 80 > rtcm->len * 8) {
-        //    //trace(2, "rtcm3 %d length error: nsat=%d ncell=%d len=%d\n", type, h.nsat,                ncell, rtcm->len);
-        //    return -1;
-        //}
-        //for (j = 0; j < h.nsat; j++) {
-        //    r[j] = rr[j] = 0.0; ex[j] = 15;
-        //}
-        //for (j = 0; j < ncell; j++) pr[j] = cp[j] = rrf[j] = -1E16;
+        if (i + h.nsat * 36 + ncell * 80 > RTK_SVR_DATA::len * 8) {
+            //trace(2, "rtcm3 %d length error: nsat=%d ncell=%d len=%d\n", type, h.nsat,                ncell, rtcm->len);
+            return -1;
+        }
+        for (j = 0; j < h.nsat; j++) {
+            r[j] = rr[j] = 0.0; ex[j] = 15;
+        }
+        for (j = 0; j < ncell; j++) pr[j] = cp[j] = rrf[j] = -1E16;
 
-        ///* decode satellite data */
-        //for (j = 0; j < h.nsat; j++) { /* range */
-        //    rng = CommonRTK::getbitu(rtcm->buff, i, 8); i += 8;
-        //    if (rng != 255) r[j] = rng * RANGE_MS;
-        //}
-        //for (j = 0; j < h.nsat; j++) { /* extended info */
-        //    ex[j] = CommonRTK::getbitu(rtcm->buff, i, 4); i += 4;
-        //}
-        //for (j = 0; j < h.nsat; j++) {
-        //    rng_m = CommonRTK::getbitu(rtcm->buff, i, 10); i += 10;
-        //    if (r[j] != 0.0) r[j] += rng_m * P2_10 * RANGE_MS;
-        //}
-        //for (j = 0; j < h.nsat; j++) { /* phaserangerate */
-        //    rate = CommonRTK::getbits(rtcm->buff, i, 14); i += 14;
-        //    if (rate != -8192) rr[j] = rate * 1.0;
-        //}
-        ///* decode signal data */
-        //for (j = 0; j < ncell; j++) { /* pseudorange */
-        //    prv = CommonRTK::getbits(rtcm->buff, i, 20); i += 20;
-        //    if (prv != -524288) pr[j] = prv * P2_29 * RANGE_MS;
-        //}
-        //for (j = 0; j < ncell; j++) { /* phaserange */
-        //    cpv = CommonRTK::getbits(rtcm->buff, i, 24); i += 24;
-        //    if (cpv != -8388608) cp[j] = cpv * P2_31 * RANGE_MS;
-        //}
-        //for (j = 0; j < ncell; j++) { /* lock time */
-        //    lock[j] = CommonRTK::getbitu(rtcm->buff, i, 10); i += 10;
-        //}
-        //for (j = 0; j < ncell; j++) { /* half-cycle amiguity */
-        //    half[j] = CommonRTK::getbitu(rtcm->buff, i, 1); i += 1;
-        //}
-        //for (j = 0; j < ncell; j++) { /* cnr */
-        //    cnr[j] = CommonRTK::getbitu(rtcm->buff, i, 10) * 0.0625; i += 10;
-        //}
-        //for (j = 0; j < ncell; j++) { /* phaserangerate */
-        //    rrv = CommonRTK::getbits(rtcm->buff, i, 15); i += 15;
-        //    if (rrv != -16384) rrf[j] = rrv * 0.0001;
-        //}
-        ///* save obs data in msm message */
-        //save_msm_obs(rtcm, sys, &h, r, pr, cp, rr, rrf, cnr, lock, ex, half);
+        /* decode satellite data */
+        for (j = 0; j < h.nsat; j++) { /* range */
+            rng = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 8); i += 8;
+            if (rng != 255) r[j] = rng * RANGE_MS;
+        }
+        for (j = 0; j < h.nsat; j++) { /* extended info */
+            ex[j] = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 4); i += 4;
+        }
+        for (j = 0; j < h.nsat; j++) {
+            rng_m = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 10); i += 10;
+            if (r[j] != 0.0) r[j] += rng_m * P2_10 * RANGE_MS;
+        }
+        for (j = 0; j < h.nsat; j++) { /* phaserangerate */
+            rate = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 14); i += 14;
+            if (rate != -8192) rr[j] = rate * 1.0;
+        }
+        /* decode signal data */
+        for (j = 0; j < ncell; j++) { /* pseudorange */
+            prv = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 20); i += 20;
+            if (prv != -524288) pr[j] = prv * P2_29 * RANGE_MS;
+        }
+        for (j = 0; j < ncell; j++) { /* phaserange */
+            cpv = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 24); i += 24;
+            if (cpv != -8388608) cp[j] = cpv * P2_31 * RANGE_MS;
+        }
+        for (j = 0; j < ncell; j++) { /* lock time */
+            lock[j] = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 10); i += 10;
+        }
+        for (j = 0; j < ncell; j++) { /* half-cycle amiguity */
+            half[j] = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 1); i += 1;
+        }
+        for (j = 0; j < ncell; j++) { /* cnr */
+            cnr[j] = CommonRTK::getbitu(RTK_SVR_DATA::nbuff, i, 10) * 0.0625; i += 10;
+        }
+        for (j = 0; j < ncell; j++) { /* phaserangerate */
+            rrv = CommonRTK::getbits(RTK_SVR_DATA::nbuff, i, 15); i += 15;
+            if (rrv != -16384) rrf[j] = rrv * 0.0001;
+        }
+        /* save obs data in msm message */
+        save_msm_obs(sys, &h, r, pr, cp, rr, rrf, cnr, lock, ex, half);
 
         //rtcm->obsflag = !sync;
         return sync ? 0 : 1;
@@ -3103,10 +3098,10 @@ namespace RTKFunctions {
         //case 1111: ret = DecodeRTCM::decode_msm0(rtcm, SYS_QZS); break; /* not supported */
         //case 1112: ret = DecodeRTCM::decode_msm0(rtcm, SYS_QZS); break; /* not supported */
         //case 1113: ret = DecodeRTCM::decode_msm0(rtcm, SYS_QZS); break; /* not supported */
-        case 1114: ret = DecodeRTCM::decode_msm4(rtcm, SYS_QZS); break;
-        case 1115: ret = DecodeRTCM::decode_msm5(rtcm, SYS_QZS); break;
-        case 1116: ret = DecodeRTCM::decode_msm6(rtcm, SYS_QZS); break;
-        case 1117: ret = DecodeRTCM::decode_msm7(rtcm, SYS_QZS); break;
+        case 1114: ret = DecodeRTCM::decode_msm4(SYS_QZS); break;
+        case 1115: ret = DecodeRTCM::decode_msm5(SYS_QZS); break;
+        case 1116: ret = DecodeRTCM::decode_msm6(SYS_QZS); break;
+        case 1117: ret = DecodeRTCM::decode_msm7(SYS_QZS); break;
         //case 1121: ret = DecodeRTCM::decode_msm0(rtcm, SYS_CMP); break; /* not supported */
         //case 1122: ret = DecodeRTCM::decode_msm0(rtcm, SYS_CMP); break; /* not supported */
         //case 1123: ret = DecodeRTCM::decode_msm0(rtcm, SYS_CMP); break; /* not supported */
@@ -3115,30 +3110,30 @@ namespace RTKFunctions {
         //case 1126: ret = DecodeRTCM::decode_msm6(rtcm, SYS_CMP); break;
         //case 1127: ret = DecodeRTCM::decode_msm7(rtcm, SYS_CMP); break;
         //case 1230: ret = DecodeRTCM::decode_type1230(rtcm);     break; /* not supported */
-        //case 1240: ret = DecodeRTCM::decode_ssr1(rtcm, SYS_GAL); break;
-        //case 1241: ret = DecodeRTCM::decode_ssr2(rtcm, SYS_GAL); break;
-        //case 1242: ret = DecodeRTCM::decode_ssr3(rtcm, SYS_GAL); break;
-        //case 1243: ret = DecodeRTCM::decode_ssr4(rtcm, SYS_GAL); break;
-        //case 1244: ret = DecodeRTCM::decode_ssr5(rtcm, SYS_GAL); break;
-        //case 1245: ret = DecodeRTCM::decode_ssr6(rtcm, SYS_GAL); break;
-        //case 1246: ret = DecodeRTCM::decode_ssr1(rtcm, SYS_QZS); break;
-        //case 1247: ret = DecodeRTCM::decode_ssr2(rtcm, SYS_QZS); break;
-        //case 1248: ret = DecodeRTCM::decode_ssr3(rtcm, SYS_QZS); break;
-        //case 1249: ret = DecodeRTCM::decode_ssr4(rtcm, SYS_QZS); break;
-        //case 1250: ret = DecodeRTCM::decode_ssr5(rtcm, SYS_QZS); break;
-        //case 1251: ret = DecodeRTCM::decode_ssr6(rtcm, SYS_QZS); break;
-        //case 1252: ret = DecodeRTCM::decode_ssr1(rtcm, SYS_SBS); break;
-        //case 1253: ret = DecodeRTCM::decode_ssr2(rtcm, SYS_SBS); break;
-        //case 1254: ret = DecodeRTCM::decode_ssr3(rtcm, SYS_SBS); break;
-        //case 1255: ret = DecodeRTCM::decode_ssr4(rtcm, SYS_SBS); break;
-        //case 1256: ret = DecodeRTCM::decode_ssr5(rtcm, SYS_SBS); break;
-        //case 1257: ret = DecodeRTCM::decode_ssr6(rtcm, SYS_SBS); break;
-        //case 1258: ret = DecodeRTCM::decode_ssr1(rtcm, SYS_CMP); break;
-        //case 1259: ret = DecodeRTCM::decode_ssr2(rtcm, SYS_CMP); break;
-        //case 1260: ret = DecodeRTCM::decode_ssr3(rtcm, SYS_CMP); break;
-        //case 1261: ret = DecodeRTCM::decode_ssr4(rtcm, SYS_CMP); break;
-        //case 1262: ret = DecodeRTCM::decode_ssr5(rtcm, SYS_CMP); break;
-        //case 1263: ret = DecodeRTCM::decode_ssr6(rtcm, SYS_CMP); break;
+        case 1240: ret = DecodeRTCM::decode_ssr1(SYS_GAL); break;
+        case 1241: ret = DecodeRTCM::decode_ssr2(SYS_GAL); break;
+        case 1242: ret = DecodeRTCM::decode_ssr3(SYS_GAL); break;
+        case 1243: ret = DecodeRTCM::decode_ssr4(SYS_GAL); break;
+        case 1244: ret = DecodeRTCM::decode_ssr5(SYS_GAL); break;
+        case 1245: ret = DecodeRTCM::decode_ssr6(SYS_GAL); break;
+        case 1246: ret = DecodeRTCM::decode_ssr1(SYS_QZS); break;
+        case 1247: ret = DecodeRTCM::decode_ssr2(SYS_QZS); break;
+        case 1248: ret = DecodeRTCM::decode_ssr3(SYS_QZS); break;
+        case 1249: ret = DecodeRTCM::decode_ssr4(SYS_QZS); break;
+        case 1250: ret = DecodeRTCM::decode_ssr5(SYS_QZS); break;
+        case 1251: ret = DecodeRTCM::decode_ssr6(SYS_QZS); break;
+        case 1252: ret = DecodeRTCM::decode_ssr1(SYS_SBS); break;
+        case 1253: ret = DecodeRTCM::decode_ssr2(SYS_SBS); break;
+        case 1254: ret = DecodeRTCM::decode_ssr3(SYS_SBS); break;
+        case 1255: ret = DecodeRTCM::decode_ssr4(SYS_SBS); break;
+        case 1256: ret = DecodeRTCM::decode_ssr5(SYS_SBS); break;
+        case 1257: ret = DecodeRTCM::decode_ssr6(SYS_SBS); break;
+        case 1258: ret = DecodeRTCM::decode_ssr1(SYS_CMP); break;
+        case 1259: ret = DecodeRTCM::decode_ssr2(SYS_CMP); break;
+        case 1260: ret = DecodeRTCM::decode_ssr3(SYS_CMP); break;
+        case 1261: ret = DecodeRTCM::decode_ssr4(SYS_CMP); break;
+        case 1262: ret = DecodeRTCM::decode_ssr5(SYS_CMP); break;
+        case 1263: ret = DecodeRTCM::decode_ssr6(SYS_CMP); break;
         //case   11: ret = DecodeRTCM::decode_ssr7(rtcm, SYS_GLO); break; /* tentative */
         //case   12: ret = DecodeRTCM::decode_ssr7(rtcm, SYS_GAL); break; /* tentative */
         //case   13: ret = DecodeRTCM::decode_ssr7(rtcm, SYS_QZS); break; /* tentative */
@@ -3169,23 +3164,23 @@ namespace RTKFunctions {
         //rtcm->time = CommonRTK::gpst2time(week, hour * 3600 + zcnt);
     }
     /* get observation data index ------------------------------------------------*/
-    int DecodeRTCM::obsindex(obs_t* obs, gtime_t time, int sat)
+    int DecodeRTCM::obsindex(int sat)
     {
         int i, j;
 
-        //for (i = 0; i < obs->n; i++) {
-        //    if (obs->data[i].sat == sat) return i; /* field already exists */
-        //}
-        //if (i >= MAXOBS) return -1; /* overflow */
+        for (i = 0; i < RTK_SVR_DATA::n; i++) {
+            if (RTK_SVR_DATA::sat == sat) return i; /* field already exists */
+        }
+        if (i >= MAXOBS) return -1; /* overflow */
 
-        ///* add new field */
+        /* add new field */
         //obs->data[i].time = time;
-        //obs->data[i].sat = sat;
-        //for (j = 0; j < NFREQ; j++) {
-        //    obs->data[i].L[j] = obs->data[i].P[j] = 0.0;
-        //    obs->data[i].D[j] = 0.0;
-        //    obs->data[i].SNR[j] = obs->data[i].LLI[j] = obs->data[i].code[j] = 0;
-        //}
+        RTK_SVR_DATA::sat = sat;
+        for (j = 0; j < NFREQ; j++) {
+            RTK_SVR_DATA::L[j] = RTK_SVR_DATA::P[j] = 0.0;
+            RTK_SVR_DATA::D[j] = 0.0;
+            RTK_SVR_DATA::SNR[j] = RTK_SVR_DATA::LLI[j] = RTK_SVR_DATA::code[j] = 0;
+        }
         //obs->n++;
         return i;
     }
