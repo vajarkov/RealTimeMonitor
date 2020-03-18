@@ -101,7 +101,15 @@ void __fastcall SvrStart(void)
 	{
 		strs[i] = STR_NONE;
 		Format[i] = NULL;
-		//paths[i] = NULL;
+		if (i == 1) {
+			//Присвоение базовой станции выбранного адреса
+			paths[1] = new char[ip_address.size() + 1];
+			strcpy(paths[1], ip_address.c_str());
+		}
+		else {
+			paths[i] = (char*)"";
+		}
+		
 		if (i < 3) {
 			rcvopts[i] = new char[RcvOpt[i].size() + 1];
 			strcpy(rcvopts[i], RcvOpt[i].c_str());
@@ -111,9 +119,7 @@ void __fastcall SvrStart(void)
 	strs[1] = stream_type;
 	//Присвоение базовой станции выбранного формата
 	Format[1] = format;
-	//Присвоение базовой станции выбранного адреса
-	paths[1] = new char[ip_address.size() + 1];
-	strcpy(paths[1], ip_address.c_str());
+	
 	
 	
 	//Установка периода для цикла опроса NMEA
@@ -129,7 +135,10 @@ void __fastcall SvrStart(void)
 	strsetdir(local_dir.c_str());
 	//strsetproxy(ProxyAddr.c_str());
 
-	
+	for (int i = 0; i < 2; i++) {
+		solopt[i] = SolOpt;
+		solopt[i].posf = Format[i + 3];
+	}
 
 	//Первичные параметры потока
 	stropt[0] = 0;
@@ -225,8 +234,8 @@ void __fastcall Timer(void)
 	if (update) {
 		//UpdateTime();
 		//UpdatePos();
-		wcout << "XXX    " << rtksvr.rtcm->sta.pos[0] << "YYY     " << rtksvr.rtcm->sta.pos[1] << "ZZZ    " << rtksvr.rtcm->sta.pos[2] << endl;
-		wcout << "OBS    " << rtksvr.rtcm->obs.data[0].code << "SAT     " << rtksvr.rtcm->obs.data[0].sat << "RCV    " << rtksvr.rtcm->obs.data[0].rcv << endl;
+		wcout << "XXX    " << rtksvr.rtcm[1].sta.pos[0] << "YYY     " << rtksvr.rtcm[1].sta.pos[1] << "ZZZ    " << rtksvr.rtcm[1].sta.pos[2] << endl;
+		wcout << "OBS    " << rtksvr.rtcm[1].obs.data[0].code << "RCV    " << rtksvr.rtcm[1].obs.data[0].rcv << endl;
 		inactive = 0;
 	}
 
