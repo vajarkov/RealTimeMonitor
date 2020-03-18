@@ -4,6 +4,8 @@
 
 using namespace std;
 
+
+
 //Переменная для хранения пути к файлу 
 string path;
 
@@ -52,8 +54,29 @@ int SolCurrentStat;
 
 string RcvOpt[3] = { "", "", "" };
 
-//Функция запуска сервера
+//Функция запуска сервера отображения данных
 void __fastcall SvrStart(void);
 
 //Функция периодического обновления данных 
 void __fastcall Timer(void);
+
+//Функция запуска сервера сохранения данных в файл
+void __fastcall SvrStartStream(void);
+
+//Функция остановки сервера сохранения данных в файл
+void __fastcall SvrStop(void);
+
+//Переменная параметров потока
+int SvrOpt[6];
+
+//Переменная цикла опроса NMEA
+int NmeaReq; 
+
+//Переменная обмена данными из файла 
+int FileSwapMargin;
+
+//Ретрансляция выходного потока
+int RelayBack;
+
+//Координаты NMEA
+double AntPos[3], AntOff[3];

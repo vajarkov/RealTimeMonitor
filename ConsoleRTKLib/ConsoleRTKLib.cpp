@@ -1,6 +1,10 @@
 #include "ConsoleRTKLib.h"
 #include <iostream>
 
+//Структура для хранения данных
+static strsvr_t strsvr;
+// Максимальное число потоков
+#define MAXSTR 4 
 
 int main() {
 
@@ -22,6 +26,17 @@ int main() {
 	//Инициализация потока сбора данных по-умолчанию
 	strinitcom();
 
+	//Параметры по-умолчанию для потока
+	int optdef[] = { 10000,10000,1000,32768,10,0 };
+	for (int i = 0; i < 6; i++) {
+		SvrOpt[i] = optdef[i];
+	}
+	
+
+	FileSwapMargin = 30;
+
+	//AntPos = 0;
+
 	//Инициализация структуры для сбора данных 
 	rtksvrinit(&rtksvr);
 
@@ -32,12 +47,12 @@ int main() {
 	local_dir = "C:\\Temp";
 
 	//Запуск службы сбора
-	SvrStart();
+	SvrStartStream();
 
-	while (true) {
+	/*while (true) {
 		Timer();
 		Sleep(1000);
-	}
+	}*/
 
 }
 
@@ -153,7 +168,16 @@ void __fastcall SvrStart(void)
 	/* baseline length to reset (km) */
 	rtksvr.bl_reset = MaxBL;
 
-	
+
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
 	/* start rtk server ------------------------------------------------------------
 	* start rtk server thread
 	* args   : rtksvr_t *svr    IO rtk server
@@ -207,6 +231,9 @@ void __fastcall SvrStart(void)
 	
 	
 }
+
+
+
 
 
 void __fastcall Timer(void)
@@ -406,4 +433,170 @@ void __fastcall UpdatePos(void)
 		label[1]->Caption + L" " + label[4]->Caption + L" " +
 		label[2]->Caption + L" " + label[5]->Caption + s[8];
 		*/
+}
+
+
+// start stream server ------------------------------------------------------
+void __fastcall SvrStartStream(void)
+{
+	//Конвертер
+	strconv_t* conv[3] = { 0 };
+	//Переменная для инициализации путей
+	static char str[MAXSTR][1024];
+	
+	//Тип потока
+	int strs[4] = { 0 };
+	//Параметры потока
+	int	opt[8] = { 0 };
+	//Пути и адреса для потоков
+	char *paths[MAXSTR];
+	//Команды на старт потока
+	char* cmds[MAXSTR] = { 0 }; 
+	//Периодические команды
+	char* cmds_periodic[MAXSTR] = { 0 };
+	//Временные переменные для хранения промежуточных данных
+	char filepath[1024], buff[1024];
+	char* p;
+	FILE* fp;
+
+	
+	for (int i = 0; i < 4; i++) paths[i] = str[i];
+
+	strs[0] = STR_TCPCLI;
+	strs[1] = STR_FILE;
+	strs[2] = STR_NONE;
+	strs[3] = STR_NONE;
+
+	strcpy(paths[0], ip_address.c_str());
+	strcpy(paths[1], "C:\\distr\\data\\temp.rtcm3");
+	strcpy(paths[2], "");
+	strcpy(paths[3], "");
+
+	
+	for (int i = 0; i < 5; i++) {
+		opt[i] = SvrOpt[i];
+	}
+	opt[5] = NmeaReq ? SvrOpt[5] : 0;
+	opt[6] = FileSwapMargin;
+	opt[7] = RelayBack;
+
+	for (int i = 1; i < MAXSTR; i++) { // for each out stream
+		if (strs[i] != STR_FILE) continue;
+		strcpy(filepath, paths[i]);
+		if (strstr(filepath, "::A")) continue;
+		if ((p = strstr(filepath, "::"))) *p = '\0';
+		if (!(fp = fopen(filepath, "r"))) continue;
+		fclose(fp);
+		
+	}
+	strsetdir(local_dir.c_str());
+	//strsetproxy(ProxyAddress.c_str());
+
+	
+
+	/* start stream server ---------------------------------------------------------
+	* start stream server
+	* args   : strsvr_t *svr    IO  stream sever struct
+	*          int    *opts     I   stream options
+	*              opts[0]= inactive timeout (ms)
+	*              opts[1]= interval to reconnect (ms)
+	*              opts[2]= averaging time of data rate (ms)
+	*              opts[3]= receive/send buffer size (bytes);
+	*              opts[4]= server cycle (ms)
+	*              opts[5]= nmea request cycle (ms) (0:no)
+	*              opts[6]= file swap margin (s)
+	*              opts[7]= relay back of output stream (0:no)
+	*          int    *strs     I   stream types (STR_???)
+	*              strs[0]= input stream
+	*              strs[1]= output stream 1
+	*              strs[2]= output stream 2
+	*              strs[3]= output stream 3
+	*          char   **paths   I   stream paths
+	*              paths[0]= input stream
+	*              paths[1]= output stream 1
+	*              paths[2]= output stream 2
+	*              paths[3]= output stream 3
+	*          strcnv **conv    I   stream converter
+	*              conv[0]= output stream 1 converter
+	*              conv[1]= output stream 2 converter
+	*              conv[2]= output stream 3 converter
+	*          char   **cmds    I   start commands (NULL: no cmd)
+	*              cmds[0]= input stream command
+	*              cmds[1]= output stream 1 command
+	*              cmds[2]= output stream 2 command
+	*              cmds[3]= output stream 3 command
+	*          char   **cmds_periodic I periodic commands (NULL: no cmd)
+	*              cmds[0]= input stream command
+	*              cmds[1]= output stream 1 command
+	*              cmds[2]= output stream 2 command
+	*              cmds[3]= output stream 3 command
+	*          double *nmeapos  I   nmea request position (ecef) (m) (NULL: no)
+	* return : status (0:error,1:ok)
+	*-----------------------------------------------------------------------------*/
+	if (!strsvrstart(&strsvr, opt, strs, paths, conv, cmds, cmds_periodic, AntPos)) {
+		return;
+	}
+
+
+	/* set ntrip source table for stream server ------------------------------------
+	* set ntrip source table for stream server
+	* args   : strsvr_t *svr    IO  stream server struct
+	*          char  *file      I   source table file
+	* return : none
+	*-----------------------------------------------------------------------------*/
+	// set ntrip source table
+	//strsvrsetsrctbl(&strsvr, SrcTblFile.c_str());
+
+	
+}
+// stop stream server -------------------------------------------------------
+void __fastcall SvrStop(void)
+{
+	
+	char* cmds[MAXSTR] = { 0 };
+	int strs[MAXSTR];
+
+	strs[0] = STR_TCPCLI;
+	strs[1] = STR_FILE;
+	strs[2] = STR_NONE;
+	strs[3] = STR_NONE;
+
+	
+	strsvrstop(&strsvr, cmds);
+
+	
+
+	/*for (int i = 0; i < MAXSTR - 1; i++) {
+		strconvfree(strsvr.conv[i]);
+	}*/
+	//if (TraceLevel > 0) traceclose();
+}
+
+
+void __fastcall LoadOpt(void)
+{
+	int optdef[] = { 10000,10000,1000,32768,10,0 };
+	
+	NmeaReq = 0;
+	FileSwapMargin = 30;
+	RelayBack = 0;
+	
+	for (int i = 0; i < 6; i++) {
+		SvrOpt[i] = optdef[i];
+	}
+	for (int i = 0; i < 3; i++) {
+		AntPos[i] = 0.0;
+		AntOff[i] = 0.0;
+	}
+	
+	
+	/*StaPosFile = ini->ReadString("stapos", "staposfile", "");
+	ExeDirectory = ini->ReadString("dirs", "exedirectory", "");
+	LocalDirectory = ini->ReadString("dirs", "localdirectory", "");
+	ProxyAddress = ini->ReadString("dirs", "proxyaddress", "");
+	SrcTblFile = ini->ReadString("file", "srctblfile", "");
+	LogFile = ini->ReadString("file", "logfile", "");
+	delete ini;*/
+
+	
 }
