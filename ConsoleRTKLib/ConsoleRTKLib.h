@@ -61,10 +61,10 @@ void __fastcall SvrStart(void);
 void __fastcall Timer(void);
 
 //Функция запуска сервера сохранения данных в файл
-void __fastcall SvrStartStream(void);
+void __fastcall SvrStartStream(char pathString[1024]);
 
 //Функция остановки сервера сохранения данных в файл
-void __fastcall SvrStop(void);
+void __fastcall SvrStopStream(void);
 
 //Переменная параметров потока
 int SvrOpt[6];

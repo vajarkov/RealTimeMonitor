@@ -8,6 +8,9 @@ static strsvr_t strsvr;
 
 int main() {
 
+	time_t rawtime;
+	struct tm* timeinfo;
+
 	//Инициализация IP-адреса
 	ip_address = ":@192.168.0.186:5018/:";
 
@@ -24,7 +27,7 @@ int main() {
 	SolOpt = solopt_default;
 
 	//Инициализация потока сбора данных по-умолчанию
-	strinitcom();
+	strsvrinit(&strsvr,3);
 
 	//Параметры по-умолчанию для потока
 	int optdef[] = { 10000,10000,1000,32768,10,0 };
@@ -46,13 +49,59 @@ int main() {
 	//Указание локальной дериктории
 	local_dir = "C:\\Temp";
 
-	//Запуск службы сбора
-	SvrStartStream();
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+	if (timeinfo->tm_sec == 0) {
+		SvrStopStream();
+		printf("Minute is out...\n");
+	}
+	Sleep(1000);
+	char pathString[1024] = "C:\\distr\\data\\0001_";
+	char buff[4];
+	_itoa(timeinfo->tm_year - 100 + 2000, buff, 10);
+	strcat(pathString, buff);
+	strcat(pathString, "-");
+	_itoa(timeinfo->tm_mon + 1, buff, 10);
+	strcat(pathString, buff);
+	strcat(pathString, "-");
+	_itoa(timeinfo->tm_mday, buff, 10);
+	strcat(pathString, buff);
+	strcat(pathString, "_");
+	_itoa(timeinfo->tm_hour, buff, 10);
+	strcat(pathString, buff);
+	strcat(pathString, ".rtcm");
 
-	/*while (true) {
-		Timer();
-		Sleep(1000);
-	}*/
+	//Запуск службы сбора
+	SvrStartStream(pathString);
+
+	while (true) {
+		time(&rawtime);
+		timeinfo = localtime(&rawtime);
+		if (timeinfo->tm_sec == 0) {
+			SvrStopStream();
+			printf("Minute is out...\n");
+			Sleep(1000);
+			char pathString[1024] = "C:\\distr\\data\\0001_";
+			char buff[4];
+			_itoa(timeinfo->tm_year - 100 + 2000, buff, 10);
+			strcat(pathString, buff);
+			strcat(pathString, "-");
+			_itoa(timeinfo->tm_mon + 1, buff, 10);
+			strcat(pathString, buff);
+			strcat(pathString, "-");
+			_itoa(timeinfo->tm_mday, buff, 10);
+			strcat(pathString, buff);
+			strcat(pathString, "_");
+			_itoa(timeinfo->tm_min, buff, 10);
+			strcat(pathString, buff);
+			strcat(pathString, ".rtcm");
+
+
+
+			SvrStartStream(pathString);
+		}
+		
+	}
 
 }
 
@@ -437,7 +486,7 @@ void __fastcall UpdatePos(void)
 
 
 // start stream server ------------------------------------------------------
-void __fastcall SvrStartStream(void)
+void __fastcall SvrStartStream(char pathString[1024])
 {
 	//Конвертер
 	strconv_t* conv[3] = { 0 };
@@ -468,7 +517,7 @@ void __fastcall SvrStartStream(void)
 	strs[3] = STR_NONE;
 
 	strcpy(paths[0], ip_address.c_str());
-	strcpy(paths[1], "C:\\distr\\data\\temp.rtcm3");
+	strcpy(paths[1], pathString);
 	strcpy(paths[2], "");
 	strcpy(paths[3], "");
 
@@ -550,7 +599,7 @@ void __fastcall SvrStartStream(void)
 	
 }
 // stop stream server -------------------------------------------------------
-void __fastcall SvrStop(void)
+void __fastcall SvrStopStream(void)
 {
 	
 	char* cmds[MAXSTR] = { 0 };
