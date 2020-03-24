@@ -88,7 +88,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_RTLDLL;WIN32;TRACE;ENAGLO;ENAQZS;ENAGAL;ENAIRN;ENACMP;NFREQ=3;NEXOBS=3;ENALEX;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <DisableSpecificWarnings>4703</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4703;4700</DisableSpecificWarnings>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>

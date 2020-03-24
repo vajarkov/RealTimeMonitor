@@ -6,6 +6,15 @@ static strsvr_t strsvr;
 // Максимальное число потоков
 #define MAXSTR 4 
 
+#define MAXHIST		20		   // max number of histories
+#define TSTARTMARGIN 60.0	   // time margin for file name replacement
+#define TRACEFILE	"rtkconv.trace" // trace file
+
+
+static int abortf = 0;
+
+
+
 int main() {
 
 	time_t rawtime;
@@ -35,7 +44,43 @@ int main() {
 		SvrOpt[i] = optdef[i];
 	}
 	
+	OutFileEna3 = sep_nav && (NavSys & SYS_GLO);
+	OutFileEna4 = sep_nav && (NavSys & SYS_SBS);
+	OutFileEna5 = sep_nav && (NavSys & SYS_QZS);
+	OutFileEna6 = sep_nav && (NavSys & SYS_GAL);
+	OutFileEna7 = sep_nav && (NavSys & SYS_CMP);
+	OutFileEna8 = sep_nav && (NavSys & SYS_IRN);
+	OutFileEna9 = !rnx;
+	//OutDir = OutDirEna;
+	//LabelOutDir = OutDirEna;
+	OutFile1 = OutFileEna1;
+	OutFile2 = OutFileEna2;
+	OutFile3 = OutFileEna3 && sep_nav && (NavSys & SYS_GLO);
+	OutFile4 = OutFileEna4 && sep_nav && (NavSys & SYS_SBS);
+	OutFile5 = OutFileEna5 && sep_nav && (NavSys & SYS_QZS);
+	OutFile6 = OutFileEna6 && sep_nav && (NavSys & SYS_GAL);
+	OutFile7 = OutFileEna7 && sep_nav && (NavSys & SYS_CMP);
+	OutFile8 = OutFileEna8 && sep_nav && (NavSys & SYS_IRN);
+	OutFile9 = OutFileEna9 && !rnx;
 
+	if (Nav1) navsys |= SYS_GPS;
+	if (Nav2) navsys |= SYS_GLO;
+	if (Nav3) navsys |= SYS_GAL;
+	if (Nav4) navsys |= SYS_QZS;
+	if (Nav5) navsys |= SYS_SBS;
+	if (Nav6) navsys |= SYS_CMP;
+	if (Nav7) navsys |= SYS_IRN;
+	if (Obs1) obstype |= OBSTYPE_PR;
+	if (Obs2) obstype |= OBSTYPE_CP;
+	if (Obs3) obstype |= OBSTYPE_DOP;
+	if (Obs4) obstype |= OBSTYPE_SNR;
+	if (Freq1) freqtype |= FREQTYPE_L1;
+	if (Freq2) freqtype |= FREQTYPE_L2;
+	if (Freq3) freqtype |= FREQTYPE_L5;
+	if (Freq4) freqtype |= FREQTYPE_L6;
+	if (Freq5) freqtype |= FREQTYPE_L7;
+	if (Freq6) freqtype |= FREQTYPE_L8;
+	if (Freq7) freqtype |= FREQTYPE_L9;
 	FileSwapMargin = 30;
 
 	//AntPos = 0;
@@ -56,20 +101,28 @@ int main() {
 		printf("Minute is out...\n");
 	}
 	Sleep(1000);
-	char pathString[1024] = "C:\\distr\\data\\0001_";
+	
 	char buff[4];
 	_itoa(timeinfo->tm_year - 100 + 2000, buff, 10);
 	strcat(pathString, buff);
 	strcat(pathString, "-");
+	strcat(fileString, buff);
+	strcat(fileString, "-");
 	_itoa(timeinfo->tm_mon + 1, buff, 10);
 	strcat(pathString, buff);
 	strcat(pathString, "-");
+	strcat(fileString, buff);
+	strcat(fileString, "-");
 	_itoa(timeinfo->tm_mday, buff, 10);
 	strcat(pathString, buff);
 	strcat(pathString, "_");
+	strcat(fileString, buff);
+	strcat(fileString, "-");
 	_itoa(timeinfo->tm_hour, buff, 10);
 	strcat(pathString, buff);
-	strcat(pathString, ".rtcm");
+	strcat(fileString, buff);
+	//strcat(fileString, "-");
+	strcat(pathString, ".rtcm3");
 
 	//Запуск службы сбора
 	SvrStartStream(pathString);
@@ -77,24 +130,46 @@ int main() {
 	while (true) {
 		time(&rawtime);
 		timeinfo = localtime(&rawtime);
+		
+		
 		if (timeinfo->tm_sec == 0) {
 			SvrStopStream();
+			
 			printf("Minute is out...\n");
 			Sleep(1000);
-			char pathString[1024] = "C:\\distr\\data\\0001_";
+			SetOutFiles(pathString);
+			ConvertFile(pathString);
+
+
+			//RTCM
+			pathString[0] = 0;
+			fileString[0] = 0;
+			strcat(pathString, "C:\\distr\\data\\0001_");
+			strcat(fileString, "0001_");
 			char buff[4];
 			_itoa(timeinfo->tm_year - 100 + 2000, buff, 10);
 			strcat(pathString, buff);
 			strcat(pathString, "-");
+			strcat(fileString, buff);
+			strcat(fileString, "-");
+
 			_itoa(timeinfo->tm_mon + 1, buff, 10);
 			strcat(pathString, buff);
 			strcat(pathString, "-");
+			strcat(fileString, buff);
+			strcat(fileString, "-");
 			_itoa(timeinfo->tm_mday, buff, 10);
 			strcat(pathString, buff);
 			strcat(pathString, "_");
+			strcat(fileString, buff);
+			strcat(fileString, "-");
 			_itoa(timeinfo->tm_min, buff, 10);
 			strcat(pathString, buff);
-			strcat(pathString, ".rtcm");
+			strcat(fileString, buff);
+			//strcat(fileString, "-");
+			strcat(pathString, ".rtcm3");
+
+
 
 
 
@@ -637,15 +712,323 @@ void __fastcall LoadOpt(void)
 		AntPos[i] = 0.0;
 		AntOff[i] = 0.0;
 	}
+	RnxTime.time = 0;
 	
 	
-	/*StaPosFile = ini->ReadString("stapos", "staposfile", "");
-	ExeDirectory = ini->ReadString("dirs", "exedirectory", "");
-	LocalDirectory = ini->ReadString("dirs", "localdirectory", "");
-	ProxyAddress = ini->ReadString("dirs", "proxyaddress", "");
-	SrcTblFile = ini->ReadString("file", "srctblfile", "");
-	LogFile = ini->ReadString("file", "logfile", "");
-	delete ini;*/
-
 	
 }
+
+
+// set output file paths ----------------------------------------------------
+void __fastcall SetOutFiles(string infile)
+{
+	/*TEdit* edit[] = {
+		OutFile1,OutFile2,OutFile3,OutFile4,OutFile5,OutFile6,OutFile7,
+		OutFile8,OutFile9
+	};*/
+	string Format_Text;//= Format;
+	string OutDir_Text = OutDir;
+	char ofile[10][1024], *code,*p;
+	//string in_file = infile;
+	int i, lex = strstr(Format_Text.c_str(), "LEX") != NULL;
+
+	if (!EventEna) return;
+
+
+	if (OutDirEna) {
+		//size_t found = infile.rfind('\\');
+		//if (found != std::string::npos) in_file.substr(found,in_file.length()) ; //else p = infile.c_str();
+		sprintf(ofile[0], "%s%s", OutDir_Text.c_str(),fileString);
+	}
+	else {
+		strcpy(ofile[0], fileString);
+	}
+	/*for (p = ofile[0]; *p; p++) {
+		if (*p == '*' || *p == '?') *p = '0';
+	}*/
+	if (!RnxFile) {
+		if ((p = strrchr(ofile[0], '.'))) *p = '\0';
+		sprintf(ofile[1], "%s.obs", ofile[0]);
+		sprintf(ofile[2], "%s.nav", ofile[0]);
+		sprintf(ofile[3], "%s.gnav", ofile[0]);
+		sprintf(ofile[4], "%s.hnav", ofile[0]);
+		sprintf(ofile[5], "%s.qnav", ofile[0]);
+		sprintf(ofile[6], "%s.lnav", ofile[0]);
+		sprintf(ofile[7], "%s.cnav", ofile[0]);
+		sprintf(ofile[8], "%s.inav", ofile[0]);
+		sprintf(ofile[9], lex ? "%s.lex" : "%s.sbs", ofile[0]);
+
+		/*sprintf(ofile[1], "%s.obs", fileString);
+		sprintf(ofile[2], "%s.nav", fileString);
+		sprintf(ofile[3], "%s.gnav", fileString);
+		sprintf(ofile[4], "%s.hnav", fileString);
+		sprintf(ofile[5], "%s.qnav", fileString);
+		sprintf(ofile[6], "%s.lnav", fileString);
+		sprintf(ofile[7], "%s.cnav", fileString);
+		sprintf(ofile[8], "%s.inav", fileString);
+		sprintf(ofile[9], lex ? "%s.lex" : "%s.sbs", fileString);*/
+	}
+	else {
+		if ((p = strrchr(ofile[0], '\\'))) *(p + 1) = '\0';
+		else ofile[0][0] = '\0';
+		sprintf(ofile[1], "%s%%r%%n0.%%yO", ofile[0]);
+		if (RnxVer >= 3 && NavSys && (NavSys != SYS_GPS)) { /* ver.3 and mixed system */
+			sprintf(ofile[2], "%s%%r%%n0.%%yP", ofile[0]);
+		}
+		else {
+			sprintf(ofile[2], "%s%%r%%n0.%%yN", ofile[0]);
+		}
+		sprintf(ofile[3], "%s%%r%%n0.%%yG", ofile[0]);
+		sprintf(ofile[4], "%s%%r%%n0.%%yH", ofile[0]);
+		sprintf(ofile[5], "%s%%r%%n0.%%yQ", ofile[0]);
+		sprintf(ofile[6], "%s%%r%%n0.%%yL", ofile[0]);
+		sprintf(ofile[7], "%s%%r%%n0.%%yC", ofile[0]);
+		sprintf(ofile[8], "%s%%r%%n0.%%yI", ofile[0]);
+		sprintf(ofile[9], lex ? "%s%%r%%n0_%%y.lex" : "%s%%r%%n0_%%y.sbs", ofile[0]);
+	}
+	for (i = 0; i < 9; i++) {
+		if (!strcmp(ofile[i + 1], fileString)) strcat(ofile[i + 1], "_");
+		//edit[i]->Text = ofile[i + 1];
+	}
+	OutFile1 = ofile[1];
+	OutFile2 = ofile[2];
+	OutFile3 = ofile[3];
+	OutFile4 = ofile[4];
+	OutFile5 = ofile[5];
+	OutFile6 = ofile[6];
+	OutFile7 = ofile[7];
+	OutFile8 = ofile[8];
+	OutFile9 = ofile[9];
+}
+
+
+// convert file -------------------------------------------------------------
+void __fastcall ConvertFile(char pathString[1024])
+{
+	rnxopt_t rnxopt = { 0 };
+	//string InFile_Text = InFile->Text;
+	string InFile_Text = pathString;
+	string OutFile1_Text = OutFile1, OutFile2_Text = OutFile2;
+	string OutFile3_Text = OutFile3, OutFile4_Text = OutFile4;
+	string OutFile5_Text = OutFile5, OutFile6_Text = OutFile6;
+	string OutFile7_Text = OutFile7, OutFile8_Text = OutFile8;
+	string OutFile9_Text = OutFile9;
+	int i, format, sat;
+	char file[1024] = "", * ofile[9], ofile_[9][1024] = { "" }, msg[256], * p;
+	char buff[256], tstr[32];
+	double RNXVER[] = { 2.10,2.11,2.12,3.00,3.01,3.02,3.03 };
+	FILE* fp;
+
+	for (i = 0; i < 9; i++) ofile[i] = ofile_[i];
+
+	// recognize input file format
+	strcpy(file, InFile_Text.c_str());
+	if (!(p = strrchr(file, '.'))) p = file;
+	if (FormatConv == 0) { // auto
+		if (!strcmp(p, ".rtcm2")) format = STRFMT_RTCM2;
+		else if (!strcmp(p, ".rtcm3")) format = STRFMT_RTCM3;
+		else if (!strcmp(p, ".gps")) format = STRFMT_OEM4;
+		else if (!strcmp(p, ".ubx")) format = STRFMT_UBX;
+		else if (!strcmp(p, ".log")) format = STRFMT_SS2;
+		else if (!strcmp(p, ".bin")) format = STRFMT_CRES;
+		else if (!strcmp(p, ".jps")) format = STRFMT_JAVAD;
+		else if (!strcmp(p, ".bnx")) format = STRFMT_BINEX;
+		else if (!strcmp(p, ".binex")) format = STRFMT_BINEX;
+		else if (!strcmp(p, ".rt17")) format = STRFMT_RT17;
+		else if (!strcmp(p, ".cmr")) format = STRFMT_CMR;
+		else if (!strcmp(p, ".trs")) format = STRFMT_TERSUS;
+		else if (!strcmp(p, ".obs")) format = STRFMT_RINEX;
+		else if (!strcmp(p, ".OBS")) format = STRFMT_RINEX;
+		else if (!strcmp(p, ".nav")) format = STRFMT_RINEX;
+		else if (!strcmp(p, ".NAV")) format = STRFMT_RINEX;
+		else if (!strcmp(p + 2, "nav")) format = STRFMT_RINEX;
+		else if (!strcmp(p + 2, "NAV")) format = STRFMT_RINEX;
+		else if (!strcmp(p + 3, "o")) format = STRFMT_RINEX;
+		else if (!strcmp(p + 3, "O")) format = STRFMT_RINEX;
+		else if (!strcmp(p + 3, "n")) format = STRFMT_RINEX;
+		else if (!strcmp(p + 3, "N")) format = STRFMT_RINEX;
+		else if (!strcmp(p + 3, "p")) format = STRFMT_RINEX;
+		else if (!strcmp(p + 3, "P")) format = STRFMT_RINEX;
+		else if (!strcmp(p + 3, "g")) format = STRFMT_RINEX;
+		else if (!strcmp(p + 3, "G")) format = STRFMT_RINEX;
+		else if (!strcmp(p + 3, "h")) format = STRFMT_RINEX;
+		else if (!strcmp(p + 3, "H")) format = STRFMT_RINEX;
+		else if (!strcmp(p + 3, "q")) format = STRFMT_RINEX;
+		else if (!strcmp(p + 3, "Q")) format = STRFMT_RINEX;
+		else if (!strcmp(p + 3, "l")) format = STRFMT_RINEX;
+		else if (!strcmp(p + 3, "L")) format = STRFMT_RINEX;
+		else if (!strcmp(p + 3, "c")) format = STRFMT_RINEX;
+		else if (!strcmp(p + 3, "C")) format = STRFMT_RINEX;
+		else {
+			//showmsg("file format can not be recognized");
+			return;
+		}
+	}
+	//else {
+	//	for (i = 0; formatstrs[i]; i++) {
+	//		//if (Format->Text == formatstrs[i]) break;
+	//	}
+	//	if (formatstrs[i]) format = i; else return;
+	//}
+	rnxopt.rnxver = RNXVER[RnxVer];
+
+	if (format == STRFMT_RTCM2 || format == STRFMT_RTCM3 || format == STRFMT_RT17 ||
+		format == STRFMT_CMR) {
+
+		// input start date/time for rtcm 2, rtcm 3, RT17 or CMR
+		//StartDialog->FileName = file;
+		//if (StartDialog->ShowModal() != mrOk) return;
+		GetFileTime(file);
+		rnxopt.trtcm = Time;
+	}
+	if (OutFile1 != "" && OutFileEna1) strcpy(ofile[0], OutFile1_Text.c_str());
+	if (OutFile2 != "" && OutFileEna2) strcpy(ofile[1], OutFile2_Text.c_str());
+	if (OutFile3 != "" && OutFileEna3) strcpy(ofile[2], OutFile3_Text.c_str());
+	if (OutFile4 != "" && OutFileEna4) strcpy(ofile[3], OutFile4_Text.c_str());
+	if (OutFile5 != "" && OutFileEna5) strcpy(ofile[4], OutFile5_Text.c_str());
+	if (OutFile6 != "" && OutFileEna6) strcpy(ofile[5], OutFile6_Text.c_str());
+	if (OutFile7 != "" && OutFileEna7) strcpy(ofile[6], OutFile7_Text.c_str());
+	if (OutFile8 != "" && OutFileEna8) strcpy(ofile[7], OutFile8_Text.c_str());
+	if (OutFile9 != "" && OutFileEna9) strcpy(ofile[8], OutFile9_Text.c_str());
+
+	// check overwrite output file
+	for (i = 0; i < 9; i++) {
+		if (!*ofile[i] || !(fp = fopen(ofile[i], "r"))) continue;
+		fclose(fp);
+		//ConfDialog->Label2->Caption = ofile[i];
+		//if (ConfDialog->ShowModal() != mrOk) return;
+	}
+	GetTime(&rnxopt.ts, &rnxopt.te, &rnxopt.tint, &rnxopt.tunit);
+	strncpy(rnxopt.staid, RnxCode.c_str(), 31);
+	sprintf(rnxopt.prog, "%s %s %s", PRGNAME, VER_RTKLIB, PATCH_LEVEL);
+	strncpy(rnxopt.runby, RunBy.c_str(), 31);
+	strncpy(rnxopt.marker, Marker.c_str(), 63);
+	strncpy(rnxopt.markerno, MarkerNo.c_str(), 31);
+	strncpy(rnxopt.markertype, MarkerType.c_str(), 31);
+	for (i = 0; i < 2; i++) strncpy(rnxopt.name[i], Name[i].c_str(), 31);
+	for (i = 0; i < 3; i++) strncpy(rnxopt.rec[i], Rec[i].c_str(), 31);
+	for (i = 0; i < 3; i++) strncpy(rnxopt.ant[i], Ant[i].c_str(), 31);
+	if (AutoPos) {
+		for (i = 0; i < 3; i++) rnxopt.apppos[i] = AppPos[i];
+	}
+	for (i = 0; i < 3; i++) rnxopt.antdel[i] = AntDel[i];
+	strncpy(rnxopt.rcvopt, RcvOption.c_str(), 255);
+	rnxopt.navsys = NavSys;
+	rnxopt.obstype = ObsType;
+	rnxopt.freqtype = FreqType;
+	p = rnxopt.comment[0];
+	sprintf(p, "log: %-53.53s", file);
+	p = rnxopt.comment[1];
+	p += sprintf(p, "format: %s", formatstrs[format]);
+	if (*rnxopt.rcvopt) sprintf(p, ", option: %s", rnxopt.rcvopt);
+	for (i = 0; i < 2; i++) strncpy(rnxopt.comment[i + 2], Comment[i].c_str(), 63);
+	for (i = 0; i < 7; i++) strcpy(rnxopt.mask[i], CodeMask[i].c_str());
+	rnxopt.autopos = AutoPos;
+	rnxopt.scanobs = ScanObs;
+	rnxopt.halfcyc = HalfCyc;
+	rnxopt.outiono = OutIono;
+	rnxopt.outtime = OutTime;
+	rnxopt.outleaps = OutLeaps;
+	rnxopt.sep_nav = SepNav;
+	rnxopt.ttol = TimeTol;
+
+	strcpy(buff, ExSats.c_str());
+	for (p = strtok(buff, " "); p; p = strtok(NULL, " ")) {
+		if (!(sat = satid2no(p))) continue;
+		rnxopt.exsats[sat - 1] = 1;
+	}
+	abortf = 0;
+	
+
+	if (TraceLevel > 0) {
+		traceopen(TRACEFILE);
+		tracelevel(TraceLevel);
+	}
+	// convert to rinex
+	(void)convrnx(format, &rnxopt, file, ofile);
+
+	if (TraceLevel > 0) {
+		traceclose();
+	}
+	
+
+#if 0
+	// set time-start/end if time not specified
+	if (!TimeStartF->Checked && rnxopt.tstart.time != 0) {
+		time2str(rnxopt.tstart, tstr, 0);
+		tstr[10] = '\0';
+		TimeY1->Text = tstr;
+		TimeH1->Text = tstr + 11;
+	}
+	if (!TimeEndF->Checked && rnxopt.tend.time != 0) {
+		time2str(rnxopt.tend, tstr, 0);
+		tstr[10] = '\0';
+		TimeY2->Text = tstr;
+		TimeH2->Text = tstr + 11;
+	}
+#endif
+	RnxTime = rnxopt.tstart;
+
+	///AddHist(InFile);
+}
+
+// get time -----------------------------------------------------------------
+void __fastcall GetTime(gtime_t* ts, gtime_t* te, double* tint,	double* tunit)
+{
+
+
+	string TimeY1_Text = TimeY1, TimeH1_Text = TimeH1;
+	string TimeY2_Text = TimeY2, TimeH2_Text = TimeH2;
+	string TimeInt_Text = TimeInt, TimeUnit_Text = TimeUnit;
+	double eps[] = { 2000,1,1,0,0,0 }, epe[] = { 2000,1,1,0,0,0 };
+
+	if (TimeStartF) {
+		sscanf(TimeY1_Text.c_str(), "%lf/%lf/%lf", eps, eps + 1, eps + 2);
+		sscanf(TimeH1_Text.c_str(), "%lf:%lf:%lf", eps + 3, eps + 4, eps + 5);
+		*ts = epoch2time(eps);
+	}
+	if (TimeEndF) {
+		sscanf(TimeY2_Text.c_str(), "%lf/%lf/%lf", epe, epe + 1, epe + 2);
+		sscanf(TimeH2_Text.c_str(), "%lf:%lf:%lf", epe + 3, epe + 4, epe + 5);
+		*te = epoch2time(epe);
+	}
+	if (TimeIntF) {
+		sscanf(TimeInt_Text.c_str(), "%lf", tint);
+	}
+	if (TimeUnitF) {
+		if (sscanf(TimeUnit_Text.c_str(), "%lf", tunit) >= 1) *tunit *= 3600.0;
+	}
+}
+
+
+//---------------------------------------------------------------------------
+void __fastcall GetFileTime(const char* fileName)
+{
+	FILETIME tc, ta, tw;
+	SYSTEMTIME st;
+	string s;
+	HANDLE h;
+
+	if ((h = CreateFileA(fileName, GENERIC_READ, 0, NULL, OPEN_EXISTING,
+		FILE_ATTRIBUTE_NORMAL, 0)) == INVALID_HANDLE_VALUE) {
+		return;
+	}
+	GetFileTime(h, &tc, &ta, &tw);
+	CloseHandle(h);
+	FileTimeToSystemTime(&tc, &st); // file create time
+	char buff[1000];
+	sprintf(buff, "%04d/%02d/%02d", st.wYear, st.wMonth, st.wDay);
+	TimeY1 = buff;
+	sprintf(buff, "%02d:%02d:%02d", st.wHour, st.wMinute, st.wSecond);
+	TimeH1 = buff;
+
+	//AnsiString TimeY1_Text = TimeY1->Text, TimeH1_Text = TimeH1->Text;
+	double ep[] = { 2000,1,1,0,0,0 };
+	sscanf(TimeY1.c_str(), "%lf/%lf/%lf", ep, ep + 1, ep + 2);
+	sscanf(TimeH1.c_str(), "%lf:%lf:%lf", ep + 3, ep + 4, ep + 5);
+	Time = epoch2time(ep);
+	//strftime(TimeY1.c_str(), sizeof(TimeY1) / sizeof(TimeY1[0]), "%04d/%02d/%02d", st.wYear, st.wMonth, st.wDay);
+	//TimeY1 = s.sprintf("%04d/%02d/%02d", st.wYear, st.wMonth, st.wDay);
+	//TimeH1 = s.sprintf("%02d:%02d:%02d", st.wHour, st.wMinute, st.wSecond);
+}
+//---------------------------------------------------------------------------
