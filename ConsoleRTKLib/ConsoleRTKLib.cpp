@@ -38,12 +38,14 @@ int main() {
 	//Инициализация потока сбора данных по-умолчанию
 	strsvrinit(&strsvr,3);
 
-	//Параметры по-умолчанию для потока
+	//Параметры по-умолчанию для потока записи RTCM
 	int optdef[] = { 10000,10000,1000,32768,10,0 };
 	for (int i = 0; i < 6; i++) {
 		SvrOpt[i] = optdef[i];
 	}
-	
+
+
+	//Параметры для конвертации
 	OutFileEna3 = sep_nav && (NavSys & SYS_GLO);
 	OutFileEna4 = sep_nav && (NavSys & SYS_SBS);
 	OutFileEna5 = sep_nav && (NavSys & SYS_QZS);

@@ -98,8 +98,10 @@ double AntPos[3], AntOff[3];
 
 string mask = "1111111111111111111111111111111111111111111111111111111";
 
+//Версия RINEX по-умолчанию
 int RnxVer =  0;
 int RnxFile = 0;
+//
 string RnxCode = "0000";
 string RunBy = "";
 string Marker = "";
@@ -112,13 +114,18 @@ float AppPos[3] = { 0.0, 0.0, 0.0 };
 float AntDel[3] = { 0.0, 0.0, 0.0 };
 string Comment[2] = { "", "" };
 string RcvOption = "";
+//Выбранные навигационные системы
 int NavSys = 0x3;
 int ObsType = 0xF;
 int FreqType = 0x3;
+//Исключенные спутники
 string ExSats = "";
+//Уровень трассировки
 int TraceLevel = 0;
+//
 gtime_t RnxTime;
 
+//Маски для выбранных спутниковых систем
 string CodeMask[7] = { 
 	"1111111100000111111111111100000000000000000000000000000", 
 	"1100000000000100001000000000000000000000000111000000000", 
@@ -126,7 +133,9 @@ string CodeMask[7] = {
 	"1000001100011001110000011100000010110000000000000000000", 
 	"1000000000000000000000011100000000000000000000000000000",
 	"0000000000010000000000000011100010000000011000110000000", 
-	"0000000000000000000000000100000000000000000000001111111" };
+	"0000000000000000000000000100000000000000000000001111111" 
+};
+
 int AutoPos = 0;
 int ScanObs = 0;
 int HalfCyc = 0;
@@ -140,14 +149,17 @@ int sep_nav = RnxVer < 3 || SepNav;
 bool TimeStartF = 0;
 bool TimeEndF = 0;
 bool TimeIntF = 0;
+//Дата и время начала трассировки
 string TimeY1 = "2000/01/01";
 string TimeH1 = "00:00:00";
 string TimeY2 = "2000/01/01";
 string TimeH2 = "00:00:00";
 string TimeInt = "1";
 bool TimeUnitF = 0;
+//Формат времени
 string TimeUnit = "24";
 string InFile = "";
+//Папка для сконвертированных файлов
 string OutDir = "C:\\distr\\data\\";
 string OutFile1 = "";
 string OutFile2 = "";
@@ -173,6 +185,7 @@ int EventEna = 1;
 const char* FileName;
 int rnx = strstr("RTCM3", "RINEX") != NULL;
 int navsys = 0, obstype = 0, freqtype = 0;
+//Выбранные навигационные системы
 bool Nav1 = 1;
 bool Nav2 = 1;
 bool Nav3 = 1;
@@ -196,6 +209,8 @@ bool Freq7 = 0;
 
 //int TraceLevel = 0;
 gtime_t Time;
+//Путь к файлу для передачи в функциям
 char pathString[1024] = "C:\\distr\\data\\0001_";
+//Префикс файла для функций
 char fileString[1024] = "0001_";
 //string InFile;
