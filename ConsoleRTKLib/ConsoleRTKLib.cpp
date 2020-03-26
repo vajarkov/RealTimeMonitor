@@ -46,6 +46,7 @@ int main() {
 
 
 	//Параметры для конвертации
+	//Разрешение на конвертацию в файлы RINEX
 	OutFileEna3 = sep_nav && (NavSys & SYS_GLO);
 	OutFileEna4 = sep_nav && (NavSys & SYS_SBS);
 	OutFileEna5 = sep_nav && (NavSys & SYS_QZS);
@@ -55,6 +56,8 @@ int main() {
 	OutFileEna9 = !rnx;
 	//OutDir = OutDirEna;
 	//LabelOutDir = OutDirEna;
+
+	//Наименование файлов, но синтаксис непонятный, так они обозначены в оригинальной библиотеке
 	OutFile1 = OutFileEna1;
 	OutFile2 = OutFileEna2;
 	OutFile3 = OutFileEna3 && sep_nav && (NavSys & SYS_GLO);
@@ -65,6 +68,8 @@ int main() {
 	OutFile8 = OutFileEna8 && sep_nav && (NavSys & SYS_IRN);
 	OutFile9 = OutFileEna9 && !rnx;
 
+
+	//Добавление выбранных спутниковых систем
 	if (Nav1) navsys |= SYS_GPS;
 	if (Nav2) navsys |= SYS_GLO;
 	if (Nav3) navsys |= SYS_GAL;
@@ -95,86 +100,130 @@ int main() {
 
 	//Указание локальной дериктории
 	local_dir = "C:\\Temp";
-
-	time(&rawtime);
-	timeinfo = localtime(&rawtime);
-	if (timeinfo->tm_sec == 0) {
-		SvrStopStream();
-		printf("Minute is out...\n");
-	}
-	Sleep(1000);
 	
+	
+	/*Проверочный код*/
+	////Получение текущего времени станции
+	//time(&rawtime);
+	////Преобразование к SYSTEMDATE
+	//timeinfo = localtime(&rawtime);
+	////Проверяю секунды на обнуление (минута прошла)
+	//if (timeinfo->tm_sec == 0) {
+	//	//Останавливаю поток записи "сырых" данных
+	//	SvrStopStream();
+	//	//Вывожу на экран сообщение
+	//	printf("Minute is out...\n");
+	//}
+	////Секундная задержка
+	//Sleep(1000);
+	
+	//Буфер для перевода даты и времени в строку
 	char buff[4];
+	//Преобразовать год в строку
 	_itoa(timeinfo->tm_year - 100 + 2000, buff, 10);
+	//Записать год в путь к файлу
 	strcat(pathString, buff);
 	strcat(pathString, "-");
+	//Записать год в названию файла
 	strcat(fileString, buff);
 	strcat(fileString, "-");
+	//Преобразовать месяц в строку
 	_itoa(timeinfo->tm_mon + 1, buff, 10);
+	//Записать месяц в путь к файлу
 	strcat(pathString, buff);
 	strcat(pathString, "-");
+	//Записать месяц в названию файла
 	strcat(fileString, buff);
 	strcat(fileString, "-");
+	//Преобразовать день в строку
 	_itoa(timeinfo->tm_mday, buff, 10);
+	//Записать день в путь к файлу
 	strcat(pathString, buff);
 	strcat(pathString, "_");
+	//Записать день в названию файла
 	strcat(fileString, buff);
 	strcat(fileString, "-");
+	//Преобразовать час в строку
 	_itoa(timeinfo->tm_hour, buff, 10);
+	//Записать час в путь к файлу
 	strcat(pathString, buff);
+	//Записать час в названию файла
 	strcat(fileString, buff);
-	//strcat(fileString, "-");
+	//Записать расширение файла к пути, в название файла не надо, оно использую для конвертации данных в RINEX
 	strcat(pathString, ".rtcm3");
 
 	//Запуск службы сбора
 	SvrStartStream(pathString);
 
+
+	//Создаем бесконечный цикл
 	while (true) {
+
+		//Получение текущего времени станции
 		time(&rawtime);
+		//Преобразование к SYSTEMDATE
 		timeinfo = localtime(&rawtime);
-		
-		
+		//Проверяю секунды на обнуление (минута прошла)
 		if (timeinfo->tm_sec == 0) {
+			//Останавливаю поток записи "сырых" данных
 			SvrStopStream();
-			
+
+		
+			//Вывожу на экран сообщение
 			printf("Minute is out...\n");
+			//Секундная задержка
 			Sleep(1000);
+			//Генерация названий для сконвертированных файлов
 			SetOutFiles(pathString);
+			//Конвертация файлов
 			ConvertFile(pathString);
 
 
 			//RTCM
+			//Обнуление пути к файлу
 			pathString[0] = 0;
+			//Обнуление имени файла
 			fileString[0] = 0;
+			//Первоначальная инициализация пути к файлу
 			strcat(pathString, "C:\\distr\\data\\0001_");
+			//Первоначальная инициализация имени файла
 			strcat(fileString, "0001_");
+			//Буфер для перевода даты и времени в строку
 			char buff[4];
+			//Преобразовать год в строку
 			_itoa(timeinfo->tm_year - 100 + 2000, buff, 10);
+			//Записать год в путь к файлу
 			strcat(pathString, buff);
 			strcat(pathString, "-");
+			//Записать год в названию файла
 			strcat(fileString, buff);
 			strcat(fileString, "-");
-
+			//Преобразовать месяц в строку
 			_itoa(timeinfo->tm_mon + 1, buff, 10);
+			//Записать месяц в путь к файлу
 			strcat(pathString, buff);
 			strcat(pathString, "-");
+			//Записать месяц в названию файла
 			strcat(fileString, buff);
 			strcat(fileString, "-");
+			//Преобразовать день в строку
 			_itoa(timeinfo->tm_mday, buff, 10);
+			//Записать день в путь к файлу
 			strcat(pathString, buff);
 			strcat(pathString, "_");
+			//Записать день в названию файла
 			strcat(fileString, buff);
 			strcat(fileString, "-");
-			_itoa(timeinfo->tm_min, buff, 10);
+			//Преобразовать час в строку
+			_itoa(timeinfo->tm_hour, buff, 10);
+			//Записать час в путь к файлу
 			strcat(pathString, buff);
+			//Записать час в названию файла
 			strcat(fileString, buff);
-			//strcat(fileString, "-");
+			//Записать расширение файла к пути, в название файла не надо, оно использую для конвертации данных в RINEX
 			strcat(pathString, ".rtcm3");
 
-
-
-
-
+			//Запуск службы сбора
 			SvrStartStream(pathString);
 		}
 		
@@ -183,7 +232,7 @@ int main() {
 }
 
 
-
+//Функция запуска службы отображения данных
 void __fastcall SvrStart(void)
 {
 	//Переменная для хранения сообщений об ошибках
@@ -358,10 +407,7 @@ void __fastcall SvrStart(void)
 	
 }
 
-
-
-
-
+//Функция обновления и отображения отображения данных
 void __fastcall Timer(void)
 {
 	static int n = 0, inactive = 0;
@@ -370,24 +416,33 @@ void __fastcall Timer(void)
 	unsigned char buff[8];
 
 	trace(4, "TimerTimer\n");
-
+	//Блокировка потока
 	rtksvrlock(&rtksvr);
-
+	//Для каждого решения 
 	for (i = 0; i < rtksvr.nsol; i++) {
+		//Указатель на на буфер с данными
 		sol = rtksvr.solbuf + i;
+
 		//UpdateLog(sol->stat, sol->time, sol->rr, sol->qr, rtksvr.rtk.rb, sol->ns,
 			//sol->age, sol->ratio);
+		//Флаг для обновления данных
 		update = 1;
 	}
-	rtksvr.nsol = 0;
-	SolCurrentStat = rtksvr.state ? rtksvr.rtk.sol.stat : 0;
 
+	//Обнуление указателя на количество решений
+	rtksvr.nsol = 0;
+	//Состояние текущего решения
+	SolCurrentStat = rtksvr.state ? rtksvr.rtk.sol.stat : 0;
+	//Разблокировка потока
 	rtksvrunlock(&rtksvr);
 
+	//Если обновлены данные
 	if (update) {
 		//UpdateTime();
 		//UpdatePos();
+		//Вывод данных о координатах
 		wcout << "XXX    " << rtksvr.rtcm[1].sta.pos[0] << "YYY     " << rtksvr.rtcm[1].sta.pos[1] << "ZZZ    " << rtksvr.rtcm[1].sta.pos[2] << endl;
+		//Вывод данных спутниках 
 		wcout << "OBS    " << rtksvr.rtcm[1].obs.data[0].code << "RCV    " << rtksvr.rtcm[1].obs.data[0].rcv << endl;
 		inactive = 0;
 	}
@@ -403,6 +458,7 @@ void __fastcall Timer(void)
 	}*/
 }
 
+//Функция для пересчета данных о позиции 
 void __fastcall UpdatePos(void)
 {
 	//TLabel *label[] = { Plabel1,Plabel2,Plabel3,Pos1,Pos2,Pos3,LabelStd,LabelNSat };
@@ -562,7 +618,7 @@ void __fastcall UpdatePos(void)
 }
 
 
-// start stream server ------------------------------------------------------
+//Запуск сервиса записи "сырых" данных (start stream server) ------------------------------------------------------
 void __fastcall SvrStartStream(char pathString[1024])
 {
 	//Конвертер
@@ -588,20 +644,24 @@ void __fastcall SvrStartStream(char pathString[1024])
 	
 	for (int i = 0; i < 4; i++) paths[i] = str[i];
 
+	//Типы принимаемого и выходного потоков "сырых" данных
 	strs[0] = STR_TCPCLI;
 	strs[1] = STR_FILE;
 	strs[2] = STR_NONE;
 	strs[3] = STR_NONE;
 
+	//IP-адрес для приема потока "сырых" данных
 	strcpy(paths[0], ip_address.c_str());
+	//Путь для записи "сырых" данных
 	strcpy(paths[1], pathString);
 	strcpy(paths[2], "");
 	strcpy(paths[3], "");
 
-	
+	//Загрузка параметров потока по-умолчанию
 	for (int i = 0; i < 5; i++) {
 		opt[i] = SvrOpt[i];
 	}
+
 	opt[5] = NmeaReq ? SvrOpt[5] : 0;
 	opt[6] = FileSwapMargin;
 	opt[7] = RelayBack;
@@ -615,6 +675,7 @@ void __fastcall SvrStartStream(char pathString[1024])
 		fclose(fp);
 		
 	}
+	
 	strsetdir(local_dir.c_str());
 	//strsetproxy(ProxyAddress.c_str());
 
@@ -675,19 +736,22 @@ void __fastcall SvrStartStream(char pathString[1024])
 
 	
 }
-// stop stream server -------------------------------------------------------
+
+//Остановка сервиса записи "сырых" данных (stop stream server) -------------------------------------------------------
 void __fastcall SvrStopStream(void)
 {
-	
+	//Обнуление комманд
 	char* cmds[MAXSTR] = { 0 };
+	//Объявление переменной типов данных
 	int strs[MAXSTR];
 
+	//Инициализация типов
 	strs[0] = STR_TCPCLI;
 	strs[1] = STR_FILE;
 	strs[2] = STR_NONE;
 	strs[3] = STR_NONE;
 
-	
+	//Остановка потока записи
 	strsvrstop(&strsvr, cmds);
 
 	
@@ -698,7 +762,7 @@ void __fastcall SvrStopStream(void)
 	//if (TraceLevel > 0) traceclose();
 }
 
-
+//Функции закрузки параметров по-умолчанию для потока записи "сырых" данных
 void __fastcall LoadOpt(void)
 {
 	int optdef[] = { 10000,10000,1000,32768,10,0 };
@@ -715,40 +779,45 @@ void __fastcall LoadOpt(void)
 		AntOff[i] = 0.0;
 	}
 	RnxTime.time = 0;
-	
-	
-	
+
 }
 
 
-// set output file paths ----------------------------------------------------
+//Генерация названий выходных файлов set output file paths ----------------------------------------------------
 void __fastcall SetOutFiles(string infile)
 {
 	/*TEdit* edit[] = {
 		OutFile1,OutFile2,OutFile3,OutFile4,OutFile5,OutFile6,OutFile7,
 		OutFile8,OutFile9
 	};*/
+	//Формат данных (использовал, но пока не особо важен)
 	string Format_Text;//= Format;
+	//Директория для записи выходных файлов
 	string OutDir_Text = OutDir;
+	//Переменная для сгенерированных имен выходных файлов и временные переменные
 	char ofile[10][1024], *code,*p;
 	//string in_file = infile;
 	int i, lex = strstr(Format_Text.c_str(), "LEX") != NULL;
 
+	//Если конвертация запрещена
 	if (!EventEna) return;
 
-
+	//Если есть разрешение на конвертацию в директорию
 	if (OutDirEna) {
-		//size_t found = infile.rfind('\\');
+		//Добавление имени файла к директории
 		//if (found != std::string::npos) in_file.substr(found,in_file.length()) ; //else p = infile.c_str();
 		sprintf(ofile[0], "%s%s", OutDir_Text.c_str(),fileString);
 	}
 	else {
+		//Если нет, то копирование имени файла
 		strcpy(ofile[0], fileString);
 	}
 	/*for (p = ofile[0]; *p; p++) {
 		if (*p == '*' || *p == '?') *p = '0';
 	}*/
+	//Если не RINEX файл
 	if (!RnxFile) {
+		//Добавление необходимых расширений к имени файла
 		if ((p = strrchr(ofile[0], '.'))) *p = '\0';
 		sprintf(ofile[1], "%s.obs", ofile[0]);
 		sprintf(ofile[2], "%s.nav", ofile[0]);
@@ -792,6 +861,7 @@ void __fastcall SetOutFiles(string infile)
 		if (!strcmp(ofile[i + 1], fileString)) strcat(ofile[i + 1], "_");
 		//edit[i]->Text = ofile[i + 1];
 	}
+	//Копирование путей и имен файлов в глобальные переменные
 	OutFile1 = ofile[1];
 	OutFile2 = ofile[2];
 	OutFile3 = ofile[3];
@@ -804,18 +874,22 @@ void __fastcall SetOutFiles(string infile)
 }
 
 
-// convert file -------------------------------------------------------------
+//Конвертация файлов convert file -------------------------------------------------------------
 void __fastcall ConvertFile(char pathString[1024])
 {
+	//Переменная для параметров RINEX
 	rnxopt_t rnxopt = { 0 };
-	//string InFile_Text = InFile->Text;
+	//Имя файла с путем к нему
 	string InFile_Text = pathString;
+	//Имена выходных файлов
 	string OutFile1_Text = OutFile1, OutFile2_Text = OutFile2;
 	string OutFile3_Text = OutFile3, OutFile4_Text = OutFile4;
 	string OutFile5_Text = OutFile5, OutFile6_Text = OutFile6;
 	string OutFile7_Text = OutFile7, OutFile8_Text = OutFile8;
 	string OutFile9_Text = OutFile9;
+	//
 	int i, format, sat;
+	//Временные переменные
 	char file[1024] = "", * ofile[9], ofile_[9][1024] = { "" }, msg[256], * p;
 	char buff[256], tstr[32];
 	double RNXVER[] = { 2.10,2.11,2.12,3.00,3.01,3.02,3.03 };
@@ -825,7 +899,9 @@ void __fastcall ConvertFile(char pathString[1024])
 
 	// recognize input file format
 	strcpy(file, InFile_Text.c_str());
+	//Копирование расширения файла
 	if (!(p = strrchr(file, '.'))) p = file;
+	//Выбор формата если не автоматический - по разрешению файла
 	if (FormatConv == 0) { // auto
 		if (!strcmp(p, ".rtcm2")) format = STRFMT_RTCM2;
 		else if (!strcmp(p, ".rtcm3")) format = STRFMT_RTCM3;
@@ -872,14 +948,16 @@ void __fastcall ConvertFile(char pathString[1024])
 	//	}
 	//	if (formatstrs[i]) format = i; else return;
 	//}
+	//Версия RINEX
 	rnxopt.rnxver = RNXVER[RnxVer];
-
+	//Если RTCM илим CMR
 	if (format == STRFMT_RTCM2 || format == STRFMT_RTCM3 || format == STRFMT_RT17 ||
 		format == STRFMT_CMR) {
 
 		// input start date/time for rtcm 2, rtcm 3, RT17 or CMR
 		//StartDialog->FileName = file;
 		//if (StartDialog->ShowModal() != mrOk) return;
+		//Считываем время из файла
 		GetFileTime(file);
 		rnxopt.trtcm = Time;
 	}
@@ -900,7 +978,9 @@ void __fastcall ConvertFile(char pathString[1024])
 		//ConfDialog->Label2->Caption = ofile[i];
 		//if (ConfDialog->ShowModal() != mrOk) return;
 	}
+	//Преобразование времени
 	GetTime(&rnxopt.ts, &rnxopt.te, &rnxopt.tint, &rnxopt.tunit);
+	//Копириование параметров
 	strncpy(rnxopt.staid, RnxCode.c_str(), 31);
 	sprintf(rnxopt.prog, "%s %s %s", PRGNAME, VER_RTKLIB, PATCH_LEVEL);
 	strncpy(rnxopt.runby, RunBy.c_str(), 31);
@@ -941,7 +1021,7 @@ void __fastcall ConvertFile(char pathString[1024])
 	}
 	abortf = 0;
 	
-
+	//Запись в трасировочный лог
 	if (TraceLevel > 0) {
 		traceopen(TRACEFILE);
 		tracelevel(TraceLevel);
@@ -1003,7 +1083,7 @@ void __fastcall GetTime(gtime_t* ts, gtime_t* te, double* tint,	double* tunit)
 }
 
 
-//---------------------------------------------------------------------------
+//Считывание времени из файла---------------------------------------------------------------------------
 void __fastcall GetFileTime(const char* fileName)
 {
 	FILETIME tc, ta, tw;
